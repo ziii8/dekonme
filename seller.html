@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#E8732C">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <meta name="description" content="Découvrez les annonces de ce vendeur sur DEKONme — marketplace du Togo.">
+  <title>Profil vendeur — DEKONme</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+</head>
+<body>
+
+<div class="topbar">
+  <button class="icon-btn back-btn" onclick="history.length > 1 ? history.back() : window.location.href='index.html'" aria-label="Retour">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+  </button>
+  <div class="page-title">Profil vendeur</div>
+  <button id="themeToggleBtn" class="icon-btn" onclick="toggleTheme()" aria-label="Changer de thème" style="font-size:18px;">🌙</button>
+</div>
+
+<div class="container" id="sellerContainer">
+  <p class="loading-text">Chargement…</p>
+</div>
+
+<div class="bottom-nav" id="bottomNav"></div>
+
+<script src="js/supabase-config.js"></script>
+<script src="js/app.js"></script>
+<script>
+  const sellerId = new URLSearchParams(window.location.search).get('id');
+
+  function timeAgo(dateString) {
+    const months = Math.floor((Date.now() - new Date(dateString)) / (1000 * 60 * 60 * 24 * 30));
+    if (months < 1) return "Membre depuis ce mois-ci";
+    if (months === 1) return "Membre depuis 1 mois";
+    if (months < 12) return `Membre depuis ${months} mois`;
+    const years = Math.floor(months / 12);
+    return `Membre depuis ${years} an${years > 1 ? 's' : ''}`;
+  }
+
+  async function init() {
+    const container = document.getElementById('sellerContainer');
+
+    if (!sellerId) {
+      container.innerHTML = `<div class="empty-state"><div class="emoji">🔍</div><p>Profil introuvable.</p></div>`;
+      renderBottomNav('');
+      return;
+    }
+
+    const profile = await getSellerProfile(sellerId);
+
+    if (!profile) {
+      container.innerHTML = `<div class="empty-state"><div class="emoji">🔍</div><p>Ce vendeur n'existe pas ou son profil n'est plus disponible.</p></div>`;
+      renderBottomNav('');
+      return;
+    }
+
+    const listings = await getListingsBySeller(sellerId);
+
+    container.innerHTML = `
+      <div class="profile-header">
+        <div class="profile-avatar">${profile.avatar_emoji || '👤'}</div>
+        <div>
+          <h2>${profile.name}</h2>
+          <p>${profile.city ? profile.city + ' · ' : ''}${timeAgo(profile.created_at)}</p>
+          ${(() => {
+            const s = getOnlineStatus(profile.last_seen);
+            return s.dot ? `<p class="seller-status" style="margin-top:4px;">${s.dot} ${s.label}</p>` : '';
+          })()}
+        </div>
+      </div>
+
+      <div class="section-head" style="margin-top: 24px;">
+        <h3>Annonces actives (${listings.length})</h3>
+      </div>
+      <div class="product-grid" id="sellerListingsGrid"></div>
+    `;
+
+    const grid = document.getElementById('sellerListingsGrid');
+    grid.innerHTML = listings.length
+      ? await renderListingGrid(listings)
+      : `<div class="empty-state" style="grid-column:1/-1; padding: 30px 20px;"><div class="emoji">📭</div><p>Ce vendeur n'a aucune annonce active pour le moment.</p></div>`;
+
+    renderBottomNav('');
+  }
+
+  init();
+</script>
+</body>
+</html>

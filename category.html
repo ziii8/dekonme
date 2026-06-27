@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#E8732C">
+  <link rel="apple-touch-icon" href="/icons/icon-192.png">
+  <meta name="description" content="Parcourez toutes les catégories de DEKONme — Mode, Électronique, Maison, Beauté, Sport, Accessoires. Achetez et vendez partout au Togo.">
+  <title>Catégories — DEKONme Marketplace Togo</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <button class="icon-btn back-btn" onclick="history.length > 1 ? history.back() : window.location.href='index.html'" aria-label="Retour">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+  </button>
+  <div class="page-title" id="pageTitle">Catégories</div>
+  <div style="display:flex; align-items:center; gap:8px;">
+    <button id="themeToggleBtn" class="icon-btn" onclick="toggleTheme()" aria-label="Changer de thème" style="font-size:18px;">🌙</button>
+    <button class="icon-btn" onclick="toggleFavListView()" aria-label="Favoris" id="favShortcut">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+    </button>
+  </div>
+</div>
+
+<div class="container">
+  <!-- VUE LISTE DES CATÉGORIES (affichage par défaut ou avec ?view=categories) -->
+  <div id="brandListView" class="hidden">
+    <div class="brand-list" id="brandList"></div>
+  </div>
+
+  <!-- VUE PRODUITS FILTRÉS (catégorie choisie ou recherche) -->
+  <div id="productListView" class="hidden">
+    <div class="toolbar">
+      <div style="position: relative;">
+        <button onclick="toggleCategoryFilter()" id="filterBtn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M6 12h12M10 18h4"/></svg>
+          Filtrer
+        </button>
+        <div id="categoryDropdown" class="category-dropdown hidden">
+          <div class="category-dropdown-content">
+            <div class="category-item" onclick="filterByCategory(null)">
+              ✓ Tous
+            </div>
+          </div>
+        </div>
+      </div>
+      <button onclick="window.location.href='category.html'">
+  Tous les produits
+</button>
+      </button>
+    </div>
+    <div class="product-grid" id="productGrid"></div>
+  </div>
+</div>
+
+<!-- BOTTOM NAV -->
+<div class="bottom-nav" id="bottomNav"></div>
+
+<!-- DROPDOWN MENU -->
+<div class="dropdown-menu" id="dropdownMenu" onclick="if(event.target===this) toggleDropdown()">
+  <div class="dropdown-panel">
+  </div>
+</div>
+
+<style>
+  .category-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    min-width: 160px;
+    margin-top: 8px;
+    box-shadow: var(--shadow-lift);
+    z-index: 100;
+    max-height: 300px;
+    overflow-y: auto;
+  }
+
+  .category-dropdown.hidden {
+    display: none;
+  }
+
+  .category-dropdown-content {
+    padding: 8px 0;
+  }
+
+  .category-item {
+    padding: 10px 16px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.15s;
+    color: var(--ink);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .category-item:hover {
+    background-color: var(--bg-soft);
+  }
+
+  .category-item.active {
+    color: var(--orange);
+    font-weight: 700;
+  }
+</style>
+
+<script src="js/supabase-config.js"></script>
+<script src="js/app.js"></script>
+<script src="js/lazy-load.js"></script>
+<script>
+  const params = new URLSearchParams(window.location.search);
+  const cat = params.get('cat');
+  const query = params.get('q');
+  const view = params.get('view');
+  let currentFilter = null; // null = tous, sinon nom de la catégorie
+  let allResults = []; // Tous les résultats avant filtrage
+
+  async function renderCategoryListView() {
+    document.getElementById('pageTitle').textContent = 'Catégories';
+    document.getElementById('brandListView').classList.remove('hidden');
+    document.getElementById('productListView').classList.add('hidden');
+
+    const list = document.getElementById('brandList');
+    list.innerHTML = '<p class="loading-text">Chargement…</p>';
+
+    const counts = await Promise.all(CATEGORIES.map(c => countByCategory(c.name)));
+
+    list.innerHTML = CATEGORIES.map((c, i) => `
+      <div class="brand-row" onclick="window.location.href='category.html?cat=${encodeURIComponent(c.name)}'">
+        <div class="icon" style="background:${c.color};">${c.emoji}</div>
+        <div class="info">
+          <h4>${c.name}</h4>
+          <p>${counts[i]} annonce${counts[i] > 1 ? 's' : ''}</p>
+        </div>
+        <span class="chevron">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+        </span>
+      </div>
+    `).join('');
+  }
+
+  function buildCategoryDropdown() {
+    const dropdown = document.querySelector('.category-dropdown-content');
+    const items = [
+      { name: 'Tous', value: null }
+    ];
+    
+    CATEGORIES.forEach(c => {
+      items.push({ name: c.name, emoji: c.emoji, value: c.name });
+    });
+
+    dropdown.innerHTML = items.map(item => `
+      <div class="category-item ${currentFilter === item.value ? 'active' : ''}" onclick="filterByCategory('${item.value}')">
+        ${item.emoji ? item.emoji + ' ' : ''}${item.name}
+      </div>
+    `).join('');
+  }
+
+  window.toggleCategoryFilter = function () {
+    const dropdown = document.getElementById('categoryDropdown');
+    dropdown.classList.toggle('hidden');
+  };
+
+  window.filterByCategory = async function (categoryName) {
+    currentFilter = categoryName;
+    buildCategoryDropdown();
+    document.getElementById('categoryDropdown').classList.add('hidden');
+    
+    const grid = document.getElementById('productGrid');
+    
+    if (currentFilter) {
+      // Filtre les résultats par catégorie
+      const filtered = allResults.filter(l => l.category === currentFilter);
+      grid.innerHTML = filtered.length
+        ? await renderListingGrid(filtered)
+        : `<div class="empty-state" style="grid-column:1/-1;"><div class="emoji">📭</div><p>Aucune annonce dans cette catégorie.</p></div>`;
+    } else {
+      // Affiche tous les résultats
+      grid.innerHTML = allResults.length
+        ? await renderListingGrid(allResults)
+        : `<div class="empty-state" style="grid-column:1/-1;"><div class="emoji">📭</div><p>Aucune annonce trouvée.</p></div>`;
+    }
+  };
+
+  async function renderProductListView() {
+    document.getElementById('brandListView').classList.add('hidden');
+    document.getElementById('productListView').classList.remove('hidden');
+    document.getElementById('pageTitle').textContent = cat || (query ? `"${query}"` : 'Résultats');
+
+    const grid = document.getElementById('productGrid');
+    grid.innerHTML = '<p class="loading-text">Chargement…</p>';
+
+    allResults = cat ? await getListingsByCategory(cat) : await searchListings(query || '');
+    buildCategoryDropdown();
+
+    grid.innerHTML = allResults.length
+      ? await renderListingGrid(allResults)
+      : `<div class="empty-state" style="grid-column:1/-1;"><div class="emoji">📭</div><p>Aucune annonce trouvée.</p></div>`;
+  }
+
+  // ==================== AFFICHER TOUS LES PRODUITS ====================
+  async function renderAllProducts() {
+    document.getElementById('brandListView').classList.add('hidden');
+    document.getElementById('productListView').classList.remove('hidden');
+    document.getElementById('pageTitle').textContent = 'Tous les produits';
+
+    const grid = document.getElementById('productGrid');
+    grid.innerHTML = '<p class="loading-text">Chargement…</p>';
+
+    allResults = await getAllListings(100);
+    buildCategoryDropdown();
+
+    grid.innerHTML = allResults.length
+      ? await renderListingGrid(allResults)
+      : `<div class="empty-state" style="grid-column:1/-1;"><div class="emoji">📭</div><p>Aucune annonce pour le moment.</p></div>`;
+  }
+
+  window.toggleFavListView = function () {
+    window.location.href = 'favoris.html';
+  };
+
+  // Fermer le dropdown si on clique ailleurs
+  document.addEventListener('click', (e) => {
+    const dropdown = document.getElementById('categoryDropdown');
+    const filterBtn = document.getElementById('filterBtn');
+    if (!dropdown?.contains(e.target) && !filterBtn?.contains(e.target)) {
+      dropdown?.classList.add('hidden');
+    }
+  });
+
+  // ==================== ROUTING ====================
+  if (view === 'categories') {
+    renderCategoryListView();
+  } else if (cat || query) {
+    renderProductListView();
+  } else {
+    renderAllProducts();
+  }
+
+  renderBottomNav('categories');
+</script>
+</body>
+</html>

@@ -1,0 +1,1 @@
+/annonce/:slug-:id  /product.html?id=:id  200

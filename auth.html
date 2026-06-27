@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#E8732C">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <meta name="description" content="Connectez-vous à DEKONme pour publier vos annonces et contacter des vendeurs partout au Togo.">
+  <title>Connexion — DEKONme</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+</head>
+<body>
+
+<div class="topbar">
+  <button class="icon-btn back-btn" onclick="history.length > 1 ? history.back() : window.location.href='index.html'" aria-label="Retour">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+  </button>
+  <div class="page-title" id="pageTitle">Connexion</div>
+  <button id="themeToggleBtn" class="icon-btn" onclick="toggleTheme()" aria-label="Changer de thème" style="font-size:18px;">🌙</button>
+</div>
+
+<div class="container auth-container" style="padding-top: 24px;">
+  <div class="auth-logo-wrap">
+    <div class="logo" style="justify-content:center; font-size:24px; margin-bottom:8px;"><span class="mark">D</span>EKONme</div>
+    <p style="color: var(--ink-soft); font-size: 14px;" id="subtitle">Connectez-vous pour gérer vos annonces</p>
+  </div>
+
+  <!-- FORMULAIRE CONNEXION -->
+  <form id="loginForm" onsubmit="return handleLogin(event)">
+    <label class="field-label">Email</label>
+    <input type="email" id="loginEmail" placeholder="vous@exemple.com" required>
+
+    <label class="field-label">Mot de passe</label>
+    <input type="password" id="loginPassword" placeholder="••••••••" required>
+
+    <button type="submit" class="btn btn-primary btn-block" style="margin-top: 8px;">Se connecter</button>
+  </form>
+
+  <!-- FORMULAIRE INSCRIPTION -->
+  <form id="signupForm" class="hidden" onsubmit="return handleSignup(event)">
+    <label class="field-label">Nom complet</label>
+    <input type="text" id="signupName" placeholder="Ex : Amadou Diallo" required>
+
+    <label class="field-label">Email</label>
+    <input type="email" id="signupEmail" placeholder="vous@exemple.com" required>
+
+    <label class="field-label">Numéro WhatsApp</label>
+    <div class="phone-input-group">
+      <span class="phone-prefix">+228</span>
+      <input type="tel" id="signupPhone" placeholder="90 11 22 33" required>
+    </div>
+    <p class="field-hint">Utilisé uniquement pour que les acheteurs vous contactent.</p>
+
+    <label class="field-label">Ville</label>
+    <select id="signupCity" required>
+      <option value="">Choisir une ville</option>
+      <option>Lomé</option>
+      <option>Kara</option>
+      <option>Sokodé</option>
+      <option>Kpalimé</option>
+      <option>Atakpamé</option>
+    </select>
+
+    <label class="field-label">Mot de passe</label>
+    <input type="password" id="signupPassword" placeholder="8 caractères minimum" minlength="8" required>
+
+    <button type="submit" class="btn btn-primary btn-block" style="margin-top: 8px;">Créer mon compte</button>
+  </form>
+
+  <p id="formError" class="form-error hidden"></p>
+
+  <div class="auth-switch">
+    <span id="switchPrompt">Pas encore de compte ?</span>
+    <button onclick="toggleMode()" id="switchBtn">Créer un compte</button>
+  </div>
+</div>
+
+<script src="js/supabase-config.js"></script>
+<script src="js/app.js"></script>
+<script>
+  const next = new URLSearchParams(window.location.search).get('next') || 'index.html';
+  let mode = 'login';
+
+  async function init() {
+    // Déjà connecté ? on renvoie directement vers la destination prévue.
+    if (await isLoggedIn()) {
+      window.location.href = next;
+    }
+  }
+  init();
+
+  function toggleMode() {
+    mode = mode === 'login' ? 'signup' : 'login';
+    const isLogin = mode === 'login';
+    document.getElementById('loginForm').classList.toggle('hidden', !isLogin);
+    document.getElementById('signupForm').classList.toggle('hidden', isLogin);
+    document.getElementById('pageTitle').textContent = isLogin ? 'Connexion' : 'Inscription';
+    document.getElementById('subtitle').textContent = isLogin
+      ? 'Connectez-vous pour gérer vos annonces'
+      : 'Créez votre compte pour publier des annonces';
+    document.getElementById('switchPrompt').textContent = isLogin ? 'Pas encore de compte ?' : 'Déjà inscrit ?';
+    document.getElementById('switchBtn').textContent = isLogin ? 'Créer un compte' : 'Se connecter';
+    document.getElementById('formError').classList.add('hidden');
+  }
+
+  function showError(msg) {
+    const el = document.getElementById('formError');
+    el.textContent = msg;
+    el.classList.remove('hidden');
+  }
+
+  function setLoading(formId, loading, label) {
+    const btn = document.querySelector(`#${formId} button[type="submit"]`);
+    btn.disabled = loading;
+    btn.textContent = loading ? 'Veuillez patienter…' : label;
+    btn.classList.toggle('btn-loading', loading);
+  }
+
+  async function handleLogin(e) {
+    e.preventDefault();
+    const email = document.getElementById('loginEmail').value.trim();
+    const password = document.getElementById('loginPassword').value;
+    if (!email || !password) { showError('Merci de renseigner votre email et votre mot de passe.'); return false; }
+
+    setLoading('loginForm', true);
+    const { error } = await signInUser({ email, password });
+    setLoading('loginForm', false, 'Se connecter');
+
+    if (error) {
+      showError(
+        error.toLowerCase().includes('invalid')
+          ? 'Email ou mot de passe incorrect.'
+          : error
+      );
+      return false;
+    }
+    window.location.href = next;
+    return false;
+  }
+
+  async function handleSignup(e) {
+    e.preventDefault();
+    const name = document.getElementById('signupName').value.trim();
+    const email = document.getElementById('signupEmail').value.trim();
+    const phone = document.getElementById('signupPhone').value.trim();
+    const city = document.getElementById('signupCity').value;
+    const password = document.getElementById('signupPassword').value;
+
+    if (!name || !email || !phone || !city) { showError('Merci de remplir tous les champs.'); return false; }
+    if (password.length < 8) { showError('Le mot de passe doit faire au moins 8 caractères.'); return false; }
+
+    setLoading('signupForm', true);
+    const { error } = await signUpUser({ name, email, phone, city, password });
+    setLoading('signupForm', false, 'Créer mon compte');
+
+    if (error) {
+      showError(
+        error.toLowerCase().includes('already') || error.toLowerCase().includes('registered')
+          ? 'Un compte existe déjà avec cet email.'
+          : error
+      );
+      return false;
+    }
+    window.location.href = next;
+    return false;
+  }
+</script>
+</body>
+</html>

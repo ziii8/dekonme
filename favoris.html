@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#E8732C">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <meta name="description" content="Vos annonces favorites sur DEKONme — retrouvez rapidement les produits qui vous intéressent.">
+  <title>Mes favoris — DEKONme</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+</head>
+<body>
+
+<div class="topbar">
+  <button class="icon-btn back-btn" onclick="history.length > 1 ? history.back() : window.location.href='index.html'" aria-label="Retour">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+  </button>
+  <div class="page-title">Mes favoris</div>
+  <button id="themeToggleBtn" class="icon-btn" onclick="toggleTheme()" aria-label="Changer de thème" style="font-size:18px;">🌙</button>
+</div>
+
+<div class="container">
+  <div class="product-grid" id="favGrid" style="padding-top: 8px;"></div>
+</div>
+
+<!-- BOTTOM NAV -->
+<div class="bottom-nav" id="bottomNav"></div>
+
+<script src="js/supabase-config.js"></script>
+<script src="js/app.js"></script>
+<script>
+  async function renderFavorites() {
+    if (!(await requireAuth('favoris.html'))) return;
+
+    const grid = document.getElementById('favGrid');
+    grid.innerHTML = '<p class="loading-text">Chargement…</p>';
+
+    const favListings = await getFavoriteListings();
+
+    grid.innerHTML = favListings.length
+      ? favListings.map(l => productCardHTML(l, true)).join('')
+      : `
+        <div class="empty-state" style="grid-column:1/-1;">
+          <div class="emoji">🤍</div>
+          <p>Aucun favori pour le moment.</p>
+          <div style="margin-top:16px;">
+            <button class="btn btn-primary" onclick="window.location.href='category.html'">Découvrir des annonces</button>
+          </div>
+        </div>
+      `;
+
+    renderBottomNav('favoris');
+  }
+
+  renderFavorites();
+</script>
+</body>
+</html>
