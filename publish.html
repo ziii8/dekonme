@@ -63,9 +63,9 @@
   <label class="field-label">Photos (exactement 2)</label>
   <input type="file" id="pImageFiles" accept="image/*" multiple>
   <div id="imagePreviewWrap" class="photo-preview-grid hidden"></div>
-  <p class="field-hint" id="uploadStatus"></p>
+  <p class="field-hint" id="uploadStatus">Ajoutez exactement 2 photos — elles seront automatiquement optimisées.</p>
 
-  <button type="submit" class="btn btn-primary btn-block" id="submitBtn" style="margin-top: 16px; margin-bottom: 24px; padding: 14px;">Publier l'annonce</button>
+  <button type="submit" class="btn btn-primary btn-block" id="submitBtn" style="margin-top: 16px; margin-bottom: 24px; padding: 15px;">Publier l'annonce</button>
 </form>
 
 <!-- Bouton Marquer comme vendu (visible uniquement en édition) -->
@@ -198,7 +198,7 @@
     e.preventDefault();
     const totalPhotos = existingImages.length + newFiles.length;
     if (totalPhotos !== 2) {
-      alert('Merci d\'ajouter exactement 2 photos.');
+      alert('Merci d\'ajouter exactement 2 photos de votre téléphone.');
       return false;
     }
 
