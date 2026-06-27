@@ -30,7 +30,7 @@
 <!-- HERO -->
 <div class="hero">
   <h1>Achète et vends<br><span class="accent">partout au Togo.</span></h1>
-  <p>Mode, électronique, maison, beauté et plus encore.<br>Contact direct par WhatsApp — Lomé, Kara, Sokodé...</p>
+  <p>Contact direct par WhatsApp — Lomé, Kara, Sokodé...</p>
   <div class="search-container">
     <div class="search">
       <input id="searchInput" type="text" placeholder="Rechercher un produit..." onkeyup="if(event.key==='Enter') performSearch()">
@@ -40,11 +40,11 @@
     </div>
     <div id="searchDropdown"></div>
   </div>
-
+  
 </div>
 
 <div class="container">
-  <!-- CATÉGORIES (3 seulement) -->
+  <!-- CATÉGORIES (4 seulement) -->
   <div class="section-head">
     <h3>Catégories</h3>
     <span class="see-all" onclick="window.location.href='category.html?view=categories'">Voir tout</span>
@@ -84,9 +84,9 @@
 
   function renderCategoryGrid() {
     const grid = document.getElementById('brandGrid');
-    // Affiche seulement les 3 premières catégories
-    const firstThree = CATEGORIES.slice(0, 3);
-    grid.innerHTML = firstThree.map(c => `
+    // Affiche seulement les 4 premières catégories
+    const firstFour = CATEGORIES.slice(0, 4);
+    grid.innerHTML = firstFour.map(c => `
       <div class="brand-tile" onclick="window.location.href='category.html?cat=${encodeURIComponent(c.name)}'">
         <div class="icon" style="background:${c.color};">${c.emoji}</div>
         <span>${c.name}</span>
