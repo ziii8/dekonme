@@ -1349,3 +1349,46 @@ img { display: block; max-width: 100%; }
   .detail-title { font-size: 19px; }
   .detail-price { font-size: 21px; }
 }
+
+/* ==================== PAGE PUBLICATION ==================== */
+
+#publishContainer{
+    width:min(var(--container-width),100%);
+    margin:0 auto;
+    padding:16px;
+}
+
+#publishForm{
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+}
+
+#publishForm input,
+#publishForm select,
+#publishForm textarea{
+    width:100%;
+    padding:14px;
+    border:1px solid var(--border);
+    border-radius:12px;
+    background:var(--white);
+    color:var(--ink);
+    font:inherit;
+}
+
+#publishForm textarea{
+    resize:vertical;
+    min-height:120px;
+}
+
+#publishForm input:focus,
+#publishForm select:focus,
+#publishForm textarea:focus{
+    outline:none;
+    border-color:var(--orange);
+    box-shadow:0 0 0 3px rgba(232,115,44,.15);
+}
+
+#publishForm button{
+    margin-top:10px;
+}

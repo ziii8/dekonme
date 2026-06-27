@@ -6,64 +6,251 @@
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#E8732C">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
-  <meta name="description" content="Publier une annonce sur DEKONme Marketplace Togo.">
-  <title>Publier une annonce — DEKONme</title>
+  <title id="docTitle">DEKONme - Publier une annonce</title>
   <link rel="stylesheet" href="css/style.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 </head>
 <body>
 
 <div class="topbar">
-  <button class="icon-btn back-btn" onclick="history.back()" aria-label="Retour">
+  <button class="icon-btn back-btn" onclick="history.length > 1 ? history.back() : window.location.href='index.html'" aria-label="Retour">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
   </button>
-  <div class="page-title">Publier une annonce</div>
+  <div class="page-title" id="pageTitle">Publier une annonce</div>
   <button id="themeToggleBtn" class="icon-btn" onclick="toggleTheme()" aria-label="Changer de thème" style="font-size:18px;">🌙</button>
 </div>
 
-<div class="container">
-  <!-- Formulaire de publication -->
-  <div class="form-container">
-    <input type="text" id="title" placeholder="Titre de l'annonce" required>
-    <select id="category">
-      <option value="">Catégorie</option>
-      <option value="Mode">Mode</option>
-      <option value="Électronique">Électronique</option>
-      <option value="Maison">Maison</option>
-      <option value="Beauté">Beauté</option>
-      <option value="Sport">Sport</option>
-    </select>
-    <input type="number" id="price" placeholder="Prix" required>
-    <button class="btn btn-primary" onclick="publishListing()">Publier</button>
-  </div>
-</div>
+<form id="publishForm" onsubmit="return handlePublish(event)">
+  <label class="field-label">Titre de l'annonce</label>
+  <input type="text" id="pTitle" placeholder="Ex : iPhone 13 128 Go, Robe élégante taille M..." required>
 
-<div class="bottom-nav" id="bottomNav"></div>
+  <label class="field-label">Catégorie</label>
+  <select id="pCategory" required></select>
+
+  <label class="field-label">Modèle / détails (facultatif)</label>
+  <input type="text" id="pModel" placeholder="Ex : 128 Go, Taille M, Couleur rouge...">
+
+  <label class="field-label">Prix (FCFA)</label>
+  <input type="number" id="pPrice" placeholder="Ex : 250000" min="0" required>
+
+  <label class="field-label">État</label>
+  <select id="pCondition" required>
+    <option value="">Choisir un état</option>
+    <option>Neuf</option>
+    <option>Occasion propre</option>
+    <option>Occasion</option>
+  </select>
+
+  <label class="field-label">Ville</label>
+  <select id="pCity" required>
+    <option value="">Choisir une ville</option>
+    <option>Lomé</option>
+    <option>Kara</option>
+    <option>Sokodé</option>
+    <option>Kpalimé</option>
+    <option>Atakpamé</option>
+  </select>
+
+  <label class="field-label">Description</label>
+  <textarea id="pDescription" rows="4" placeholder="État, accessoires inclus, raison de la vente..." required></textarea>
+
+  <label class="field-label">Numéro WhatsApp pour vous contacter</label>
+  <div class="phone-input-group">
+    <span class="phone-prefix">+228</span>
+    <input type="tel" id="pWhatsapp" placeholder="90 11 22 33" required>
+  </div>
+
+  <label class="field-label">Photos (exactement 2)</label>
+  <input type="file" id="pImageFiles" accept="image/*" multiple>
+  <div id="imagePreviewWrap" class="photo-preview-grid hidden"></div>
+  <p class="field-hint" id="uploadStatus"></p>
+
+  <button type="submit" class="btn btn-primary btn-block" id="submitBtn" style="margin-top: 16px; margin-bottom: 24px; padding: 14px;">Publier l'annonce</button>
+</form>
+
+<!-- Bouton Marquer comme vendu (visible uniquement en édition) -->
+<div id="soldButtonContainer"></div>
+
+<div id="publishContainer"></div>
 
 <script src="js/supabase-config.js"></script>
 <script src="js/app.js"></script>
 
 <script>
-  function renderBottomNav(page) {
-    const mount = document.getElementById('bottomNav');
-    if (!mount) return;
+  const editId = Number(new URLSearchParams(window.location.search).get('id')) || null;
+  let existingImages = [];
+  let newFiles = [];
 
-    mount.innerHTML = `
-      <div onclick="window.location.href='index.html'">🏠</div>
-      <div onclick="window.location.href='category.html'">🔎</div>
-      <div onclick="window.location.href='publish.html'">📢</div>
-      <div onclick="window.location.href='favoris.html'">❤️</div>
-      <div onclick="window.location.href='profil.html'" style="color:var(--orange)">👤</div>
-    `;
+  async function init() {
+    if (!(await requireAuth(editId ? `publish.html?id=${editId}` : 'publish.html'))) return;
+
+    document.getElementById('pCategory').innerHTML =
+      '<option value="">Choisir une catégorie</option>' +
+      CATEGORIES.map(c => `<option>${c.name}</option>`).join('');
+
+    if (editId) {
+      document.getElementById('docTitle').textContent = "DEKONme - Modifier l'annonce";
+      document.getElementById('pageTitle').textContent = "Modifier l'annonce";
+      document.getElementById('submitBtn').textContent = 'Enregistrer les modifications';
+
+      const listing = await getListingById(editId);
+      if (!listing) {
+        alert("Cette annonce n'existe plus.");
+        window.location.href = 'profil.html';
+        return;
+      }
+
+      document.getElementById('pTitle').value = listing.title;
+      document.getElementById('pModel').value = listing.model;
+      document.getElementById('pPrice').value = listing.price;
+      document.getElementById('pCondition').value = listing.condition;
+      document.getElementById('pCity').value = listing.city;
+      document.getElementById('pDescription').value = listing.description;
+      document.getElementById('pWhatsapp').value = String(listing.whatsapp).replace(/\D/g, '').replace(/^228/, '');
+
+      existingImages = listing.images && listing.images.length ? [...listing.images] : (listing.image_url ? [listing.image_url] : []);
+      renderPreviews();
+
+      // Bouton "Marquer comme vendu"
+      const soldWrap = document.createElement('div');
+      soldWrap.innerHTML = `
+        <button type="button" class="btn btn-outline-fav btn-block" id="soldBtn" style="margin-top:12px; color:#C0392B; border-color:#F0D5D0;">
+          📦 Marquer comme vendu
+        </button>
+      `;
+      document.getElementById('publishForm').appendChild(soldWrap);
+      document.getElementById('soldBtn').addEventListener('click', handleMarkSold);
+    }
+
+    renderBottomNav('');
   }
 
-  async function publishListing() {
-    // Logique de publication (déjà dans app.js)
-    alert("Annonce publiée avec succès !");
-    window.location.href = 'index.html';
+  // ==================== PHOTOS ====================
+  function renderPreviews() {
+    const wrap = document.getElementById('imagePreviewWrap');
+    const allUrls = [...existingImages, ...newFiles.map(f => URL.createObjectURL(f))];
+
+    if (allUrls.length === 0) {
+      wrap.classList.add('hidden');
+      wrap.innerHTML = '';
+      return;
+    }
+
+    wrap.classList.remove('hidden');
+    wrap.innerHTML = allUrls.map((url, i) => `
+      <div class="photo-preview-item">
+        <img src="${url}" alt="Photo ${i + 1}">
+        <button type="button" onclick="removePhoto(${i})" aria-label="Retirer cette photo">✕</button>
+      </div>
+    `).join('');
   }
 
-  renderBottomNav('publish');
+  window.removePhoto = function (index) {
+    if (index < existingImages.length) existingImages.splice(index, 1);
+    else newFiles.splice(index - existingImages.length, 1);
+    renderPreviews();
+  };
+
+  // ==================== COMPRESSION ====================
+  function compressImage(file, maxWidthPx = 1200, qualityJpeg = 0.78) {
+    return new Promise((resolve) => {
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        const scale = Math.min(1, maxWidthPx / img.width);
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+        canvas.toBlob((blob) => resolve(new File([blob], file.name.replace(/\.[^.]+$/, '.jpg'), { type: 'image/jpeg' })), 'image/jpeg', qualityJpeg);
+      };
+      img.src = url;
+    });
+  }
+
+  document.getElementById('pImageFiles').addEventListener('change', async (e) => {
+    const totalAfter = existingImages.length + newFiles.length + e.target.files.length;
+    if (totalAfter > 2) {
+      alert('Maximum 2 photos par annonce.');
+      e.target.value = '';
+      return;
+    }
+    document.getElementById('uploadStatus').textContent = 'Optimisation des photos…';
+    const compressed = await Promise.all(Array.from(e.target.files).map(f => compressImage(f)));
+    newFiles.push(...compressed);
+    e.target.value = '';
+    document.getElementById('uploadStatus').textContent = `${existingImages.length + newFiles.length}/2 photo(s) prête(s)`;
+    renderPreviews();
+  });
+
+  // ==================== MARQUER COMME VENDU ====================
+  async function handleMarkSold() {
+    if (!confirm('Confirmer : ce téléphone a été vendu ? Il disparaîtra du site (mais restera dans vos annonces).')) return;
+    const { error } = await markAsSold(editId);
+    if (error) { alert('Erreur : ' + error); return; }
+    alert('✅ Annonce marquée comme vendue.');
+    window.location.href = 'profil.html';
+  }
+
+  // ==================== PUBLICATION / MODIFICATION ====================
+  async function handlePublish(e) {
+    e.preventDefault();
+    const totalPhotos = existingImages.length + newFiles.length;
+    if (totalPhotos !== 2) {
+      alert('Merci d\'ajouter exactement 2 photos.');
+      return false;
+    }
+
+    const submitBtn = document.getElementById('submitBtn');
+    submitBtn.disabled = true;
+    submitBtn.textContent = editId ? 'Enregistrement…' : 'Publication…';
+
+    let uploadedUrls = [];
+    if (newFiles.length > 0) {
+      document.getElementById('uploadStatus').textContent = `Envoi de ${newFiles.length} photo(s)…`;
+      const result = await uploadListingPhotos(newFiles);
+      if (result.error) {
+        alert("Erreur lors de l'envoi des photos : " + result.error);
+        submitBtn.disabled = false;
+        submitBtn.textContent = editId ? 'Enregistrer les modifications' : "Publier l'annonce";
+        return false;
+      }
+      uploadedUrls = result.urls;
+    }
+
+    const allImages = [...existingImages, ...uploadedUrls];
+
+    const payload = {
+      title: document.getElementById('pTitle').value.trim(),
+      category: document.getElementById('pCategory').value,
+      price: Number(document.getElementById('pPrice').value),
+      city: document.getElementById('pCity').value,
+      condition: document.getElementById('pCondition').value,
+      model: document.getElementById('pModel').value.trim(),
+      images: allImages,
+      description: document.getElementById('pDescription').value.trim(),
+      whatsapp: document.getElementById('pWhatsapp').value.trim()
+    };
+
+    const { data, error } = editId
+      ? await updateListing(editId, payload)
+      : await createListing(payload);
+
+    if (error) {
+      alert('Erreur : ' + error);
+      submitBtn.disabled = false;
+      submitBtn.textContent = editId ? 'Enregistrer les modifications' : "Publier l'annonce";
+      return false;
+    }
+
+    window.location.href = editId
+      ? `product.html?id=${data.id}&updated=1`
+      : `product.html?id=${data.id}&published=1`;
+    return false;
+  }
+
+  init();
 </script>
 </body>
 </html>
