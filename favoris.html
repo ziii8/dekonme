@@ -10,51 +10,103 @@
   <title>Mes favoris — DEKONme</title>
   <link rel="stylesheet" href="css/style.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  
+  <style>
+    /* Wrapper pour structurer proprement l'espace de la grille */
+    .fav-page-wrapper {
+      padding-top: 12px;
+      padding-bottom: 40px;
+    }
+  </style>
 </head>
 <body>
 
+<!-- TOP BAR -->
 <div class="topbar">
   <button class="icon-btn back-btn" onclick="history.length > 1 ? history.back() : window.location.href='index.html'" aria-label="Retour">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
   </button>
   <div class="page-title">Mes favoris</div>
-  <button id="themeToggleBtn" class="icon-btn" onclick="toggleTheme()" aria-label="Changer de thème" style="font-size:18px;">🌙</button>
+  <button id="themeToggleBtn" class="icon-btn" onclick="toggleTheme()" aria-label="Changer de thème">🌙</button>
 </div>
 
+<!-- CONTAINER PRINCIPAL -->
 <div class="container">
-  <div class="product-grid" id="favGrid" style="padding-top: 8px;"></div>
+  <div class="product-grid fav-page-wrapper" id="favGrid">
+    <p class="loading-text">Chargement de vos favoris…</p>
+  </div>
 </div>
 
 <!-- BOTTOM NAV -->
 <div class="bottom-nav" id="bottomNav"></div>
 
+<!-- SCRIPTS -->
 <script src="js/supabase-config.js"></script>
 <script src="js/app.js"></script>
+<script src="js/lazy-load.js"></script>
 <script>
   async function renderFavorites() {
-    if (!(await requireAuth('favoris.html'))) return;
-
     const grid = document.getElementById('favGrid');
-    grid.innerHTML = '<p class="loading-text">Chargement…</p>';
+    if (!grid) return;
 
-    const favListings = await getFavoriteListings();
+    // Vérification de l'authentification avant d'aller plus loin
+    if (typeof requireAuth === 'function') {
+      const isAuth = await requireAuth('favoris.html');
+      if (!isAuth) return;
+    }
 
-    grid.innerHTML = favListings.length
-      ? favListings.map(l => productCardHTML(l, true)).join('')
-      : `
-        <div class="empty-state" style="grid-column:1/-1;">
-          <div class="emoji">🤍</div>
-          <p>Aucun favori pour le moment.</p>
-          <div style="margin-top:16px;">
-            <button class="btn btn-primary" onclick="window.location.href='category.html'">Découvrir des annonces</button>
+    try {
+      if (typeof getFavoriteListings !== 'function') return;
+      const favListings = await getFavoriteListings() || [];
+
+      if (favListings.length > 0) {
+        grid.innerHTML = favListings.map(l => {
+          // Utilisation d'un fallback d'image et formatage du prix
+          const image = (l.images && l.images[0]) || l.image_url || 'https://picsum.photos/seed/' + l.id + '/600/600';
+          const formattedPrice = typeof formatPrice === 'function' ? formatPrice(l.price) : l.price;
+          
+          return `
+            <div class="product-card" onclick="window.location.href='product.html?id=${l.id}'">
+              <div class="img-wrap">
+                <img data-src="${image}" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'%3E%3C/svg%3E" alt="${l.title}" class="lazy">
+              </div>
+              <div class="product-info">
+                <h4>${l.title}</h4>
+                <div class="price-row">
+                  <span class="price">${formattedPrice} F</span>
+                </div>
+                <p class="meta">${l.city || ''} · ${l.condition || ''}</p>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        // Initialisation du lazy loading sur les cartes injectées
+        if (typeof initLazyLoad === 'function') initLazyLoad();
+      } else {
+        grid.innerHTML = `
+          <div class="empty-state" style="grid-column: 1 / -1; padding: 40px 20px;">
+            <div class="emoji">🤍</div>
+            <p>Aucun favori pour le moment.</p>
+            <div style="margin-top: 20px;">
+              <button class="btn btn-primary" onclick="window.location.href='index.html'">Découvrir des annonces</button>
+            </div>
           </div>
+        `;
+      }
+    } catch (error) {
+      console.error("Erreur lors de la récupération des favoris :", error);
+      grid.innerHTML = `
+        <div class="empty-state" style="grid-column: 1 / -1;">
+          <p class="loading-text" style="color: var(--error);">Impossible de charger vos favoris.</p>
         </div>
       `;
+    }
 
-    renderBottomNav('favoris');
+    if (typeof renderBottomNav === 'function') renderBottomNav('favoris');
   }
 
-  renderFavorites();
+  document.addEventListener('DOMContentLoaded', renderFavorites);
 </script>
 </body>
 </html>

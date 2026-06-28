@@ -9,27 +9,105 @@
   <title>DEKONme - Détail produit</title>
   <link rel="stylesheet" href="css/style.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  
+  <style>
+    /* Styles spécifiques pour l'affichage de la galerie et des actions */
+    .product-page-wrapper {
+      padding-bottom: 100px; /* Espace pour les actions fixes en bas */
+    }
+    .detail-gallery-track {
+      display: flex;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      scroll-behavior: smooth;
+      -webkit-overflow-scrolling: touch;
+      border-radius: 16px;
+      margin-bottom: 12px;
+      background: var(--border);
+    }
+    .detail-gallery-track::-webkit-scrollbar {
+      display: none;
+    }
+    .detail-gallery-slide {
+      flex: 0 0 100%;
+      scroll-snap-align: start;
+      aspect-ratio: 4/3;
+      cursor: pointer;
+    }
+    .detail-gallery-slide img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .gallery-dots {
+      display: flex;
+      justify-content: center;
+      gap: 6px;
+      margin-bottom: 16px;
+    }
+    .gallery-dots .dot, .lightbox-dots .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--border);
+      transition: var(--transition);
+      cursor: pointer;
+    }
+    .gallery-dots .dot.active, .lightbox-dots .dot.active {
+      background: var(--orange);
+      transform: scale(1.2);
+    }
+    .detail-section {
+      background: var(--white);
+      padding: 16px;
+      border-radius: 16px;
+      margin-top: 16px;
+      border: 1px solid var(--border);
+    }
+    .pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .pill {
+      background: var(--bg);
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .pill.tag {
+      background: rgba(232, 115, 44, 0.1);
+      color: var(--orange);
+    }
+  </style>
 </head>
 <body>
 
 <!-- TOP BAR -->
 <div class="topbar">
   <button class="icon-btn back-btn" onclick="history.length > 1 ? history.back() : window.location.href='index.html'" aria-label="Retour">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
   </button>
   <div style="flex:1;"></div>
-  <button id="themeToggleBtn" class="icon-btn back-btn" onclick="toggleTheme()" aria-label="Changer de thème" style="font-size:18px; margin-right:8px;">🌙</button>
-  <button class="icon-btn back-btn" id="shareBtn" onclick="onShareClick()" aria-label="Partager" style="margin-right:8px;">
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="10.5" x2="15.4" y2="6.5"/><line x1="8.6" y1="13.5" x2="15.4" y2="17.5"/></svg>
+  <button id="themeToggleBtn" class="icon-btn" onclick="toggleTheme()" aria-label="Changer de thème">🌙</button>
+  <button class="icon-btn" id="shareBtn" onclick="onShareClick()" aria-label="Partager" style="margin-left: 8px;">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="10.5" x2="15.4" y2="6.5"/><line x1="8.6" y1="13.5" x2="15.4" y2="17.5"/></svg>
   </button>
-  <button class="icon-btn back-btn" id="detailFavBtn" onclick="onFavClick()" aria-label="Favori" style="margin-right:8px;">
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+  <button class="icon-btn" id="detailFavBtn" onclick="onFavClick()" aria-label="Favori" style="margin-left: 8px;">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
   </button>
 </div>
 
-<div id="productContainer"></div>
+<!-- CONTAINER PRINCIPAL -->
+<div class="container">
+  <div id="productContainer" class="product-page-wrapper">
+    <p class="loading-text">Chargement des détails de l'annonce…</p>
+  </div>
+</div>
 
-<!-- VISIONNEUSE PLEIN ÉCRAN (ouverte au clic sur une photo) -->
+<!-- VISIONNEUSE PLEIN ÉCRAN -->
 <div class="lightbox" id="lightbox" onclick="if(event.target===this) closeLightbox()">
   <button class="lightbox-close" onclick="closeLightbox()" aria-label="Fermer">✕</button>
   <div class="lightbox-track" id="lightboxTrack"></div>
@@ -37,12 +115,12 @@
 </div>
 
 <!-- MODAL : SIGNALER UNE ANNONCE -->
-<div class="modal" id="reportModal">
+<div class="modal" id="reportModal" style="display: none;">
   <div class="modal-content">
     <button class="modal-close" onclick="closeReportModal()" aria-label="Fermer">✕</button>
     <h3>Signaler cette annonce</h3>
     <form id="reportForm" onsubmit="return handleReportSubmit(event)">
-      <label class="field-label">Motif</label>
+      <label class="field-label" for="reportReason">Motif</label>
       <select id="reportReason" required>
         <option value="">Choisir un motif</option>
         <option value="arnaque">Arnaque suspectée</option>
@@ -52,28 +130,25 @@
         <option value="autre">Autre</option>
       </select>
 
-      <label class="field-label">Détails (facultatif)</label>
+      <label class="field-label" for="reportComment">Détails (facultatif)</label>
       <textarea id="reportComment" rows="3" placeholder="Précisez si besoin..."></textarea>
 
-      <button type="submit" class="btn btn-primary btn-block" style="margin-top: 12px;">Envoyer le signalement</button>
+      <button type="submit" class="btn btn-primary btn-block" style="margin-top: 16px;">Envoyer le signalement</button>
     </form>
     <p id="reportSuccess" class="success-banner hidden" style="margin-top: 14px;">✅ Signalement envoyé. Merci, notre équipe va l'examiner.</p>
   </div>
 </div>
 
-<!-- ACTIONS FIXES -->
+<!-- ACTIONS FIXES DE CONTACT -->
 <div class="detail-actions" id="detailActions"></div>
 
 <!-- BOTTOM NAV -->
 <div class="bottom-nav" id="bottomNav"></div>
 
+<!-- SCRIPTS -->
 <script src="js/supabase-config.js"></script>
 <script src="js/app.js"></script>
 <script>
-  // Lit l'ID depuis deux formats d'URL possibles :
-  // 1. ?id=10 (navigation interne normale)
-  // 2. /boyfriend-disponible-10 (lien partagé via WhatsApp, slug propre)
-  //    → le nombre à la fin du chemin, après le dernier tiret
   const params = new URLSearchParams(window.location.search);
   let id = Number(params.get('id'));
   if (!id) {
@@ -85,12 +160,15 @@
   let fav = false;
 
   function renderFavBtn() {
-    document.getElementById('detailFavBtn').classList.toggle('active', fav);
-    document.getElementById('detailFavBtn').querySelector('path').setAttribute('fill', fav ? 'currentColor' : 'none');
+    const btn = document.getElementById('detailFavBtn');
+    if (!btn) return;
+    btn.classList.toggle('active', fav);
+    const path = btn.querySelector('path');
+    if (path) path.setAttribute('fill', fav ? 'currentColor' : 'none');
   }
 
   window.onFavClick = async function () {
-    if (!listing) return;
+    if (!listing || typeof toggleFavorite !== 'function') return;
     await toggleFavorite(listing.id);
     fav = !fav;
     renderFavBtn();
@@ -98,13 +176,16 @@
   };
 
   window.onShareClick = function () {
-    if (!listing) return;
+    if (!listing || typeof shareListing !== 'function') return;
     shareListing(listing.id, listing.title, listing.price);
   };
 
   function renderActions() {
-    if (!listing) { document.getElementById('detailActions').innerHTML = ''; return; }
-    document.getElementById('detailActions').innerHTML = `
+    const actionsBox = document.getElementById('detailActions');
+    if (!actionsBox) return;
+    if (!listing) { actionsBox.innerHTML = ''; return; }
+    
+    actionsBox.innerHTML = `
       <button class="btn btn-outline-fav ${fav ? 'active' : ''}" onclick="onFavClick()" aria-label="Ajouter aux favoris">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="${fav ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
       </button>
@@ -116,131 +197,140 @@
   }
 
   async function init() {
-    document.getElementById('productContainer').innerHTML = '<p class="loading-text">Chargement…</p>';
-    listing = await getListingById(id);
+    const container = document.getElementById('productContainer');
+    if (!container) return;
 
-    if (listing) {
-      fav = await isFavorite(listing.id);
-      const sellerProfile = await getSellerProfile(listing.user_id);
-      const params = new URLSearchParams(window.location.search);
-      const published = params.get('published') === '1';
-      const updated = params.get('updated') === '1';
-      const ratingLine = listing.reviews > 0
-        ? `★ ${listing.rating} (${listing.reviews} avis)`
-        : 'Nouvelle annonce';
+    try {
+      if (typeof getListingById !== 'function') return;
+      listing = await getListingById(id);
 
-      const images = listing.images && listing.images.length
-        ? listing.images
-        : [listing.image_url || 'https://picsum.photos/seed/' + listing.id + '/600/600'];
+      if (listing) {
+        fav = typeof isFavorite === 'function' ? await isFavorite(listing.id) : false;
+        const sellerProfile = typeof getSellerProfile === 'function' ? await getSellerProfile(listing.user_id) : null;
+        
+        const published = params.get('published') === '1';
+        const updated = params.get('updated') === '1';
+        const ratingLine = listing.reviews > 0 ? `★ ${listing.rating} (${listing.reviews} avis)` : 'Nouvelle annonce';
 
-      const galleryHTML = `
-        <div class="detail-gallery-track" id="galleryTrack">
-          ${images.map((url, i) => `
-            <div class="detail-gallery-slide" onclick="openLightbox(${i})">
-              <img src="${url}" alt="${listing.title} — photo ${i + 1}">
+        const images = listing.images && listing.images.length
+          ? listing.images
+          : [listing.image_url || 'https://picsum.photos/seed/' + listing.id + '/600/600'];
+
+        const galleryHTML = `
+          <div class="detail-gallery-track" id="galleryTrack">
+            ${images.map((url, i) => `
+              <div class="detail-gallery-slide" onclick="openLightbox(${i})">
+                <img src="${url}" alt="${listing.title} — photo ${i + 1}">
+              </div>
+            `).join('')}
+          </div>
+          ${images.length > 1 ? `
+            <div class="gallery-dots" id="galleryDots">
+              ${images.map((_, i) => `<span class="dot ${i === 0 ? 'active' : ''}" data-i="${i}"></span>`).join('')}
             </div>
-          `).join('')}
-        </div>
-        ${images.length > 1 ? `
-          <div class="gallery-dots" id="galleryDots">
-            ${images.map((_, i) => `<span class="dot ${i === 0 ? 'active' : ''}" data-i="${i}"></span>`).join('')}
+          ` : ''}
+        `;
+
+        const currentUser = typeof getCurrentUser === 'function' ? await getCurrentUser() : null;
+        const isOwner = currentUser && currentUser.id === listing.user_id;
+
+        const ownerActionsHTML = isOwner ? `
+          <div class="detail-section owner-actions">
+            <button class="btn btn-primary btn-block" onclick="window.location.href='publish.html?id=${listing.id}'">✏️ Modifier l'annonce</button>
           </div>
-        ` : ''}
-      `;
-
-      const currentUser = await getCurrentUser();
-      const isOwner = currentUser && currentUser.id === listing.user_id;
-
-      const ownerActionsHTML = isOwner ? `
-        <div class="detail-section owner-actions">
-          <button class="btn btn-primary btn-block" onclick="window.location.href='publish.html?id=${listing.id}'">✏️ Modifier l'annonce</button>
-        </div>
-      ` : `
-        <div class="detail-section owner-actions">
-          <button class="report-link" onclick="openReportModal()">🚩 Signaler cette annonce</button>
-        </div>
-      `;
-
-      document.getElementById('productContainer').innerHTML = `
-        ${published ? `<div class="success-banner">✅ Votre annonce a été publiée avec succès.</div>` : ''}
-        ${updated ? `<div class="success-banner">✅ Votre annonce a été mise à jour.</div>` : ''}
-        ${galleryHTML}
-
-        <h1 class="detail-title">${listing.title}</h1>
-        <div class="detail-price-row">
-          <span class="detail-price">${formatPrice(listing.price)} FCFA</span>
-          <span class="detail-rating">${ratingLine}</span>
-        </div>
-
-        <div class="detail-section">
-          <h3>Détails</h3>
-          <div class="pill-row">
-            <span class="pill">${listing.model}</span>
-            <span class="pill">${listing.condition}</span>
-            <span class="pill tag">📍 ${listing.city}</span>
+        ` : `
+          <div class="detail-section owner-actions" style="text-align: center;">
+            <button class="report-link" onclick="openReportModal()" style="background:none; border:none; color:var(--ink-soft); font-size:13px; cursor:pointer; text-decoration:underline;">🚩 Signaler cette annonce</button>
           </div>
-        </div>
+        `;
 
-        <div class="detail-section">
-          <h3>Description</h3>
-          <p class="detail-desc">${listing.description}</p>
-        </div>
+        const formattedPrice = typeof formatPrice === 'function' ? formatPrice(listing.price) : listing.price;
 
-        <div class="detail-section">
-          <h3>Vendeur</h3>
-          <div class="seller-card" ${!isOwner ? `onclick="window.location.href='seller.html?id=${listing.user_id}'" style="cursor:pointer;"` : ''}>
-            <div class="avatar">👤</div>
-            <div class="info">
-              <h5>${listing.seller_name || 'Vendeur DEKONme'}</h5>
-              <p class="seller-status">${(() => {
-                const s = getOnlineStatus(sellerProfile && sellerProfile.last_seen);
-                return s.dot ? `${s.dot} ${s.label}` : `${listing.city}`;
-              })()}</p>
+        container.innerHTML = `
+          ${published ? `<div class="success-banner">✅ Votre annonce a été publiée avec succès.</div>` : ''}
+          ${updated ? `<div class="success-banner">✅ Votre annonce a été mise à jour.</div>` : ''}
+          ${galleryHTML}
+
+          <h1 class="detail-title" style="font-size:22px; margin-top:12px; margin-bottom:4px;">${listing.title}</h1>
+          <div class="detail-price-row" style="display:flex; justify-content:between; align-items:center; margin-bottom:16px;">
+            <span class="detail-price" style="font-size:20px; font-weight:800; color:var(--orange); flex:1;">${formattedPrice} FCFA</span>
+            <span class="detail-rating" style="font-size:13px; color:var(--ink-soft);">${ratingLine}</span>
+          </div>
+
+          <div class="detail-section">
+            <h3 style="margin-bottom:8px;">Détails</h3>
+            <div class="pill-row">
+              <span class="pill">${listing.model || ''}</span>
+              <span class="pill">${listing.condition || ''}</span>
+              <span class="pill tag">📍 ${listing.city || ''}</span>
             </div>
-            ${!isOwner ? `<span class="chevron"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></span>` : ''}
           </div>
-        </div>
 
-        ${ownerActionsHTML}
-      `;
+          <div class="detail-section">
+            <h3 style="margin-bottom:8px;">Description</h3>
+            <p class="detail-desc" style="line-height:1.6; color:var(--ink);">${listing.description || ''}</p>
+          </div>
 
-      if (images.length > 1) {
-        // Les points suivent le défilement tactile (swipe natif via scroll-snap),
-        // pas l'inverse — on observe le scroll plutôt que de gérer le swipe en JS.
-        const track = document.getElementById('galleryTrack');
-        track.addEventListener('scroll', () => {
-          const i = Math.round(track.scrollLeft / track.clientWidth);
-          document.querySelectorAll('#galleryDots .dot').forEach((d, idx) => d.classList.toggle('active', idx === i));
-        }, { passive: true });
+          <div class="detail-section">
+            <h3 style="margin-bottom:12px;">Vendeur</h3>
+            <div class="seller-card" ${!isOwner ? `onclick="window.location.href='seller.html?id=${listing.user_id}'" style="cursor:pointer; display:flex; align-items:center; gap:12px;"` : 'style="display:flex; align-items:center; gap:12px;"'}>
+              <div class="avatar" style="width:44px; height:44px; background:var(--bg); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:20px;">👤</div>
+              <div class="info" style="flex:1;">
+                <h5 style="margin:0; font-size:15px;">${listing.seller_name || 'Vendeur DEKONme'}</h5>
+                <p class="seller-status" style="margin:0; font-size:12px; color:var(--ink-soft);">
+                  ${(() => {
+                    if (typeof getOnlineStatus === 'function') {
+                      const s = getOnlineStatus(sellerProfile && sellerProfile.last_seen);
+                      return s.dot ? `${s.dot} ${s.label}` : `${listing.city}`;
+                    }
+                    return listing.city || '';
+                  })()}
+                </p>
+              </div>
+              ${!isOwner ? `<span class="chevron"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></span>` : ''}
+            </div>
+          </div>
 
-        document.querySelectorAll('#galleryDots .dot').forEach(dot => {
-          dot.addEventListener('click', () => {
-            const i = Number(dot.dataset.i);
-            track.scrollTo({ left: i * track.clientWidth, behavior: 'smooth' });
+          ${ownerActionsHTML}
+        `;
+
+        if (images.length > 1) {
+          const track = document.getElementById('galleryTrack');
+          track.addEventListener('scroll', () => {
+            const i = Math.round(track.scrollLeft / track.clientWidth);
+            document.querySelectorAll('#galleryDots .dot').forEach((d, idx) => d.classList.toggle('active', idx === i));
+          }, { passive: true });
+
+          document.querySelectorAll('#galleryDots .dot').forEach(dot => {
+            dot.addEventListener('click', () => {
+              const i = Number(dot.dataset.i);
+              track.scrollTo({ left: i * track.clientWidth, behavior: 'smooth' });
+            });
           });
-        });
-      }
+        }
 
-      renderFavBtn();
-      renderActions();
-    } else {
-      document.getElementById('productContainer').innerHTML = `
-        <div class="empty-state">
-          <div class="emoji">🔍</div>
-          <p>Cette annonce n'existe plus ou a été retirée.</p>
-          <div style="margin-top:16px;">
-            <button class="btn btn-primary" onclick="window.location.href='index.html'">Retour à l'accueil</button>
+        renderFavBtn();
+        renderActions();
+      } else {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="emoji">🔍</div>
+            <p>Cette annonce n'existe plus ou a été retirée.</p>
+            <div style="margin-top:20px;">
+              <button class="btn btn-primary" onclick="window.location.href='index.html'">Retour à l'accueil</button>
+            </div>
           </div>
-        </div>
-      `;
+        `;
+      }
+    } catch (err) {
+      console.error("Erreur d'initialisation du produit :", err);
+      container.innerHTML = '<p class="loading-text" style="color:var(--error);">Une erreur est survenue lors du chargement.</p>';
     }
 
-    renderBottomNav('categories');
+    if (typeof renderBottomNav === 'function') renderBottomNav('categories');
   }
 
   // ==================== VISIONNEUSE PLEIN ÉCRAN (lightbox) ====================
-  // Ouverture au clic sur une photo, défilement tactile natif (swipe) via
-  // scroll-snap — pas de librairie externe, juste du CSS + un peu de JS.
   window.openLightbox = function (startIndex) {
     if (!listing) return;
     const images = listing.images && listing.images.length
@@ -249,9 +339,10 @@
 
     const track = document.getElementById('lightboxTrack');
     const dots = document.getElementById('lightboxDots');
+    if (!track || !dots) return;
 
     track.innerHTML = images.map((url, i) => `
-      <div class="lightbox-slide"><img src="${url}" alt="Photo ${i + 1}"></div>
+      <div class="lightbox-slide" style="flex:0 0 100%; scroll-snap-align:start; display:flex; align-items:center; justify-content:center;"><img src="${url}" alt="Photo ${i + 1}" style="max-width:100%; max-height:80vh; object-fit:contain;"></div>
     `).join('');
 
     dots.innerHTML = images.length > 1
@@ -265,10 +356,10 @@
       track.scrollTo({ left: startIndex * track.clientWidth });
     });
 
-    track.onscroll = () => {
+    track.addEventListener('scroll', () => {
       const i = Math.round(track.scrollLeft / track.clientWidth);
       dots.querySelectorAll('.dot').forEach((d, idx) => d.classList.toggle('active', idx === i));
-    };
+    }, { passive: true });
   };
 
   window.closeLightbox = function () {
@@ -289,7 +380,7 @@
 
   window.handleReportSubmit = async function (e) {
     e.preventDefault();
-    if (!listing) return false;
+    if (!listing || typeof reportListing !== 'function') return false;
 
     const reason = document.getElementById('reportReason').value;
     const comment = document.getElementById('reportComment').value.trim();
@@ -298,23 +389,28 @@
     submitBtn.disabled = true;
     submitBtn.textContent = 'Envoi…';
 
-    const { error } = await reportListing(listing.id, reason, comment);
+    try {
+      const { error } = await reportListing(listing.id, reason, comment);
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Envoyer le signalement';
 
-    submitBtn.disabled = false;
-    submitBtn.textContent = 'Envoyer le signalement';
+      if (error) {
+        alert('Erreur : ' + error);
+        return false;
+      }
 
-    if (error) {
-      alert('Erreur : ' + error);
-      return false;
+      document.getElementById('reportForm').classList.add('hidden');
+      document.getElementById('reportSuccess').classList.remove('hidden');
+      document.getElementById('reportForm').reset();
+    } catch (err) {
+      console.error("Erreur lors du signalement :", err);
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Envoyer le signalement';
     }
-
-    document.getElementById('reportForm').classList.add('hidden');
-    document.getElementById('reportSuccess').classList.remove('hidden');
-    document.getElementById('reportForm').reset();
     return false;
   };
 
-  init();
+  document.addEventListener('DOMContentLoaded', init);
 </script>
 </body>
 </html>

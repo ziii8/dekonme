@@ -10,20 +10,44 @@
   <title>Mon profil — DEKONme</title>
   <link rel="stylesheet" href="css/style.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+
+  <style>
+    /* Ajustements locaux complémentaires pour le profil */
+    .profile-page-wrapper {
+      margin-top: 16px;
+      padding-bottom: 40px;
+    }
+    .btn-danger {
+      background: transparent;
+      border: 2px solid var(--error) !important;
+      color: var(--error) !important;
+    }
+    .btn-danger:hover {
+      background: var(--error) !important;
+      color: var(--white) !important;
+      box-shadow: 0 4px 16px rgba(192, 57, 43, 0.2);
+    }
+    .profile-header {
+      animation: fadeIn 0.4s ease-out;
+    }
+  </style>
 </head>
 <body>
 
 <div class="topbar">
   <button class="icon-btn back-btn" onclick="history.length > 1 ? history.back() : window.location.href='index.html'" aria-label="Retour">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
   </button>
   <div class="page-title">Mon profil</div>
-  <button id="themeToggleBtn" class="icon-btn" onclick="toggleTheme()" aria-label="Changer de thème" style="font-size:18px;">🌙</button>
+  <button id="themeToggleBtn" class="icon-btn" onclick="toggleTheme()" aria-label="Changer de thème">🌙</button>
 </div>
 
-<div id="profileContainer"></div>
+<div class="container">
+  <div id="profileContainer" class="profile-page-wrapper">
+    <p class="loading-text">Vérification de la session…</p>
+  </div>
+</div>
 
-<!-- BOTTOM NAV -->
 <div class="bottom-nav" id="bottomNav"></div>
 
 <script src="js/supabase-config.js"></script>
@@ -32,22 +56,22 @@
 <script>
   function renderLoggedOut() {
     document.getElementById('profileContainer').innerHTML = `
-      <div class="empty-state" style="padding-top: 60px;">
+      <div class="empty-state" style="padding-top: 40px;">
         <div class="emoji">👤</div>
         <p>Connectez-vous pour accéder à votre profil, vos annonces et vos favoris.</p>
-        <div style="margin-top:20px; display:flex; flex-direction:column; gap:10px; max-width:280px; margin-left:auto; margin-right:auto;">
+        <div style="margin-top:24px; display:flex; flex-direction:column; gap:10px; width:100%; max-width:280px; margin-left:auto; margin-right:auto;">
           <button class="btn btn-primary btn-block" onclick="window.location.href='auth.html?next=profil.html'">Se connecter</button>
         </div>
       </div>
     `;
-    renderBottomNav('profil');
+    if (typeof renderBottomNav === 'function') renderBottomNav('profil');
   }
 
   async function renderLoggedIn(profile) {
     document.getElementById('profileContainer').innerHTML = `
       <div class="profile-header">
         <div class="profile-avatar">${profile.avatar_emoji || '👤'}</div>
-        <div>
+        <div class="info">
           <h2>${profile.name}</h2>
           <p>${profile.city ? profile.city + ' · ' : ''}${profile.phone}</p>
         </div>
@@ -66,64 +90,98 @@
         </div>
       </div>
 
-      <div class="section-head" style="margin-top: 28px;">
+      <div class="section-head" style="margin-top: 32px;">
         <h3>Mes annonces actives</h3>
       </div>
-      <div class="product-grid" id="myListingsGrid"><p class="loading-text">Chargement…</p></div>
+      <div class="product-grid" id="myListingsGrid"><p class="loading-text">Chargement de vos annonces…</p></div>
 
-      <div class="section-head" style="margin-top: 28px;" id="soldSectionHead"></div>
+      <div class="section-head" style="margin-top: 32px;" id="soldSectionHead"></div>
       <div class="product-grid" id="mySoldGrid"></div>
 
-      <button class="btn btn-outline-fav btn-block logout-btn" onclick="logoutUser()" style="margin-top: 24px; color: #C0392B; border-color: #F0D5D0;">
+      <button class="btn btn-outline btn-block btn-danger" onclick="handleLogout()" style="margin-top: 40px;">
         Déconnexion
       </button>
     `;
 
-    const myListings = await getMyListings();
-    const active = myListings.filter(l => l.status !== 'sold');
-    const sold = myListings.filter(l => l.status === 'sold');
+    try {
+      if (typeof getMyListings !== 'function') return;
+      
+      const myListings = await getMyListings() || [];
+      const active = myListings.filter(l => l.status !== 'sold');
+      const sold = myListings.filter(l => l.status === 'sold');
 
-    function myListingCardHTML(l, editable) {
-      const image = (l.images && l.images[0]) || l.image_url || 'https://picsum.photos/seed/' + l.id + '/600/600';
-      const target = editable ? `publish.html?id=${l.id}` : `product.html?id=${l.id}`;
-      return `
-        <div class="product-card" onclick="window.location.href='${target}'">
-          <div class="img-wrap">
-            <img data-src="${image}" alt="${l.title}" loading="lazy">
-            ${!editable ? '<span class="sold-badge">VENDU</span>' : ''}
+      function myListingCardHTML(l, editable) {
+        const image = (l.images && l.images[0]) || l.image_url || 'https://picsum.photos/seed/' + l.id + '/600/600';
+        const target = editable ? `publish.html?id=${l.id}` : `product.html?id=${l.id}`;
+        const formattedPrice = typeof formatPrice === 'function' ? formatPrice(l.price) : l.price;
+        
+        return `
+          <div class="product-card" onclick="window.location.href='${target}'">
+            <div class="img-wrap">
+              <img data-src="${image}" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'%3E%3C/svg%3E" alt="${l.title}" class="lazy">
+              ${!editable ? '<span class="sold-badge">VENDU</span>' : ''}
+            </div>
+            <div class="product-info">
+              <h4>${l.title}</h4>
+              <div class="price-row"><span class="price">${formattedPrice} F</span></div>
+              <p class="meta">${l.city || ''} · ${l.condition || ''}</p>
+            </div>
           </div>
-          <div class="product-info">
-            <h4>${l.title}</h4>
-            <div class="price-row"><span class="price">${formatPrice(l.price)} F</span></div>
-            <p class="meta">${l.city} · ${l.condition}</p>
-          </div>
-        </div>
-      `;
+        `;
+      }
+
+      const activeGrid = document.getElementById('myListingsGrid');
+      if (activeGrid) {
+        activeGrid.innerHTML = active.length
+          ? active.map(l => myListingCardHTML(l, true)).join('')
+          : `<div class="empty-state" style="grid-column:1/-1; padding: 30px 20px;"><div class="emoji">📭</div><p>Vous n'avez aucune annonce active.</p></div>`;
+      }
+
+      if (sold.length) {
+        const soldHead = document.getElementById('soldSectionHead');
+        const soldGrid = document.getElementById('mySoldGrid');
+        if (soldHead) soldHead.innerHTML = '<h3>Annonces vendues</h3>';
+        if (soldGrid) soldGrid.innerHTML = sold.map(l => myListingCardHTML(l, false)).join('');
+      }
+
+      // Déclenchement du lazy-loading après injection des cartes
+      if (typeof initLazyLoad === 'function') initLazyLoad();
+
+    } catch (error) {
+      console.error("Erreur lors de la récupération des annonces :", error);
+      const activeGrid = document.getElementById('myListingsGrid');
+      if (activeGrid) activeGrid.innerHTML = '<p class="loading-text" style="color:var(--error);">Impossible de charger vos annonces.</p>';
     }
 
-    const activeGrid = document.getElementById('myListingsGrid');
-    activeGrid.innerHTML = active.length
-      ? active.map(l => myListingCardHTML(l, true)).join('')
-      : `<div class="empty-state" style="grid-column:1/-1; padding: 30px 20px;"><div class="emoji">📭</div><p>Vous n'avez encore publié aucune annonce.</p></div>`;
+    if (typeof renderBottomNav === 'function') renderBottomNav('profil');
+  }
 
-    if (sold.length) {
-      document.getElementById('soldSectionHead').innerHTML = '<h3>Vendues</h3>';
-      document.getElementById('mySoldGrid').innerHTML = sold.map(l => myListingCardHTML(l, false)).join('');
+  async function handleLogout() {
+    if (typeof logoutUser === 'function') {
+      await logoutUser();
+      window.location.href = 'index.html';
     }
-
-    renderBottomNav('profil');
   }
 
   async function init() {
-    const profile = await getMyProfile();
-    if (profile) {
-      renderLoggedIn(profile);
-    } else {
+    try {
+      if (typeof getMyProfile === 'function') {
+        const profile = await getMyProfile();
+        if (profile) {
+          renderLoggedIn(profile);
+        } else {
+          renderLoggedOut();
+        }
+      } else {
+        renderLoggedOut();
+      }
+    } catch (err) {
+      console.error("Erreur lors de l'initialisation du profil :", err);
       renderLoggedOut();
     }
   }
 
-  init();
+  document.addEventListener('DOMContentLoaded', init);
 </script>
 </body>
 </html>

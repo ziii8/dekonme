@@ -10,69 +10,172 @@
   <title>Connexion — DEKONme</title>
   <link rel="stylesheet" href="css/style.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  
+  <!-- Styles complémentaires pour l'authentification (à intégrer à la fin de style.css) -->
+  <style>
+    .auth-container {
+      max-width: 420px;
+      margin: 40px auto 0;
+    }
+    .auth-logo-wrap {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+    .field-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 6px;
+      color: var(--ink);
+    }
+    .field-hint {
+      font-size: 12px;
+      color: var(--ink-soft);
+      margin: -6px 0 14px;
+    }
+    .phone-input-group {
+      display: flex;
+      align-items: center;
+      background: var(--white);
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      margin-bottom: 12px;
+      transition: var(--transition);
+    }
+    .phone-input-group:focus-within {
+      border-color: var(--orange);
+      box-shadow: 0 0 0 4px rgba(232, 115, 44, 0.15);
+    }
+    .phone-prefix {
+      padding: 0 12px;
+      font-weight: 700;
+      color: var(--ink-soft);
+      border-right: 1px solid var(--border);
+    }
+    .phone-input-group input {
+      flex: 1;
+      border: none !important;
+      background: transparent !important;
+      box-shadow: none !important;
+      margin-bottom: 0 !important;
+    }
+    .btn-whatsapp-mini {
+      background: transparent;
+      border: none;
+      font-size: 18px;
+      padding-right: 12px;
+      cursor: pointer;
+    }
+    .form-error {
+      background: #FBEAE8;
+      color: var(--error);
+      border: 1px solid #F0D5D0;
+      padding: 12px 16px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 16px;
+      text-align: center;
+      animation: shake 0.25s ease-in-out;
+    }
+    .auth-switch {
+      text-align: center;
+      margin-top: 24px;
+      font-size: 14px;
+      color: var(--ink-soft);
+    }
+    .auth-switch button {
+      background: none;
+      border: none;
+      color: var(--orange);
+      font-weight: 700;
+      margin-left: 4px;
+      text-decoration: underline;
+    }
+    .btn-loading {
+      opacity: 0.7;
+      cursor: not-allowed;
+    }
+    /* Application des styles du formulaire du fichier style.css */
+    #loginForm input, #signupForm input, #signupForm select {
+      width: 100%;
+      padding: 14px 16px;
+      margin-bottom: 14px;
+      background: var(--white);
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      font-size: 14px;
+      color: var(--ink);
+      outline: none;
+      transition: var(--transition);
+      font-family: inherit;
+    }
+    #loginForm input:focus, #signupForm input:focus, #signupForm select:focus {
+      border-color: var(--orange);
+      box-shadow: 0 0 0 4px rgba(232, 115, 44, 0.15);
+    }
+  </style>
 </head>
 <body>
 
 <div class="topbar">
   <button class="icon-btn back-btn" onclick="history.length > 1 ? history.back() : window.location.href='index.html'" aria-label="Retour">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
   </button>
   <div class="page-title" id="pageTitle">Connexion</div>
-  <button id="themeToggleBtn" class="icon-btn" onclick="toggleTheme()" aria-label="Changer de thème" style="font-size:18px;">🌙</button>
+  <button id="themeToggleBtn" class="icon-btn" onclick="toggleTheme()" aria-label="Changer de thème">🌙</button>
 </div>
 
 <div class="container auth-container">
   <div class="auth-logo-wrap">
-    <div class="logo" style="justify-content:center; font-size:28px; margin-bottom:8px;"><span class="mark">D</span>EKONme</div>
-    <p style="color: var(--ink-soft); font-size: 15px;" id="subtitle">Connectez-vous pour gérer vos annonces</p>
+    <div class="logo" style="justify-content:center; font-size:24px; margin-bottom:8px;"><span class="mark">D</span>EKONme</div>
+    <p id="subtitle">Connectez-vous pour gérer vos annonces</p>
   </div>
+
+  <p id="formError" class="form-error hidden" role="alert"></p>
 
   <!-- FORMULAIRE CONNEXION -->
   <form id="loginForm" onsubmit="return handleLogin(event)">
-    <label class="field-label">Email</label>
-    <input type="email" id="loginEmail" placeholder="vous@exemple.com" required>
+    <label class="field-label" for="loginEmail">Email</label>
+    <input type="email" id="loginEmail" placeholder="vous@exemple.com" autocomplete="email" required>
 
-    <label class="field-label">Mot de passe</label>
-    <input type="password" id="loginPassword" placeholder="••••••••" required>
+    <label class="field-label" for="loginPassword">Mot de passe</label>
+    <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password" required>
 
     <button type="submit" class="btn btn-primary btn-block">Se connecter</button>
   </form>
 
   <!-- FORMULAIRE INSCRIPTION -->
   <form id="signupForm" class="hidden" onsubmit="return handleSignup(event)">
-    <label class="field-label">Nom complet</label>
-    <input type="text" id="signupName" placeholder="Ex : Amadou Diallo" required>
+    <label class="field-label" for="signupName">Nom complet</label>
+    <input type="text" id="signupName" placeholder="Ex : Amadou Diallo" autocomplete="name" required>
 
-    <label class="field-label">Email</label>
-    <input type="email" id="signupEmail" placeholder="vous@exemple.com" required>
+    <label class="field-label" for="signupEmail">Email</label>
+    <input type="email" id="signupEmail" placeholder="vous@exemple.com" autocomplete="email" required>
 
-    <label class="field-label">Numéro WhatsApp</label>
+    <label class="field-label" for="signupPhone">Numéro WhatsApp</label>
     <div class="phone-input-group">
       <span class="phone-prefix">+228</span>
-      <input type="tel" id="signupPhone" placeholder="90 11 22 33" required>
-      <button type="button" class="btn-whatsapp-mini" aria-label="Ouvrir WhatsApp">
-        💬
-      </button>
+      <input type="tel" id="signupPhone" placeholder="90 11 22 33" pattern="[0-9\s]{8,15}" autocomplete="tel-national" required>
+      <button type="button" class="btn-whatsapp-mini" aria-label="Info WhatsApp">💬</button>
     </div>
     <p class="field-hint">Utilisé uniquement pour que les acheteurs vous contactent.</p>
 
-    <label class="field-label">Ville</label>
+    <label class="field-label" for="signupCity">Ville</label>
     <select id="signupCity" required>
       <option value="">Choisir une ville</option>
-      <option>Lomé</option>
-      <option>Kara</option>
-      <option>Sokodé</option>
-      <option>Kpalimé</option>
-      <option>Atakpamé</option>
+      <option value="Lomé">Lomé</option>
+      <option value="Kara">Kara</option>
+      <option value="Sokodé">Sokodé</option>
+      <option value="Kpalimé">Kpalimé</option>
+      <option value="Atakpamé">Atakpamé</option>
     </select>
 
-    <label class="field-label">Mot de passe</label>
-    <input type="password" id="signupPassword" placeholder="8 caractères minimum" minlength="8" required>
+    <label class="field-label" for="signupPassword">Mot de passe</label>
+    <input type="password" id="signupPassword" placeholder="8 caractères minimum" minlength="8" autocomplete="new-password" required>
 
     <button type="submit" class="btn btn-primary btn-block">Créer mon compte</button>
   </form>
-
-  <p id="formError" class="form-error hidden"></p>
 
   <div class="auth-switch">
     <span id="switchPrompt">Pas encore de compte ?</span>
@@ -83,11 +186,18 @@
 <script src="js/supabase-config.js"></script>
 <script src="js/app.js"></script>
 <script>
-  const next = new URLSearchParams(window.location.search).get('next') || 'index.html';
+  // Sécurisation de l'URL de redirection (Evite les open-redirects malveillants)
+  let next = new URLSearchParams(window.location.search).get('next') || 'index.html';
+  if (next.startsWith('http://') || next.startsWith('https://')) {
+    if (!next.includes(window.location.hostname)) {
+      next = 'index.html';
+    }
+  }
+
   let mode = 'login';
 
   async function init() {
-    if (await isLoggedIn()) {
+    if (typeof isLoggedIn === 'function' && await isLoggedIn()) {
       window.location.href = next;
     }
   }
@@ -96,6 +206,7 @@
   function toggleMode() {
     mode = mode === 'login' ? 'signup' : 'login';
     const isLogin = mode === 'login';
+    
     document.getElementById('loginForm').classList.toggle('hidden', !isLogin);
     document.getElementById('signupForm').classList.toggle('hidden', isLogin);
     document.getElementById('pageTitle').textContent = isLogin ? 'Connexion' : 'Inscription';
@@ -111,10 +222,15 @@
     const el = document.getElementById('formError');
     el.textContent = msg;
     el.classList.remove('hidden');
+    // Relancer l'animation shake si déjà affichée
+    el.style.animation = 'none';
+    el.offsetHeight; // déclenche un reflow
+    el.style.animation = null;
   }
 
   function setLoading(formId, loading, label) {
     const btn = document.querySelector(`#${formId} button[type="submit"]`);
+    if (!btn) return;
     btn.disabled = loading;
     btn.textContent = loading ? 'Veuillez patienter…' : label;
     btn.classList.toggle('btn-loading', loading);
@@ -124,21 +240,27 @@
     e.preventDefault();
     const email = document.getElementById('loginEmail').value.trim();
     const password = document.getElementById('loginPassword').value;
+    
     if (!email || !password) { showError('Merci de renseigner votre email et votre mot de passe.'); return false; }
 
     setLoading('loginForm', true);
-    const { error } = await signInUser({ email, password });
-    setLoading('loginForm', false, 'Se connecter');
+    try {
+      const { error } = await signInUser({ email, password });
+      setLoading('loginForm', false, 'Se connecter');
 
-    if (error) {
-      showError(
-        error.toLowerCase().includes('invalid')
-          ? 'Email ou mot de passe incorrect.'
-          : error
-      );
-      return false;
+      if (error) {
+        showError(
+          error.toLowerCase().includes('invalid')
+            ? 'Email ou mot de passe incorrect.'
+            : error
+        );
+        return false;
+      }
+      window.location.href = next;
+    } catch (err) {
+      setLoading('loginForm', false, 'Se connecter');
+      showError('Une erreur de connexion est survenue. Veuillez réessayer.');
     }
-    window.location.href = next;
     return false;
   }
 
@@ -146,7 +268,7 @@
     e.preventDefault();
     const name = document.getElementById('signupName').value.trim();
     const email = document.getElementById('signupEmail').value.trim();
-    const phone = document.getElementById('signupPhone').value.trim();
+    const phone = document.getElementById('signupPhone').value.trim().replace(/\s+/g, '');
     const city = document.getElementById('signupCity').value;
     const password = document.getElementById('signupPassword').value;
 
@@ -154,19 +276,33 @@
     if (password.length < 8) { showError('Le mot de passe doit faire au moins 8 caractères.'); return false; }
 
     setLoading('signupForm', true);
-    const { error } = await signUpUser({ name, email, phone, city, password });
-    setLoading('signupForm', false, 'Créer mon compte');
+    try {
+      const { error } = await signUpUser({ name, email, phone, city, password });
+      setLoading('signupForm', false, 'Créer mon compte');
 
-    if (error) {
-      showError(
-        error.toLowerCase().includes('already') || error.toLowerCase().includes('registered')
-          ? 'Un compte existe déjà avec cet email.'
-          : error
-      );
-      return false;
+      if (error) {
+        showError(
+          error.toLowerCase().includes('already') || error.toLowerCase().includes('registered')
+            ? 'Un compte existe déjà avec cet email.'
+            : error
+        );
+        return false;
+      }
+      window.location.href = next;
+    } catch (err) {
+      setLoading('signupForm', false, 'Créer mon compte');
+      showError('Impossible de créer le compte. Veuillez réessayer.');
     }
-    window.location.href = next;
     return false;
+  }
+  
+  // Exemple de stub pour éviter les crashs si toggleTheme n'est pas déclaré dans app.js
+  if (typeof toggleTheme !== 'function') {
+    window.toggleTheme = function() {
+      const html = document.documentElement;
+      const isDark = html.classList.toggle('dark');
+      document.getElementById('themeToggleBtn').textContent = isDark ? '☀️' : '🌙';
+    }
   }
 </script>
 </body>
