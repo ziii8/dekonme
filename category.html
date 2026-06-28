@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="manifest" href="/manifest.json">
+  <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#E8732C">
-  <link rel="apple-touch-icon" href="/icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
   <meta name="description" content="Parcourez toutes les catégories de DEKONme — Mode, Électronique, Maison, Beauté, Sport, Accessoires. Achetez et vendez partout au Togo.">
   <title>Catégories — DEKONme Marketplace Togo</title>
   <link rel="stylesheet" href="css/style.css">
@@ -50,8 +50,7 @@
         </div>
       </div>
       <button onclick="window.location.href='category.html'">
-  Tous les produits
-</button>
+        Tous les produits
       </button>
     </div>
     <div class="product-grid" id="productGrid"></div>
@@ -120,8 +119,8 @@
   const cat = params.get('cat');
   const query = params.get('q');
   const view = params.get('view');
-  let currentFilter = null; // null = tous, sinon nom de la catégorie
-  let allResults = []; // Tous les résultats avant filtrage
+  let currentFilter = null;
+  let allResults = [];
 
   async function renderCategoryListView() {
     document.getElementById('pageTitle').textContent = 'Catégories';
@@ -177,13 +176,11 @@
     const grid = document.getElementById('productGrid');
     
     if (currentFilter) {
-      // Filtre les résultats par catégorie
       const filtered = allResults.filter(l => l.category === currentFilter);
       grid.innerHTML = filtered.length
         ? await renderListingGrid(filtered)
         : `<div class="empty-state" style="grid-column:1/-1;"><div class="emoji">📭</div><p>Aucune annonce dans cette catégorie.</p></div>`;
     } else {
-      // Affiche tous les résultats
       grid.innerHTML = allResults.length
         ? await renderListingGrid(allResults)
         : `<div class="empty-state" style="grid-column:1/-1;"><div class="emoji">📭</div><p>Aucune annonce trouvée.</p></div>`;
@@ -206,7 +203,6 @@
       : `<div class="empty-state" style="grid-column:1/-1;"><div class="emoji">📭</div><p>Aucune annonce trouvée.</p></div>`;
   }
 
-  // ==================== AFFICHER TOUS LES PRODUITS ====================
   async function renderAllProducts() {
     document.getElementById('brandListView').classList.add('hidden');
     document.getElementById('productListView').classList.remove('hidden');
@@ -227,7 +223,6 @@
     window.location.href = 'favoris.html';
   };
 
-  // Fermer le dropdown si on clique ailleurs
   document.addEventListener('click', (e) => {
     const dropdown = document.getElementById('categoryDropdown');
     const filterBtn = document.getElementById('filterBtn');
@@ -236,7 +231,6 @@
     }
   });
 
-  // ==================== ROUTING ====================
   if (view === 'categories') {
     renderCategoryListView();
   } else if (cat || query) {

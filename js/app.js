@@ -585,11 +585,11 @@ function renderBottomNav(active) {
   startPresenceHeartbeat();
 
   const items = [
-    { key: 'accueil',    href: 'index.html',    label: 'Accueil',  icon: 'M3 12l9-9 9 9M5 10v10h14V10' },
-    { key: 'categories', href: 'category.html', label: 'Catégorie', icon: 'M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z' },
-    { key: 'publier',    href: '#', label: 'Publier', icon: 'M12 5v14M5 12h14', isPublish: true },
-    { key: 'favoris',    href: 'favoris.html',  label: 'Favoris',  icon: 'M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z' },
-    { key: 'profil',     href: 'profil.html',   label: 'Compte',   icon: 'M20 21a8 8 0 10-16 0M12 11a4 4 0 100-8 4 4 0 000 8z' }
+    { key: 'accueil',    href: 'index.html',                      label: 'Accueil',    icon: 'M3 12l9-9 9 9M5 10v10h14V10' },
+    { key: 'categories', href: 'category.html?view=categories',   label: 'Catégorie', icon: 'M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z' },
+    { key: 'publier',    href: '#',                               label: 'Publier',   icon: 'M12 5v14M5 12h14', isPublish: true },
+    { key: 'favoris',    href: 'favoris.html',                    label: 'Favoris',   icon: 'M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z' },
+    { key: 'profil',     href: 'profil.html',                     label: 'Compte',    icon: 'M20 21a8 8 0 10-16 0M12 11a4 4 0 100-8 4 4 0 000 8z' }
   ];
 
   mount.innerHTML = items.map(it => {

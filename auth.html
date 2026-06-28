@@ -21,10 +21,10 @@
   <button id="themeToggleBtn" class="icon-btn" onclick="toggleTheme()" aria-label="Changer de thème" style="font-size:18px;">🌙</button>
 </div>
 
-<div class="container auth-container" style="padding-top: 24px;">
+<div class="container auth-container">
   <div class="auth-logo-wrap">
-    <div class="logo" style="justify-content:center; font-size:24px; margin-bottom:8px;"><span class="mark">D</span>EKONme</div>
-    <p style="color: var(--ink-soft); font-size: 14px;" id="subtitle">Connectez-vous pour gérer vos annonces</p>
+    <div class="logo" style="justify-content:center; font-size:28px; margin-bottom:8px;"><span class="mark">D</span>EKONme</div>
+    <p style="color: var(--ink-soft); font-size: 15px;" id="subtitle">Connectez-vous pour gérer vos annonces</p>
   </div>
 
   <!-- FORMULAIRE CONNEXION -->
@@ -35,7 +35,7 @@
     <label class="field-label">Mot de passe</label>
     <input type="password" id="loginPassword" placeholder="••••••••" required>
 
-    <button type="submit" class="btn btn-primary btn-block" style="margin-top: 8px;">Se connecter</button>
+    <button type="submit" class="btn btn-primary btn-block">Se connecter</button>
   </form>
 
   <!-- FORMULAIRE INSCRIPTION -->
@@ -50,6 +50,9 @@
     <div class="phone-input-group">
       <span class="phone-prefix">+228</span>
       <input type="tel" id="signupPhone" placeholder="90 11 22 33" required>
+      <button type="button" class="btn-whatsapp-mini" aria-label="Ouvrir WhatsApp">
+        💬
+      </button>
     </div>
     <p class="field-hint">Utilisé uniquement pour que les acheteurs vous contactent.</p>
 
@@ -66,7 +69,7 @@
     <label class="field-label">Mot de passe</label>
     <input type="password" id="signupPassword" placeholder="8 caractères minimum" minlength="8" required>
 
-    <button type="submit" class="btn btn-primary btn-block" style="margin-top: 8px;">Créer mon compte</button>
+    <button type="submit" class="btn btn-primary btn-block">Créer mon compte</button>
   </form>
 
   <p id="formError" class="form-error hidden"></p>
@@ -84,7 +87,6 @@
   let mode = 'login';
 
   async function init() {
-    // Déjà connecté ? on renvoie directement vers la destination prévue.
     if (await isLoggedIn()) {
       window.location.href = next;
     }

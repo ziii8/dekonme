@@ -27,8 +27,8 @@
   <label class="field-label">Catégorie</label>
   <select id="pCategory" required></select>
 
-  <label class="field-label">Modèle / détails (facultatif)</label>
-  <input type="text" id="pModel" placeholder="Ex : 128 Go, Taille M, Couleur rouge...">
+  <label class="field-label">Modèle / Détails</label>
+  <input type="text" id="pModel" placeholder="Ex : 128 Go, Taille M, Couleur rouge..." required>
 
   <label class="field-label">Prix (FCFA)</label>
   <input type="number" id="pPrice" placeholder="Ex : 250000" min="0" required>
@@ -68,10 +68,8 @@
   <button type="submit" class="btn btn-primary btn-block" id="submitBtn" style="margin-top: 16px; margin-bottom: 24px; padding: 15px;">Publier l'annonce</button>
 </form>
 
-<!-- Bouton Marquer comme vendu (visible uniquement en édition) -->
+<!-- Bouton Marquer comme vendu (visible UNIQUEMENT en modification) -->
 <div id="soldButtonContainer"></div>
-
-<div id="publishContainer"></div>
 
 <script src="js/supabase-config.js"></script>
 <script src="js/app.js"></script>
@@ -111,7 +109,7 @@
       existingImages = listing.images && listing.images.length ? [...listing.images] : (listing.image_url ? [listing.image_url] : []);
       renderPreviews();
 
-      // Bouton "Marquer comme vendu"
+      // Bouton "Marquer comme vendu" (seulement en mode édition)
       const soldWrap = document.createElement('div');
       soldWrap.innerHTML = `
         <button type="button" class="btn btn-outline-fav btn-block" id="soldBtn" style="margin-top:12px; color:#C0392B; border-color:#F0D5D0;">

@@ -30,7 +30,7 @@
 <!-- HERO -->
 <div class="hero">
   <h1>Achète et vends<br><span class="accent">partout au Togo.</span></h1>
-  <p>Contact direct par WhatsApp — Lomé, Kara, Sokodé...</p>
+  <p>Mode, électronique, maison, beauté et plus encore.<br>Contact direct par WhatsApp — Lomé, Kara, Sokodé...</p>
   <div class="search-container">
     <div class="search">
       <input id="searchInput" type="text" placeholder="Rechercher un produit..." onkeyup="if(event.key==='Enter') performSearch()">
@@ -40,7 +40,6 @@
     </div>
     <div id="searchDropdown"></div>
   </div>
-  
 </div>
 
 <div class="container">
@@ -84,7 +83,6 @@
 
   function renderCategoryGrid() {
     const grid = document.getElementById('brandGrid');
-    // Affiche seulement les 4 premières catégories
     const firstFour = CATEGORIES.slice(0, 4);
     grid.innerHTML = firstFour.map(c => `
       <div class="brand-tile" onclick="window.location.href='category.html?cat=${encodeURIComponent(c.name)}'">
@@ -98,7 +96,6 @@
     const grid = document.getElementById('productGrid');
     grid.innerHTML = '<p class="loading-text">Chargement des annonces…</p>';
 
-    // Charge le total et la première page en parallèle
     const [listings, total] = await Promise.all([
       getAllListings(PAGE_SIZE, 0),
       countAllListings()
@@ -132,7 +129,6 @@
 
   function updateLoadMoreBtn() {
     const wrap = document.getElementById('loadMoreWrap');
-    // Affiche le bouton seulement s'il reste des annonces à charger
     wrap.style.display = currentOffset < totalListings ? 'block' : 'none';
   }
 
