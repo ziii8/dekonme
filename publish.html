@@ -167,6 +167,9 @@
       <option value="Sokodé">Sokodé</option>
       <option value="Kpalimé">Kpalimé</option>
       <option value="Atakpamé">Atakpamé</option>
+      <option value="Dapaong">Dapaong</option>
+      <option value="Tsévié">Tsévié</option>
+      <option value="Aného">Aného</option>
     </select>
 
     <label class="field-label" for="pDescription">Description</label>
@@ -272,7 +275,7 @@
     wrap.innerHTML = allUrls.map((url, i) => `
       <div class="photo-preview-item">
         <img src="${url}" alt="Photo ${i + 1}">
-        <button type="button" onclick="removePhoto(${i})" aria-label="Retirer cette photo">✕</button>
+        <button type="button" onclick="removePhoto(${index})" aria-label="Retirer cette photo">✕</button>
       </div>
     `).join('');
   }

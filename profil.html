@@ -30,6 +30,138 @@
     .profile-header {
       animation: fadeIn 0.4s ease-out;
     }
+
+    /* --- TABLEAU DE BORD & STATISTIQUES --- */
+    .profile-stats-bar {
+      display: flex;
+      justify-content: space-around;
+      background: var(--bg-card, #fff);
+      border: 1px solid rgba(0, 0, 0, 0.05);
+      border-radius: 14px;
+      padding: 12px;
+      margin-top: 16px;
+      text-align: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.01);
+    }
+    .stat-item {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+    .stat-item:not(:last-child) {
+      border-right: 1px solid rgba(0, 0, 0, 0.08);
+    }
+    .stat-item strong {
+      font-size: 18px;
+      color: var(--primary, #E8732C);
+    }
+    .stat-item span {
+      font-size: 12px;
+      opacity: 0.7;
+      margin-top: 2px;
+    }
+
+    /* --- GRILLE DES ACTIONS STYLE CATÉGORIES --- */
+    .profile-actions-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin: 20px 0;
+    }
+    .action-cat-card {
+      background: var(--bg-card, #fff);
+      border: 1px solid rgba(0, 0, 0, 0.05);
+      border-radius: 16px;
+      padding: 12px 6px;
+      text-align: center;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+      transition: transform 0.2s;
+    }
+    .action-cat-card:active {
+      transform: scale(0.95);
+    }
+    .action-cat-icon {
+      width: 42px;
+      height: 42px;
+      background: rgba(232, 115, 44, 0.08);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+    .action-cat-label {
+      font-size: 11px;
+      font-weight: 600;
+      line-height: 1.2;
+    }
+
+    /* Style pour les volets dépliants */
+    .edit-profile-wrapper {
+      background: var(--bg-card, rgba(0, 0, 0, 0.02));
+      border: 1px solid rgba(0, 0, 0, 0.06);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 16px;
+      animation: fadeIn 0.3s ease-out;
+    }
+    .edit-form-group {
+      margin-bottom: 14px;
+    }
+    .edit-form-group label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 6px;
+      opacity: 0.9;
+    }
+    .edit-form-group input, .edit-form-group select {
+      width: 100%;
+      padding: 11px;
+      border: 1px solid rgba(0, 0, 0, 0.15);
+      border-radius: 8px;
+      box-sizing: border-box;
+      background: var(--bg-input, #fff);
+      color: inherit;
+      font-size: 14px;
+    }
+
+    /* Grille de sélection d'émojis */
+    .emoji-choices-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 10px;
+      padding: 4px 0;
+    }
+    .emoji-choice-btn {
+      font-size: 24px;
+      cursor: pointer;
+      padding: 6px;
+      border-radius: 8px;
+      text-align: center;
+      transition: background 0.2s;
+    }
+    .emoji-choice-btn:active {
+      background: rgba(232, 115, 44, 0.15);
+    }
+
+    /* Style pour les boutons Voir Plus */
+    .load-more-container {
+      text-align: center;
+      margin-top: 14px;
+      margin-bottom: 8px;
+    }
+    .btn-sm {
+      padding: 8px 24px !important;
+      font-size: 13px !important;
+      width: auto !important;
+      display: inline-block !important;
+    }
   </style>
 </head>
 <body>
@@ -54,6 +186,11 @@
 <script src="js/app.js"></script>
 <script src="js/lazy-load.js"></script>
 <script>
+  let allActiveListings = [];
+  let allSoldListings = [];
+  let visibleActiveCount = 2; 
+  let visibleSoldCount = 2;   
+
   function renderLoggedOut() {
     document.getElementById('profileContainer').innerHTML = `
       <div class="empty-state" style="padding-top: 40px;">
@@ -68,6 +205,19 @@
   }
 
   async function renderLoggedIn(profile) {
+    const cleanPhone = profile.phone ? profile.phone.replace('+228', '') : '';
+    
+    // Récupération préalable des annonces pour calculer les compteurs statistiques
+    try {
+      if (typeof getMyListings === 'function') {
+        const myListings = await getMyListings() || [];
+        allActiveListings = myListings.filter(l => l.status !== 'sold');
+        allSoldListings = myListings.filter(l => l.status === 'sold');
+      }
+    } catch (e) {
+      console.error("Erreur stats :", e);
+    }
+
     document.getElementById('profileContainer').innerHTML = `
       <div class="profile-header">
         <div class="profile-avatar">${profile.avatar_emoji || '👤'}</div>
@@ -77,83 +227,286 @@
         </div>
       </div>
 
-      <div class="menu-list">
-        <div class="menu-row" onclick="window.location.href='favoris.html'">
-          <span class="menu-row-icon">❤️</span>
-          <span class="menu-row-label">Mes favoris</span>
-          <span class="chevron"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></span>
+      <!-- MINI BANDEAU STATISTIQUES ÉPURÉ -->
+      <div class="profile-stats-bar">
+        <div class="stat-item">
+          <strong>${allActiveListings.length}</strong>
+          <span>En cours</span>
         </div>
-        <div class="menu-row" onclick="window.location.href='publish.html'">
-          <span class="menu-row-icon">📢</span>
-          <span class="menu-row-label">Publier une annonce</span>
-          <span class="chevron"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></span>
+        <div class="stat-item">
+          <strong>${allSoldListings.length}</strong>
+          <span>Vendues</span>
         </div>
       </div>
 
-      <div class="section-head" style="margin-top: 32px;">
+      <!-- GRILLE DES ACTIONS DE SÉLECTION (STYLE ACCUEIL) -->
+      <div class="profile-actions-grid">
+        <div class="action-cat-card" onclick="toggleEditForm()">
+          <div class="action-cat-icon">📝</div>
+          <span class="action-cat-label">Modifier<br>Infos</span>
+        </div>
+
+        <div class="action-cat-card" onclick="toggleEmojiPicker()">
+          <div class="action-cat-icon">🎭</div>
+          <span class="action-cat-label">Changer<br>Emoji</span>
+        </div>
+
+        <div class="action-cat-card" onclick="shareMyShop('${profile.id}', '${profile.name}')">
+          <div class="action-cat-icon">🔗</div>
+          <span class="action-cat-label">Partager<br>Boutique</span>
+        </div>
+        
+        <div class="action-cat-card" onclick="window.location.href='favoris.html'">
+          <div class="action-cat-icon">❤️</div>
+          <span class="action-cat-label">Mes<br>Favoris</span>
+        </div>
+
+        <div class="action-cat-card" onclick="window.open('https://wa.me/22890000000', '_blank')">
+          <div class="action-cat-icon">💬</div>
+          <span class="action-cat-label">Besoin<br>d'aide ?</span>
+        </div>
+      </div>
+
+      <!-- PANEL 1 : SÉLECTION DE L'EMOJI D'AVATAR -->
+      <div id="emojiPickerWrapper" class="edit-profile-wrapper" style="display: none;">
+        <p style="font-size: 13px; font-weight: 600; margin-bottom: 12px; text-align:center;">Choisissez le badge de votre boutique :</p>
+        <div class="emoji-choices-grid">
+          ${['👤','👑','🛍️','👕','👠','📱','🎮','💄','⚡','✨','🔥','💼'].map(emo => `
+            <span class="emoji-choice-btn" onclick="updateAvatarEmoji('${emo}')">${emo}</span>
+          `).join('')}
+        </div>
+      </div>
+
+      <!-- PANEL 2 : FORMULAIRE DE MODIFICATION DES INFOS -->
+      <div id="editProfileWrapper" class="edit-profile-wrapper" style="display: none;">
+        <form id="editProfileForm" onsubmit="handleProfileUpdate(event)">
+          <div class="edit-form-group">
+            <label for="editName">Nom complet / Nom de boutique</label>
+            <input type="text" id="editName" value="${profile.name || ''}" required>
+          </div>
+          <div class="edit-form-group">
+            <label for="editPhone">Numéro WhatsApp (sans +228)</label>
+            <input type="tel" id="editPhone" value="${cleanPhone}" required placeholder="Ex: 90123456">
+          </div>
+          <div class="edit-form-group">
+            <label for="editCity">Ville</label>
+            <select id="editCity">
+              <option value="Lomé" ${profile.city === 'Lomé' ? 'selected' : ''}>Lomé</option>
+              <option value="Kara" ${profile.city === 'Kara' ? 'selected' : ''}>Kara</option>
+              <option value="Sokodé" ${profile.city === 'Sokodé' ? 'selected' : ''}>Sokodé</option>
+              <option value="Kpalimé" ${profile.city === 'Kpalimé' ? 'selected' : ''}>Kpalimé</option>
+              <option value="Atakpamé" ${profile.city === 'Atakpamé' ? 'selected' : ''}>Atakpamé</option>
+              <option value="Dapaong" ${profile.city === 'Dapaong' ? 'selected' : ''}>Dapaong</option>
+              <option value="Tsévié" ${profile.city === 'Tsévié' ? 'selected' : ''}>Tsévié</option>
+              <option value="Aného" ${profile.city === 'Aného' ? 'selected' : ''}>Aného</option>
+            </select>
+          </div>
+          <button type="submit" id="btnSaveProfile" class="btn btn-primary btn-block">
+            Enregistrer les modifications
+          </button>
+        </form>
+      </div>
+
+      <div class="section-head" style="margin-top: 24px;">
         <h3>Mes annonces actives</h3>
       </div>
-      <div class="product-grid" id="myListingsGrid"><p class="loading-text">Chargement de vos annonces…</p></div>
+      <div class="product-grid" id="myListingsGrid"></div>
+      <div id="activeMoreContainer" class="load-more-container"></div>
 
       <div class="section-head" style="margin-top: 32px;" id="soldSectionHead"></div>
       <div class="product-grid" id="mySoldGrid"></div>
+      <div id="soldMoreContainer" class="load-more-container"></div>
 
       <button class="btn btn-outline btn-block btn-danger" onclick="handleLogout()" style="margin-top: 40px;">
         Déconnexion
       </button>
     `;
 
-    try {
-      if (typeof getMyListings !== 'function') return;
-      
-      const myListings = await getMyListings() || [];
-      const active = myListings.filter(l => l.status !== 'sold');
-      const sold = myListings.filter(l => l.status === 'sold');
-
-      function myListingCardHTML(l, editable) {
-        const image = (l.images && l.images[0]) || l.image_url || 'https://picsum.photos/seed/' + l.id + '/600/600';
-        const target = editable ? `publish.html?id=${l.id}` : `product.html?id=${l.id}`;
-        const formattedPrice = typeof formatPrice === 'function' ? formatPrice(l.price) : l.price;
-        
-        return `
-          <div class="product-card" onclick="window.location.href='${target}'">
-            <div class="img-wrap">
-              <img data-src="${image}" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'%3E%3C/svg%3E" alt="${l.title}" class="lazy">
-              ${!editable ? '<span class="sold-badge">VENDU</span>' : ''}
-            </div>
-            <div class="product-info">
-              <h4>${l.title}</h4>
-              <div class="price-row"><span class="price">${formattedPrice} F</span></div>
-              <p class="meta">${l.city || ''} · ${l.condition || ''}</p>
-            </div>
-          </div>
-        `;
-      }
-
-      const activeGrid = document.getElementById('myListingsGrid');
-      if (activeGrid) {
-        activeGrid.innerHTML = active.length
-          ? active.map(l => myListingCardHTML(l, true)).join('')
-          : `<div class="empty-state" style="grid-column:1/-1; padding: 30px 20px;"><div class="emoji">📭</div><p>Vous n'avez aucune annonce active.</p></div>`;
-      }
-
-      if (sold.length) {
-        const soldHead = document.getElementById('soldSectionHead');
-        const soldGrid = document.getElementById('mySoldGrid');
-        if (soldHead) soldHead.innerHTML = '<h3>Annonces vendues</h3>';
-        if (soldGrid) soldGrid.innerHTML = sold.map(l => myListingCardHTML(l, false)).join('');
-      }
-
-      // Déclenchement du lazy-loading après injection des cartes
-      if (typeof initLazyLoad === 'function') initLazyLoad();
-
-    } catch (error) {
-      console.error("Erreur lors de la récupération des annonces :", error);
-      const activeGrid = document.getElementById('myListingsGrid');
-      if (activeGrid) activeGrid.innerHTML = '<p class="loading-text" style="color:var(--error);">Impossible de charger vos annonces.</p>';
-    }
+    // Distribution immédiate des cartes calculées dans les grilles paginées
+    renderActiveGrid();
+    renderSoldGrid();
 
     if (typeof renderBottomNav === 'function') renderBottomNav('profil');
+  }
+
+  function myListingCardHTML(l, editable) {
+    const image = (l.images && l.images[0]) || l.image_url || 'https://picsum.photos/seed/' + l.id + '/600/600';
+    const target = editable ? `publish.html?id=${l.id}` : `product.html?id=${l.id}`;
+    const formattedPrice = typeof formatPrice === 'function' ? formatPrice(l.price) : l.price;
+    
+    return `
+      <div class="product-card" onclick="window.location.href='${target}'">
+        <div class="img-wrap">
+          <img data-src="${image}" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'%3E%3C/svg%3E" alt="${l.title}" class="lazy">
+          ${!editable ? '<span class="sold-badge">VENDU</span>' : ''}
+        </div>
+        <div class="product-info">
+          <h4>${l.title}</h4>
+          <div class="price-row"><span class="price">${formattedPrice} F</span></div>
+          <p class="meta">${l.city || ''} · ${l.condition || ''}</p>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderActiveGrid() {
+    const grid = document.getElementById('myListingsGrid');
+    const btnContainer = document.getElementById('activeMoreContainer');
+    if (!grid) return;
+
+    const visibleListings = allActiveListings.slice(0, visibleActiveCount);
+    
+    grid.innerHTML = allActiveListings.length
+      ? visibleListings.map(l => myListingCardHTML(l, true)).join('')
+      : `<div class="empty-state" style="grid-column:1/-1; padding: 30px 20px;"><div class="emoji">📭</div><p>Vous n'avez aucune annonce active.</p></div>`;
+
+    if (allActiveListings.length > visibleActiveCount) {
+      btnContainer.innerHTML = `<button class="btn btn-outline btn-sm" onclick="loadMoreActive()">Voir plus</button>`;
+    } else {
+      btnContainer.innerHTML = '';
+    }
+
+    if (typeof initLazyLoad === 'function') initLazyLoad();
+  }
+
+  function loadMoreActive() {
+    visibleActiveCount += 2; 
+    renderActiveGrid();
+  }
+
+  function renderSoldGrid() {
+    const soldHead = document.getElementById('soldSectionHead');
+    const grid = document.getElementById('mySoldGrid');
+    const btnContainer = document.getElementById('soldMoreContainer');
+    if (!grid) return;
+
+    if (allSoldListings.length) {
+      if (soldHead) soldHead.innerHTML = '<h3>Annonces vendues</h3>';
+      const visibleListings = allSoldListings.slice(0, visibleSoldCount);
+      grid.innerHTML = visibleListings.map(l => myListingCardHTML(l, false)).join('');
+
+      if (allSoldListings.length > visibleSoldCount) {
+        btnContainer.innerHTML = `<button class="btn btn-outline btn-sm" onclick="loadMoreSold()">Voir plus</button>`;
+      } else {
+        btnContainer.innerHTML = '';
+      }
+    } else {
+      if (soldHead) soldHead.innerHTML = '';
+      grid.innerHTML = '';
+      btnContainer.innerHTML = '';
+    }
+
+    if (typeof initLazyLoad === 'function') initLazyLoad();
+  }
+
+  function loadMoreSold() {
+    visibleSoldCount += 2; 
+    renderSoldGrid();
+  }
+
+  /* Gestionnaires d'ouverture des volets */
+  function toggleEditForm() {
+    const wrapper = document.getElementById('editProfileWrapper');
+    const picker = document.getElementById('emojiPickerWrapper');
+    if (picker) picker.style.display = 'none';
+    if (!wrapper) return;
+    wrapper.style.display = (wrapper.style.display === 'none') ? 'block' : 'none';
+  }
+
+  function toggleEmojiPicker() {
+    const wrapper = document.getElementById('emojiPickerWrapper');
+    const editForm = document.getElementById('editProfileWrapper');
+    if (editForm) editForm.style.display = 'none';
+    if (!wrapper) return;
+    wrapper.style.display = (wrapper.style.display === 'none') ? 'block' : 'none';
+  }
+
+  /* Mise à jour en direct de l'émoji d'avatar */
+  async function updateAvatarEmoji(emoji) {
+    if (!window.db) return;
+    try {
+      const { data: { user } } = await window.db.auth.getUser();
+      if (!user) return;
+      
+      const { error } = await window.db
+        .from('profiles')
+        .update({ avatar_emoji: emoji })
+        .eq('id', user.id);
+        
+      if (error) throw error;
+      init(); // Rafraîchit complètement l'affichage
+    } catch (err) {
+      console.error(err);
+      alert("Impossible de changer l'émoji.");
+    }
+  }
+
+  /* Fonction de partage marketing pour la boutique */
+  async function shareMyShop(id, name) {
+    const shopUrl = `${window.location.origin}/vendeur.html?id=${id}`;
+    const shareText = `Découvrez ma vitrine "${name}" sur DEKONme ! Retrouvez tous mes articles disponibles ici :`;
+    
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: name,
+          text: shareText,
+          url: shopUrl
+        });
+      } catch (err) {
+        console.log("Partage annulé ou non supporté :", err);
+      }
+    } else {
+      try {
+        await navigator.clipboard.writeText(`${shareText} ${shopUrl}`);
+        alert("Lien de votre boutique copié avec succès ! 📋 Vous pouvez maintenant le coller directement dans votre statut WhatsApp.");
+      } catch (err) {
+        alert("Voici le lien de votre vitrine : " + shopUrl);
+      }
+    }
+  }
+
+  async function handleProfileUpdate(e) {
+    e.preventDefault();
+    const btn = document.getElementById('btnSaveProfile');
+    if (!window.db) return;
+
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = "Mise à jour...";
+    }
+
+    const name = document.getElementById('editName').value.trim();
+    const phone = document.getElementById('editPhone').value.trim();
+    const city = document.getElementById('editCity').value;
+
+    try {
+      const { data: { user } } = await window.db.auth.getUser();
+      if (!user) {
+        window.location.href = 'auth.html';
+        return;
+      }
+
+      const formattedPhone = typeof toE164 === 'function' ? toE164(phone) : ('+228' + phone.replace(/\D/g, ''));
+
+      const { error } = await window.db
+        .from('profiles')
+        .update({ name, phone: formattedPhone, city })
+        .eq('id', user.id);
+
+      if (error) throw error;
+
+      alert("Profil mis à jour avec succès ! ✨");
+      init(); 
+    } catch (err) {
+      console.error(err);
+      alert("Erreur lors de la modification.");
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = "Enregistrer les modifications";
+      }
+    }
   }
 
   async function handleLogout() {

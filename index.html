@@ -3,179 +3,400 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#E8732C">
-  <link rel="apple-touch-icon" href="icons/icon-192.png">
   <meta name="description" content="DEKONme — Le marketplace du Togo. Achetez et vendez de tout : téléphones, mode, électronique, maison, beauté, sport. Contact direct par WhatsApp à Lomé, Kara, Sokodé et partout au Togo.">
-  <title>DEKONme — Marketplace du Togo | Acheter et vendre par WhatsApp</title>
+  <meta name="theme-color" content="#E8732C">
+  <meta name="mobile-web-app-capable" content="yes">
+  
+  <!-- PWA Support -->
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="icon" type="image/x-icon" href="icons/favicon.ico">
+  
+  <!-- Styles -->
   <link rel="stylesheet" href="css/style.css">
-
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  
+  <title>DEKONme — Marketplace du Togo | Acheter et vendre par WhatsApp</title>
 </head>
 <body>
 
-<div class="topbar">
-  <button class="icon-btn" onclick="toggleDropdown()" aria-label="Menu">
-    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
-  </button>
-  <div class="logo"><span class="mark">D</span>EKONme</div>
-  <button id="themeToggleBtn" class="icon-btn" onclick="toggleTheme()" aria-label="Changer de thème">🌙</button>
-  <button class="icon-btn" onclick="window.location.href='profil.html'" aria-label="Profil et Notifications">
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 17h5l-1.4-1.4A2 2 0 0118 14.2V11a6 6 0 00-4-5.7V5a2 2 0 10-4 0v.3A6 6 0 006 11v3.2c0 .5-.2 1-.6 1.4L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
-    <span class="badge-dot"></span>
-  </button>
-</div>
+  <!-- TOP BAR NAVIGATION -->
+  <div class="topbar" role="banner">
+    <button class="icon-btn" id="menuBtn" aria-label="Ouvrir le menu" aria-expanded="false" aria-controls="dropdownMenu">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <path d="M3 6h18M3 12h18M3 18h18"/>
+      </svg>
+    </button>
+    
+    <a href="index.html" class="logo" aria-label="Accueil DEKONme">
+      <span class="mark">D</span>EKONme
+    </a>
+    
+    <button class="icon-btn" id="themeToggleBtn" aria-label="Changer de thème">🌙</button>
+    
+    <a href="profil.html" class="icon-btn" aria-label="Profil et Notifications">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M15 17h5l-1.4-1.4A2 2 0 0118 14.2V11a6 6 0 00-4-5.7V5a2 2 0 10-4 0v.3A6 6 0 006 11v3.2c0 .5-.2 1-.6 1.4L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+      </svg>
+      <span class="badge-dot" aria-hidden="true"></span>
+    </a>
+  </div>
 
-<div class="hero">
-  <h1>Achète et vends<br><span class="accent">partout au Togo.</span></h1>
-  <p>Mode, électronique, maison, beauté et plus encore.<br>Contact direct par WhatsApp — Lomé, Kara, Sokodé...</p>
-  <div class="search-container">
-    <div class="search">
-      <input id="searchInput" type="text" placeholder="Rechercher un produit..." onkeyup="if(event.key==='Enter') performSearch()" autocomplete="off">
-      <button onclick="performSearch()" aria-label="Rechercher">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
-      </button>
+  <!-- HERO SECTION -->
+  <section class="hero">
+    <h1>Achète et vends<br><span class="accent">partout au Togo.</span></h1>
+    
+    <!-- Bannière d'installation PWA (s'affiche uniquement si installable) -->
+    <div id="pwaBanner" style="display: none; background-color: rgba(232, 115, 44, 0.1); color: #E8732C; border: 1px solid rgba(232, 115, 44, 0.25); padding: 12px; border-radius: 8px; justify-content: space-between; align-items: center; font-size: 14px; font-weight: 500; margin: 15px auto; max-width: 480px; text-align: left;">
+      <span style="display: flex; align-items: center; gap: 6px; color: currentColor;">📲 Installer l'application sur votre écran</span>
+      <button id="pwaInstallBtn" style="background-color: #E8732C; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px; white-space: nowrap;">Installer</button>
     </div>
-    <div id="searchDropdown" class="hidden"></div>
-  </div>
-</div>
-
-<div class="container">
-  <div class="section-head">
-    <h3>Catégories</h3>
-    <span class="see-all" onclick="window.location.href='category.html?view=categories'">Voir tout</span>
-  </div>
-  <div class="brand-grid" id="brandGrid"></div>
-
-  <div class="section-head">
-    <h3 id="productsTitle">Annonces récentes</h3>
-    <span class="see-all" onclick="window.location.href='category.html'">Voir tout</span>
-  </div>
-  <div class="product-grid" id="productGrid"></div>
-
-  <div id="loadMoreWrap" style="text-align:center; padding: 16px 0 32px; display:none;">
-    <button class="btn btn-primary" id="loadMoreBtn" onclick="loadMore()">Voir plus d'annonces</button>
-  </div>
-</div>
-
-<div class="bottom-nav" id="bottomNav"></div>
-
-<div class="dropdown-menu" id="dropdownMenu" onclick="if(event.target===this) toggleDropdown()">
-  <div class="dropdown-panel"></div>
-</div>
-
-<script src="js/supabase-config.js"></script>
-<script src="js/app.js"></script>
-<script src="js/lazy-load.js"></script>
-<script>
-  const PAGE_SIZE = 6;
-  let currentOffset = 0;
-  let totalListings = 0;
-
-  function renderCategoryGrid() {
-    const grid = document.getElementById('brandGrid');
-    if (!grid || typeof CATEGORIES === 'undefined') return;
     
-    const firstFour = CATEGORIES.slice(0, 4);
-    grid.innerHTML = firstFour.map(c => `
-      <div class="brand-tile" onclick="window.location.href='category.html?cat=${encodeURIComponent(c.name)}'">
-        <div class="icon" style="background:${c.color};">${c.emoji}</div>
-        <span>${c.name}</span>
+    <div class="search-container" style="margin-top: 15px;">
+      <div class="search">
+        <input 
+          id="searchInput" 
+          type="search" 
+          placeholder="Rechercher un produit…" 
+          autocomplete="off"
+          aria-label="Champ de recherche"
+          maxlength="100"
+        >
+        <button class="search-btn" aria-label="Lancer la recherche">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="7"/>
+            <path d="M21 21l-4.3-4.3"/>
+          </svg>
+        </button>
       </div>
-    `).join('');
-  }
+      <div id="searchDropdown" class="search-dropdown hidden" role="listbox"></div>
+    </div>
+  </section>
 
-  async function renderHomeProducts() {
-    const grid = document.getElementById('productGrid');
-    if (!grid) return;
+  <!-- MAIN CONTENT -->
+  <main class="container" role="main">
     
-    grid.innerHTML = '<p class="loading-text">Chargement des annonces…</p>';
+    <!-- CATEGORIES SECTION -->
+    <section>
+      <div class="section-head">
+        <h2>Catégories</h2>
+        <a href="category.html?view=categories" class="see-all">Voir tout</a>
+      </div>
+      <div class="brand-grid" id="brandGrid" role="region" aria-label="Grille de catégories"></div>
+    </section>
 
-    try {
-      // Vérification de l'existence des fonctions globales pour éviter les crashs de script
-      if (typeof getAllListings !== 'function' || typeof countAllListings !== 'function') {
-        grid.innerHTML = '<p class="loading-text">Erreur de configuration de l\'application.</p>';
+    <!-- PRODUCTS SECTION -->
+    <section>
+      <div class="section-head">
+        <h2 id="productsTitle">Annonces récentes</h2>
+        <a href="category.html" class="see-all">Voir tout</a>
+      </div>
+      <div class="product-grid" id="productGrid" role="region" aria-label="Grille d'annonces"></div>
+    </section>
+
+    <!-- LOAD MORE BUTTON -->
+    <div id="loadMoreWrap" class="load-more-wrap" style="display: none;">
+      <button class="btn btn-primary" id="loadMoreBtn">Voir plus d'annonces</button>
+    </div>
+
+  </main>
+
+  <!-- BOTTOM NAVIGATION -->
+  <nav class="bottom-nav" id="bottomNav" role="navigation" aria-label="Navigation principale"></nav>
+
+  <!-- DROPDOWN MENU -->
+  <div class="dropdown-menu hidden" id="dropdownMenu" role="dialog" aria-label="Menu de navigation" aria-hidden="true">
+    <div class="dropdown-panel"></div>
+  </div>
+
+  <!-- EXTERNAL SCRIPTS WITH DEFER -->
+  <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script defer src="js/supabase-config.js"></script>
+  <script defer src="js/app.js"></script>
+  <script defer src="js/lazy-load.js"></script>
+
+  <!-- INLINE SCRIPT - APP LOGIC -->
+  <script>
+    // Configuration
+    const PAGE_SIZE = 6;
+    let currentOffset = 0;
+    let totalListings = 0;
+    let isLoading = false;
+    let deferredPrompt = null; 
+
+    // ===== CATEGORY GRID RENDERING =====
+    function renderCategoryGrid() {
+      const grid = document.getElementById('brandGrid');
+      if (!grid || typeof CATEGORIES === 'undefined') return;
+      
+      const firstFour = CATEGORIES.slice(0, 4);
+      grid.innerHTML = firstFour.map(c => `
+        <a href="category.html?cat=${encodeURIComponent(c.name)}" class="brand-tile" role="button">
+          <div class="icon" style="background-color: ${escapeHtml(c.color)};" aria-hidden="true">${escapeHtml(c.emoji)}</div>
+          <span>${escapeHtml(c.name)}</span>
+        </a>
+      `).join('');
+    }
+
+    // ===== HOME PRODUCTS RENDERING =====
+    async function renderHomeProducts() {
+      const grid = document.getElementById('productGrid');
+      if (!grid) return;
+      
+      grid.innerHTML = '<p class="loading-text" aria-live="polite">Chargement des annonces…</p>';
+
+      try {
+        if (typeof getAllListings !== 'function' || typeof countAllListings !== 'function') {
+          throw new Error('Fonctions de chargement non disponibles');
+        }
+
+        const [listings, total] = await Promise.all([
+          getAllListings(PAGE_SIZE, 0),
+          countAllListings()
+        ]);
+
+        totalListings = total || 0;
+        currentOffset = listings ? listings.length : 0;
+
+        if (listings && listings.length) {
+          grid.innerHTML = await renderListingGrid(listings);
+          if (typeof initLazyLoad === 'function') {
+            initLazyLoad();
+          }
+        } else {
+          grid.innerHTML = '<p class="loading-text">Aucune annonce pour le moment.</p>';
+        }
+      } catch (error) {
+        console.error("Erreur lors du chargement des annonces:", error);
+        grid.innerHTML = '<p class="loading-text" style="color: var(--error);">Impossible de charger les annonces. Vérifiez votre connexion.</p>';
+      }
+
+      updateLoadMoreBtn();
+    }
+
+    // ===== LOAD MORE FUNCTIONALITY =====
+    async function loadMore() {
+      if (isLoading) return;
+      
+      const btn = document.getElementById('loadMoreBtn');
+      const grid = document.getElementById('productGrid');
+      
+      if (!btn || !grid) return;
+
+      isLoading = true;
+      btn.disabled = true;
+      btn.setAttribute('aria-busy', 'true');
+      const originalText = btn.textContent;
+      btn.textContent = 'Chargement…';
+
+      try {
+        const more = await getAllListings(PAGE_SIZE, currentOffset);
+        if (more && more.length) {
+          currentOffset += more.length;
+          
+          const tempDiv = document.createElement('div');
+          tempDiv.innerHTML = await renderListingGrid(more);
+          
+          while (tempDiv.firstChild) {
+            grid.appendChild(tempDiv.firstChild);
+          }
+          
+          if (typeof initLazyLoad === 'function') {
+            initLazyLoad();
+          }
+        }
+      } catch (error) {
+        console.error("Erreur de chargement supplémentaire:", error);
+      } finally {
+        isLoading = false;
+        btn.disabled = false;
+        btn.setAttribute('aria-busy', 'false');
+        btn.textContent = originalText;
+        updateLoadMoreBtn();
+      }
+    }
+
+    // ===== UPDATE LOAD MORE BUTTON =====
+    function updateLoadMoreBtn() {
+      const wrap = document.getElementById('loadMoreWrap');
+      if (wrap) {
+        wrap.style.display = currentOffset < totalListings ? 'block' : 'none';
+      }
+    }
+
+    // ===== SEARCH FUNCTIONALITY =====
+    function performSearch() {
+      const input = document.getElementById('searchInput');
+      if (!input || !input.value.trim()) {
+        alert('Veuillez entrer un terme de recherche');
         return;
       }
-
-      const [listings, total] = await Promise.all([
-        getAllListings(PAGE_SIZE, 0),
-        countAllListings()
-      ]);
-
-      totalListings = total || 0;
-      currentOffset = listings ? listings.length : 0;
-
-      if (listings && listings.length) {
-        grid.innerHTML = await renderListingGrid(listings);
-        // Initialiser le lazy-loading s'il y a un script dédié
-        if (typeof initLazyLoad === 'function') initLazyLoad();
-      } else {
-        grid.innerHTML = '<p class="loading-text">Aucune annonce pour le moment.</p>';
-      }
-    } catch (error) {
-      console.error("Erreur lors du chargement des annonces :", error);
-      grid.innerHTML = '<p class="loading-text" style="color:var(--error);">Impossible de charger les annonces. Vérifiez votre connexion.</p>';
+      
+      const searchTerm = encodeURIComponent(input.value.trim());
+      window.location.href = `category.html?search=${searchTerm}`;
     }
 
-    updateLoadMoreBtn();
-  }
+    // ===== THEME TOGGLE =====
+    function toggleTheme() {
+      const btn = document.getElementById('themeToggleBtn');
+      const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+      const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+      
+      document.documentElement.setAttribute('data-theme', newTheme);
+      localStorage.setItem('theme', newTheme);
+      
+      btn.textContent = newTheme === 'dark' ? '☀️' : '🌙';
+    }
 
-  async function loadMore() {
-    const btn = document.getElementById('loadMoreBtn');
-    const grid = document.getElementById('productGrid');
-    if (!btn || !grid) return;
+    // ===== DROPDOWN MENU TOGGLE =====
+    function toggleDropdown() {
+      const menu = document.getElementById('dropdownMenu');
+      const btn = document.getElementById('menuBtn');
+      const isHidden = menu.classList.toggle('hidden');
+      
+      btn.setAttribute('aria-expanded', !isHidden);
+      menu.setAttribute('aria-hidden', isHidden);
+    }
 
-    btn.disabled = true;
-    btn.textContent = 'Chargement…';
+    // ===== HELPER: ESCAPE HTML =====
+    function escapeHtml(text) {
+      const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+      };
+      return String(text).replace(/[&<>"']/g, m => map[m]);
+    }
 
-    try {
-      const more = await getAllListings(PAGE_SIZE, currentOffset);
-      if (more && more.length) {
-        currentOffset += more.length;
+    // ===== GESTION DE L'INSTALLATION PWA =====
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e; 
+      const pwaBanner = document.getElementById('pwaBanner');
+      if (pwaBanner) {
+        pwaBanner.style.display = 'flex';
+      }
+    });
+
+    // ===== EVENT LISTENERS =====
+    document.addEventListener('DOMContentLoaded', function() {
+      renderCategoryGrid();
+      renderHomeProducts();
+      
+      if (typeof renderBottomNav === 'function') {
+        renderBottomNav('accueil');
+      }
+
+      // Action clic installation PWA
+      const pwaBtn = document.getElementById('pwaInstallBtn');
+      const pwaBanner = document.getElementById('pwaBanner');
+      if (pwaBtn) {
+        pwaBtn.addEventListener('click', async () => {
+          if (!deferredPrompt) return;
+          pwaBtn.disabled = true;
+          deferredPrompt.prompt(); 
+          const { outcome } = await deferredPrompt.userChoice;
+          console.log(`PWA installation: ${outcome}`);
+          deferredPrompt = null;
+          if (pwaBanner) pwaBanner.style.display = 'none';
+        });
+      }
+
+      // NOUVEAU : INTERCEPTION DU CLIC "CONTACTER LE VENDEUR"
+      // Écoute de manière globale pour cibler les liens WhatsApp générés dynamiquement
+      document.addEventListener('click', function(e) {
+        // Détecte si l'élément cliqué (ou son parent) est un lien WhatsApp ou possède une classe de contact
+        const contactTarget = e.target.closest('a[href*="wa.me"], a[href*="whatsapp.com"], .btn-whatsapp, .contact-btn');
         
-        // Création d'un conteneur temporaire pour préserver le DOM existant
-        const tempDiv = document.createElement('div');
-        tempDiv.innerHTML = await renderListingGrid(more);
-        
-        while (tempDiv.firstChild) {
-          grid.appendChild(tempDiv.firstChild);
+        if (contactTarget) {
+          // Affiche une fenêtre de confirmation native (propre, bloquante et ultra-visible sur mobile)
+          const acceptSecurity = confirm(
+            "⚠️ RAPPEL DE SÉCURITÉ DEKONme :\n\n" +
+            "Ne payez JAMAIS d'acompte (Flooz / T-Money) avant d'avoir vu et rigoureusement vérifié le produit en personne.\n\n" +
+            "Souhaitez-vous toujours ouvrir WhatsApp pour contacter ce vendeur ?"
+          );
+          
+          // Si l'utilisateur clique sur "Annuler", on bloque la redirection vers WhatsApp
+          if (!acceptSecurity) {
+            e.preventDefault();
+          }
         }
-        
-        if (typeof initLazyLoad === 'function') initLazyLoad();
+      });
+
+      // Restore theme preference
+      const savedTheme = localStorage.getItem('theme') || 'light';
+      document.documentElement.setAttribute('data-theme', savedTheme);
+      const btn = document.getElementById('themeToggleBtn');
+      if (btn) {
+        btn.textContent = savedTheme === 'dark' ? '☀️' : '🌙';
       }
-    } catch (error) {
-      console.error("Erreur de chargement supplémentaire :", error);
-    }
 
-    btn.disabled = false;
-    btn.textContent = 'Voir plus d\'annonces';
-    updateLoadMoreBtn();
-  }
+      // Search input - Enter key
+      const searchInput = document.getElementById('searchInput');
+      if (searchInput) {
+        searchInput.addEventListener('keydown', function(e) {
+          if (e.key === 'Enter') {
+            performSearch();
+          }
+        });
+      }
 
-  function updateLoadMoreBtn() {
-    const wrap = document.getElementById('loadMoreWrap');
-    if (!wrap) return;
-    wrap.style.display = currentOffset < totalListings ? 'block' : 'none';
-  }
+      // Search button click
+      const searchBtn = document.querySelector('.search-btn');
+      if (searchBtn) {
+        searchBtn.addEventListener('click', performSearch);
+      }
 
-  // Fermer le dropdown de recherche si l'utilisateur clique ailleurs sur la page
-  document.addEventListener('click', function(e) {
-    const dropdown = document.getElementById('searchDropdown');
-    const searchContainer = document.querySelector('.search-container');
-    if (dropdown && searchContainer && !searchContainer.contains(e.target)) {
-      dropdown.classList.add('hidden');
-    }
-  });
+      // Menu button click
+      const menuBtn = document.getElementById('menuBtn');
+      if (menuBtn) {
+        menuBtn.addEventListener('click', toggleDropdown);
+      }
 
-  // Initialisation au chargement de la page
-  document.addEventListener('DOMContentLoaded', () => {
-    renderCategoryGrid();
-    renderHomeProducts();
-    if (typeof renderBottomNav === 'function') {
-      renderBottomNav('accueil');
-    }
-  });
-</script>
+      // Theme toggle button
+      const themeBtn = document.getElementById('themeToggleBtn');
+      if (themeBtn) {
+        themeBtn.addEventListener('click', toggleTheme);
+      }
+
+      // Load more button
+      const loadMoreBtn = document.getElementById('loadMoreBtn');
+      if (loadMoreBtn) {
+        loadMoreBtn.addEventListener('click', loadMore);
+      }
+
+      // Close dropdown on outside click
+      document.addEventListener('click', function(e) {
+        const dropdown = document.getElementById('dropdownMenu');
+        const searchContainer = document.querySelector('.search-container');
+        const menuBtn = document.getElementById('menuBtn');
+        
+        if (dropdown && !dropdown.classList.contains('hidden') && 
+            !dropdown.contains(e.target) && 
+            !menuBtn.contains(e.target)) {
+          toggleDropdown();
+        }
+
+        if (searchContainer && !searchContainer.contains(e.target)) {
+          const searchDropdown = document.getElementById('searchDropdown');
+          if (searchDropdown) {
+            searchDropdown.classList.add('hidden');
+          }
+        }
+      });
+
+      // Close dropdown on Escape key
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+          const dropdown = document.getElementById('dropdownMenu');
+          if (dropdown && !dropdown.classList.contains('hidden')) {
+            toggleDropdown();
+          }
+        }
+      });
+    });
+  </script>
+
 </body>
 </html>

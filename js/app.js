@@ -464,7 +464,9 @@ function stopPresenceHeartbeat() {
 
 function getOnlineStatus(lastSeen) {
   if (!lastSeen) return { label: "", dot: "" };
-  const diffMin = Math.block = Math.floor((Date.now() - new Date(lastSeen)) / 60000);
+  
+  // Correction de la faute de frappe critique ici :
+  const diffMin = Math.floor((Date.now() - new Date(lastSeen)) / 60000);
   
   if (diffMin < 3) return { label: "En ligne", dot: "🟢" };
   if (diffMin < 60) return { label: `Vu il y a ${diffMin} min`, dot: "🟡" };
@@ -500,6 +502,16 @@ function presenceBadgeHTML(lastSeen) {
 
 window.contactWhatsApp = function (phone, productLabel, price, listingId) {
   if (!phone) return;
+
+  // Pop-up d'interception de sécurité native anti-fraude intégrée
+  const acceptSecurity = confirm(
+    "⚠️ RAPPEL DE SÉCURITÉ DEKONme :\n\n" +
+    "Ne payez JAMAIS d'acompte (via Flooz ou T-Money) avant d'avoir vu, testé et rigoureusement vérifié le produit en personne.\n\n" +
+    "Souhaitez-vous toujours contacter ce vendeur ?"
+  );
+  
+  if (!acceptSecurity) return;
+
   const cleanPhone = toE164(String(phone)).replace(/\D/g, "");
   let text = "Bonjour, je suis intéressé(e) par votre annonce sur DEKONme.";
   
@@ -680,4 +692,27 @@ if ("serviceWorker" in navigator) {
         console.warn("[PWA] Service worker non enregistré :", err.message);
       });
   });
+}
+async function updateMyProfile({ name, phone, city, avatar_emoji }) {
+  if (!window.db) return { error: "Base de données non initialisée" };
+  const user = await getCurrentUser();
+  if (!user) return { error: "Non connecté" };
+
+  const { data, error } = await window.db
+    .from("profiles")
+    .update({
+      name: name,
+      phone: toE164(phone), 
+      city: city,
+      avatar_emoji: avatar_emoji // Ajout de l'émoji ici pour garder le fichier de fonctions à jour
+    })
+    .eq("id", user.id)
+    .select()
+    .single();
+
+  if (error) {
+    console.error("Erreur lors de la modification du profil :", error);
+    return { error: error.message };
+  }
+  return { data, success: true };
 }
