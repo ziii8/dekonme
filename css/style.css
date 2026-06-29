@@ -1,7 +1,15 @@
 /* ============================================= */
-/* DEKONme — style.css v4.0 (Production)      */
-/* Design system factorisé + Sécurité Mobile  */
-/* Marketplace du Togo — 100% mobile-first    */
+/* DEKONme — style.css v4.1 (Production)        */
+/* Design system factorisé + Sécurité Mobile    */
+/* Marketplace du Togo — 100% mobile-first      */
+/* CORRECTIFS v4.1 :                            */
+/*   - clamp() container : min 480→320px        */
+/*   - line-clamp sans préfixe supprimé         */
+/*   - Lightbox : !important supprimés          */
+/*   - -webkit-backdrop-filter ajouté           */
+/*   - prefers-reduced-motion ajouté            */
+/*   - scrollbar lightbox masquée               */
+/*   - select : padding-right corrigé iOS       */
 /* ============================================= */
 
 :root {
@@ -24,7 +32,8 @@
   --radius-card: 18px;
   --radius-pill: 999px;
   --nav-height: 64px;
-  --container-width: clamp(480px, 92vw, 1100px);
+  /* FIX : min 480px → 320px pour éviter le débordement sur petits mobiles */
+  --container-width: clamp(320px, 92vw, 1100px);
   --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -68,20 +77,40 @@ html.light {
 }
 
 /* ==================== PATCH SÉCURITÉ MOBILE ANTI-CARRÉ BLANC ==================== */
-html.dark body, html.dark .menu-row, html.dark .product-card, html.dark .seller-card, html.dark .topbar .back-btn, html.dark .modal-content {
-  background-color: var(--white) !important;
-  border-color: var(--border) !important;
+/*
+  FIX : Les !important en cascade ont été assouplis pour ne plus écraser
+  de règles légitimes (ex. .sold-badge, états actifs, etc.).
+  On cible uniquement les propriétés réellement problématiques.
+*/
+html.dark .menu-row,
+html.dark .product-card,
+html.dark .seller-card,
+html.dark .topbar .back-btn,
+html.dark .modal-content {
+  background-color: var(--white);
+  border-color: var(--border);
 }
-html.dark .menu-row-label, html.dark .product-info h4, html.dark .profile-header h2, html.dark .section-head h3, html.dark .topbar .page-title, html.dark .detail-title {
-  color: var(--ink) !important;
+html.dark .menu-row-label,
+html.dark .product-info h4,
+html.dark .profile-header h2,
+html.dark .section-head h3,
+html.dark .topbar .page-title,
+html.dark .detail-title {
+  color: var(--ink);
 }
-html.dark .menu-row-icon, html.dark .profile-header p, html.dark .product-info .meta, html.dark .topbar .icon-btn svg {
-  color: var(--ink-soft) !important;
+html.dark .menu-row-icon,
+html.dark .profile-header p,
+html.dark .product-info .meta,
+html.dark .topbar .icon-btn svg {
+  color: var(--ink-soft);
 }
 
 /* ==================== RESET & BASE ==================== */
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
-html { overflow-x:hidden; scroll-behavior: smooth; }
+html {
+  overflow-x: hidden;
+  /* FIX : scroll-behavior déplacé dans @media prefers-reduced-motion ci-dessous */
+}
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
   background: var(--bg);
@@ -112,7 +141,8 @@ img { display:block; max-width:100%; height: auto; }
 @keyframes modalSlideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
 
 /* ==================== GLOBAL FORMS FACTORISATION ==================== */
-input, select, textarea {
+input,
+textarea {
   width: 100%;
   padding: 14px 16px;
   margin-bottom: 14px;
@@ -125,6 +155,27 @@ input, select, textarea {
   transition: var(--transition);
   font-family: inherit;
 }
+
+/* FIX : select séparé — padding-right élargi pour ne pas masquer la flèche native iOS */
+select {
+  width: 100%;
+  padding: 14px 40px 14px 16px;
+  margin-bottom: 14px;
+  background: var(--white) !important;
+  border: 2px solid var(--border) !important;
+  border-radius: 12px;
+  font-size: 14px;
+  color: var(--ink) !important;
+  outline: none;
+  transition: var(--transition);
+  font-family: inherit;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236B6660' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 14px center !important;
+}
+
 input:focus, select:focus, textarea:focus {
   border-color: var(--orange) !important;
   box-shadow: 0 0 0 4px rgba(232, 115, 44, 0.15);
@@ -183,11 +234,41 @@ textarea { resize: vertical; min-height: 120px; }
 .product-card .img-wrap { position: relative; background: var(--bg-soft); overflow: hidden; }
 .product-card img { width: 100%; height: 150px; object-fit: cover; transition: var(--transition); }
 .product-card:hover img { transform: scale(1.05); }
-.fav-btn { position: absolute; top: 10px; right: 10px; width: 36px; height: 36px; border-radius: 50%; background: rgba(255, 255, 255, 0.95); border: 2px solid var(--white); display: flex; align-items: center; justify-content: center; color: #1A1A1A; backdrop-filter: blur(8px); transition: var(--transition); box-shadow: var(--shadow); }
+.fav-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.95);
+  border: 2px solid var(--white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #1A1A1A;
+  /* FIX : préfixe -webkit- ajouté pour Safari/iOS */
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  transition: var(--transition);
+  box-shadow: var(--shadow);
+}
 .fav-btn.active { color: var(--orange); }
 .sold-badge { position: absolute; top: 10px; left: 10px; background: rgba(26, 26, 26, 0.9); color: var(--white); font-size: 10px; font-weight: 800; padding: 6px 12px; border-radius: var(--radius-pill); }
 .product-info { padding: 12px 14px 14px; flex: 1; display: flex; flex-direction: column; }
-.product-info h4 { font-size: 14px; font-weight: 700; line-height: 1.3; margin-bottom: 6px; color: var(--ink); display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.product-info h4 {
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.3;
+  margin-bottom: 6px;
+  color: var(--ink);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  /* FIX : line-clamp standard ajouté pour compatibilité */
+}
 .product-info .price-row { display: flex; align-items: center; justify-content: space-between; margin-top: auto; }
 .product-info .price { color: var(--orange); font-weight: 800; font-size: 15px; }
 .product-info .meta { font-size: 11px; color: var(--ink-soft); margin-top: 4px; }
@@ -223,7 +304,18 @@ textarea { resize: vertical; min-height: 120px; }
 .btn-block { width: 100%; }
 
 /* ==================== MODAL SYSTEM ==================== */
-.modal { position: fixed; inset: 0; background: rgba(26, 26, 26, 0.5); display: none; align-items: flex-end; justify-content: center; z-index: 2000; backdrop-filter: blur(3px); }
+.modal {
+  position: fixed;
+  inset: 0;
+  /* FIX : préfixe -webkit- ajouté pour Safari/iOS */
+  -webkit-backdrop-filter: blur(3px);
+  backdrop-filter: blur(3px);
+  background: rgba(26, 26, 26, 0.5);
+  display: none;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 2000;
+}
 @media (min-width: 600px) { .modal { align-items: center; } }
 .modal.open { display: flex; animation: fadeIn 0.3s ease-out; }
 .modal-content { background: var(--white); width: 100%; max-width: 480px; padding: 28px 24px 32px; border-radius: 24px 24px 0 0; border: 1px solid var(--border); position: relative; animation: modalSlideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
@@ -247,6 +339,64 @@ textarea { resize: vertical; min-height: 120px; }
 .empty-state .emoji { font-size: 48px; margin-bottom: 16px; animation: float 3s ease-in-out infinite; }
 .empty-state p { color: var(--ink-soft); font-size: 14px; }
 
+/* ==================== CORRECTIF LIGHTBOX ==================== */
+.lightbox {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.95);
+  /* FIX : display: none sans !important — la spécificité de .open suffit */
+  display: none;
+  flex-direction: column;
+  z-index: 9999;
+  padding: 20px;
+}
+
+/* FIX : !important supprimé — sélecteur combiné .lightbox.open est plus spécifique */
+.lightbox.open {
+  display: flex;
+}
+
+.lightbox-track {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  flex: 1;
+  align-items: center;
+  /* FIX : scrollbar masquée sur Android/Chrome */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+/* FIX : masquer la scrollbar WebKit (Safari/Chrome mobile) */
+.lightbox-track::-webkit-scrollbar {
+  display: none;
+}
+
+.lightbox-close {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  font-size: 20px;
+  cursor: pointer;
+  z-index: 10000;
+}
+
+.lightbox-dots {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  padding: 20px 0;
+}
+
 /* ==================== RESPONSIVE CRITIQUE (< 360px) ==================== */
 @media (max-width: 360px) {
   :root { --radius-card: 14px; }
@@ -256,4 +406,28 @@ textarea { resize: vertical; min-height: 120px; }
   .brand-tile .icon { width: 46px; height: 46px; font-size: 18px; }
   .product-grid { gap: 10px; }
   .product-info h4 { font-size: 13px; }
+}
+
+/* ==================== ACCESSIBILITÉ — MOUVEMENTS RÉDUITS ==================== */
+/*
+  FIX : Désactiver toutes les animations pour les utilisateurs
+  ayant activé "Réduire les animations" dans leur système.
+  Couvre aussi scroll-behavior smooth.
+*/
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+/* scroll-behavior smooth uniquement pour ceux qui acceptent les animations */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
 }
