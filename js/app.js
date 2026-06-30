@@ -1,24 +1,34 @@
 /* ============================================= */
-/* DEKONme — app.js v3.3                         */
+/* DEKONme — app.js v3.4                         */
 /* Logique Globale & Rendu UI Marketplace        */
+/* FIX v3.4 : ajout de getCategories()           */
 /* ============================================= */
 
 const CATEGORIES = [
-  { name: "Mode", emoji: "👗", color: "#F3E7DC" },
-  { name: "Électronique", emoji: "📱", color: "#DCEAF3" },
-  { name: "Maison", emoji: "🛋️", color: "#E2EDD9" },
-  { name: "Beauté", emoji: "💄", color: "#F3DCE6" },
-  { name: "Sport", emoji: "⚽", color: "#EAE0F3" },
+  { name: "Mode",        emoji: "👗", color: "#F3E7DC" },
+  { name: "Électronique",emoji: "📱", color: "#DCEAF3" },
+  { name: "Maison",      emoji: "🛋️", color: "#E2EDD9" },
+  { name: "Beauté",      emoji: "💄", color: "#F3DCE6" },
+  { name: "Sport",       emoji: "⚽", color: "#EAE0F3" },
   { name: "Accessoires", emoji: "👜", color: "#F3ECDC" }
 ];
 
-const PHONE_BRANDS = ["Apple", "Samsung", "Tecno", "Infinix", "Itel", "Huawei", "Xiaomi", "Oppo", "Vivo", "Nokia", "Autre"];
+const PHONE_BRANDS = ["Apple","Samsung","Tecno","Infinix","Itel","Huawei","Xiaomi","Oppo","Vivo","Nokia","Autre"];
 
 let _heartbeatTimer = null;
 
+/* ==================== FIX : getCategories() ==================== */
+/*
+  Fonction manquante dans v3.3 — le select #pCategory de publish.html
+  appelait cette fonction qui n'existait pas, d'où "Aucune disponible".
+  Les catégories sont locales (pas de requête Supabase nécessaire).
+*/
+function getCategories() {
+  return Promise.resolve(CATEGORIES);
+}
+
 /* ==================== SÉCURITÉ & FORMATAGE ==================== */
 
-// Protection contre les failles XSS[cite: 9, 11, 12]
 function escapeHtml(text) {
   if (text == null) return "";
   const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
@@ -61,11 +71,7 @@ async function getAllListings(limit = 6, offset = 0) {
     .eq("status", "active")
     .order("created_at", { ascending: false })
     .range(offset, offset + limit - 1);
-
-  if (error) {
-    console.error("Erreur chargement annonces :", error);
-    return [];
-  }
+  if (error) { console.error("Erreur chargement annonces :", error); return []; }
   return data;
 }
 
@@ -75,11 +81,7 @@ async function countAllListings() {
     .from("listings")
     .select("*", { count: "exact", head: true })
     .eq("status", "active");
-
-  if (error) {
-    console.error("Erreur comptage :", error);
-    return 0;
-  }
+  if (error) { console.error("Erreur comptage :", error); return 0; }
   return count || 0;
 }
 
@@ -90,11 +92,7 @@ async function getListingById(id) {
     .select("*")
     .eq("id", id)
     .maybeSingle();
-
-  if (error) {
-    console.error("Erreur chargement annonce :", error);
-    return null;
-  }
+  if (error) { console.error("Erreur chargement annonce :", error); return null; }
   return data;
 }
 
@@ -106,11 +104,7 @@ async function getListingsByCategory(category) {
     .eq("category", category)
     .eq("status", "active")
     .order("created_at", { ascending: false });
-
-  if (error) {
-    console.error("Erreur chargement annonces :", error);
-    return [];
-  }
+  if (error) { console.error("Erreur chargement annonces :", error); return []; }
   return data;
 }
 
@@ -122,11 +116,7 @@ async function searchListings(term) {
     .or(`title.ilike.%${term}%,brand.ilike.%${term}%,category.ilike.%${term}%`)
     .eq("status", "active")
     .order("created_at", { ascending: false });
-
-  if (error) {
-    console.error("Erreur recherche :", error);
-    return [];
-  }
+  if (error) { console.error("Erreur recherche :", error); return []; }
   return data;
 }
 
@@ -137,11 +127,7 @@ async function countByCategory(category) {
     .select("*", { count: "exact", head: true })
     .eq("category", category)
     .eq("status", "active");
-
-  if (error) {
-    console.error("Erreur comptage :", error);
-    return 0;
-  }
+  if (error) { console.error("Erreur comptage :", error); return 0; }
   return count || 0;
 }
 
@@ -154,27 +140,24 @@ async function createListing(listing) {
   const { data, error } = await window.db
     .from("listings")
     .insert({
-      user_id: user.id,
-      title: listing.title,
-      brand: listing.brand,
-      model: listing.model,
-      price: listing.price,
-      city: listing.city,
-      condition: listing.condition,
-      category: listing.category,
+      user_id:     user.id,
+      title:       listing.title,
+      brand:       listing.brand,
+      model:       listing.model,
+      price:       listing.price,
+      city:        listing.city,
+      condition:   listing.condition,
+      category:    listing.category,
       description: listing.description,
-      whatsapp: listing.whatsapp,
-      images: listing.images,
-      image_url: listing.images[0],
+      whatsapp:    listing.whatsapp,
+      images:      listing.images,
+      image_url:   listing.images[0],
       seller_name: profile ? profile.name : "Vendeur DEKONme"
     })
     .select()
     .single();
 
-  if (error) {
-    console.error("Erreur publication :", error);
-    return { error: error.message };
-  }
+  if (error) { console.error("Erreur publication :", error); return { error: error.message }; }
   return { data };
 }
 
@@ -183,26 +166,23 @@ async function updateListing(id, listing) {
   const { data, error } = await window.db
     .from("listings")
     .update({
-      title: listing.title,
-      brand: listing.brand,
-      model: listing.model,
-      price: listing.price,
-      city: listing.city,
-      condition: listing.condition,
-      category: listing.category,
+      title:       listing.title,
+      brand:       listing.brand,
+      model:       listing.model,
+      price:       listing.price,
+      city:        listing.city,
+      condition:   listing.condition,
+      category:    listing.category,
       description: listing.description,
-      whatsapp: listing.whatsapp,
-      images: listing.images,
-      image_url: listing.images[0]
+      whatsapp:    listing.whatsapp,
+      images:      listing.images,
+      image_url:   listing.images[0]
     })
     .eq("id", id)
     .select()
     .single();
 
-  if (error) {
-    console.error("Erreur modification :", error);
-    return { error: error.message };
-  }
+  if (error) { console.error("Erreur modification :", error); return { error: error.message }; }
   return { data };
 }
 
@@ -214,11 +194,7 @@ async function markAsSold(id) {
     .eq("id", id)
     .select()
     .single();
-
-  if (error) {
-    console.error("Erreur signalement vente :", error);
-    return { error: error.message };
-  }
+  if (error) { console.error("Erreur signalement vente :", error); return { error: error.message }; }
   return { data };
 }
 
@@ -226,17 +202,12 @@ async function getMyListings() {
   if (!window.db) return [];
   const user = await getCurrentUser();
   if (!user) return [];
-
   const { data, error } = await window.db
     .from("listings")
     .select("*")
     .eq("user_id", user.id)
     .order("created_at", { ascending: false });
-
-  if (error) {
-    console.error("Erreur chargement mes annonces :", error);
-    return [];
-  }
+  if (error) { console.error("Erreur chargement mes annonces :", error); return []; }
   return data;
 }
 
@@ -266,7 +237,7 @@ async function uploadListingPhotos(files) {
   return { urls };
 }
 
-/* ==================== AUTHENTIFICATION GUARD & PROFILES ==================== */
+/* ==================== AUTHENTIFICATION & PROFILES ==================== */
 
 async function getCurrentUser() {
   if (!window.db) return null;
@@ -282,27 +253,19 @@ async function isLoggedIn() {
 async function getMyProfile() {
   const user = await getCurrentUser();
   if (!user) return null;
-
   const { data, error } = await window.db
     .from("profiles")
     .select("*")
     .eq("id", user.id)
     .maybeSingle();
-
-  if (error) {
-    console.error("Erreur profil :", error);
-    return null;
-  }
+  if (error) { console.error("Erreur profil :", error); return null; }
   return data;
 }
 
 async function getSellerProfile(userId) {
   if (!window.db) return null;
   const { data, error } = await window.db.from("profiles").select("*").eq("id", userId).maybeSingle();
-  if (error) {
-    console.error("Erreur profil vendeur :", error);
-    return null;
-  }
+  if (error) { console.error("Erreur profil vendeur :", error); return null; }
   return data;
 }
 
@@ -314,11 +277,7 @@ async function getListingsBySeller(userId) {
     .eq("user_id", userId)
     .eq("status", "active")
     .order("created_at", { ascending: false });
-
-  if (error) {
-    console.error("Erreur annonces vendeur :", error);
-    return [];
-  }
+  if (error) { console.error("Erreur annonces vendeur :", error); return []; }
   return data;
 }
 
@@ -338,12 +297,11 @@ async function signUpUser({ name, email, phone, city, password }) {
   if (error) return { error: error.message };
 
   const { error: profileError } = await window.db.from("profiles").insert({
-    id: data.user.id,
-    name: name,
+    id:    data.user.id,
+    name:  name,
     phone: toE164(phone),
-    city: city
+    city:  city
   });
-
   if (profileError) return { error: profileError.message };
   return { data };
 }
@@ -357,24 +315,18 @@ async function signInUser({ email, password }) {
 
 window.logoutUser = async function () {
   stopPresenceHeartbeat();
-  if (window.db) {
-    await window.db.auth.signOut();
-  }
+  if (window.db) await window.db.auth.signOut();
   window.location.href = "/index.html";
 };
 
-/* ==================== GESTION DES FAVORIS ==================== */
+/* ==================== FAVORIS ==================== */
 
 async function getFavoriteIds() {
   if (!window.db) return [];
   const user = await getCurrentUser();
   if (!user) return [];
-
   const { data, error } = await window.db.from("favorites").select("listing_id").eq("user_id", user.id);
-  if (error) {
-    console.error("Erreur favoris :", error);
-    return [];
-  }
+  if (error) { console.error("Erreur favoris :", error); return []; }
   return data.map(f => f.listing_id);
 }
 
@@ -382,17 +334,12 @@ async function getFavoriteListings() {
   if (!window.db) return [];
   const user = await getCurrentUser();
   if (!user) return [];
-
   const { data, error } = await window.db
     .from("favorites")
     .select("listing_id, listings(*)")
     .eq("user_id", user.id)
     .order("created_at", { ascending: false });
-
-  if (error) {
-    console.error("Erreur favoris :", error);
-    return [];
-  }
+  if (error) { console.error("Erreur favoris :", error); return []; }
   return data.map(f => f.listings).filter(l => l && l.status === "active");
 }
 
@@ -400,14 +347,12 @@ async function isFavorite(listingId) {
   if (!window.db) return false;
   const user = await getCurrentUser();
   if (!user) return false;
-
   const { data, error } = await window.db
     .from("favorites")
     .select("listing_id")
     .eq("user_id", user.id)
     .eq("listing_id", listingId)
     .maybeSingle();
-
   if (error) return false;
   return !!data;
 }
@@ -415,13 +360,11 @@ async function isFavorite(listingId) {
 window.toggleFavorite = async function (id, btnEl) {
   if (!window.db) return;
   const user = await getCurrentUser();
-  
   if (!user) {
     const currentFile = window.location.pathname.split("/").pop() || "index.html";
     window.location.href = `/auth.html?next=${encodeURIComponent(currentFile)}`;
     return;
   }
-
   try {
     const already = await isFavorite(id);
     if (already) {
@@ -429,26 +372,22 @@ window.toggleFavorite = async function (id, btnEl) {
     } else {
       await window.db.from("favorites").insert({ user_id: user.id, listing_id: id });
     }
-
     if (btnEl) {
       btnEl.classList.toggle("active", !already);
       const svg = btnEl.querySelector("svg");
-      if (svg) {
-        svg.setAttribute("fill", !already ? "currentColor" : "none");
-      }
+      if (svg) svg.setAttribute("fill", !already ? "currentColor" : "none");
     }
   } catch (err) {
     console.error("Erreur toggleFavorite :", err);
   }
 };
 
-/* ==================== DISPONIBILITÉ & PRÉSENCE ==================== */
+/* ==================== PRÉSENCE ==================== */
 
 async function updatePresence() {
   if (!window.db) return;
   const user = await getCurrentUser();
   if (!user) return;
-  
   await window.db
     .from("profiles")
     .update({ last_seen: new Date().toISOString() })
@@ -463,24 +402,20 @@ function startPresenceHeartbeat() {
 }
 
 function stopPresenceHeartbeat() {
-  if (_heartbeatTimer) {
-    clearInterval(_heartbeatTimer);
-    _heartbeatTimer = null;
-  }
+  if (_heartbeatTimer) { clearInterval(_heartbeatTimer); _heartbeatTimer = null; }
 }
 
 function getPresenceStatus(lastSeen) {
   if (!lastSeen) return null;
-  const diffMs = Date.now() - new Date(lastSeen).getTime();
+  const diffMs  = Date.now() - new Date(lastSeen).getTime();
   const diffMin = Math.floor(diffMs / 60000);
-  const diffH = Math.floor(diffMin / 60);
-  const diffD = Math.floor(diffH / 24);
-
-  if (diffMin < 2) return { label: "En ligne", isOnline: true };
+  const diffH   = Math.floor(diffMin / 60);
+  const diffD   = Math.floor(diffH / 24);
+  if (diffMin < 2)  return { label: "En ligne",              isOnline: true  };
   if (diffMin < 60) return { label: `Vu il y a ${diffMin} min`, isOnline: false };
-  if (diffH < 24) return { label: `Vu il y a ${diffH}h`, isOnline: false };
-  if (diffD === 1) return { label: "Vu hier", isOnline: false };
-  if (diffD < 7) return { label: `Vu il y a ${diffD} jours`, isOnline: false };
+  if (diffH < 24)   return { label: `Vu il y a ${diffH}h`,   isOnline: false };
+  if (diffD === 1)  return { label: "Vu hier",               isOnline: false };
+  if (diffD < 7)    return { label: `Vu il y a ${diffD} jours`, isOnline: false };
   return { label: "Rarement connecté", isOnline: false };
 }
 
@@ -490,43 +425,32 @@ function presenceBadgeHTML(lastSeen) {
   return `<span class="presence-badge ${status.isOnline ? "online" : "offline"}">${status.isOnline ? "🟢" : "🕐"} ${status.label}</span>`;
 }
 
-/* ==================== ACTIONS WHATSAPP, SIGNALEMENT & PARTAGE ==================== */
+/* ==================== WHATSAPP, SIGNALEMENT & PARTAGE ==================== */
 
 window.contactWhatsApp = function (phone, productLabel, price, listingId) {
   if (!phone) return;
-
   const acceptSecurity = confirm(
     "⚠️ RAPPEL DE SÉCURITÉ DEKONme :\n\n" +
     "Ne payez JAMAIS d'acompte (via Flooz ou T-Money) avant d'avoir vu, testé et rigoureusement vérifié le produit en personne.\n\n" +
     "Souhaitez-vous toujours contacter ce vendeur ?"
   );
-  
   if (!acceptSecurity) return;
-
   const cleanPhone = toE164(String(phone)).replace(/\D/g, "");
   let text = "Bonjour, je suis intéressé(e) par votre annonce sur DEKONme.";
-  
   if (productLabel) {
     text = `Bonjour, je suis intéressé(e) par l'article : ${productLabel}`;
     if (price) text += ` (${formatPrice(price)} FCFA)`;
   }
-  if (listingId && productLabel) {
-    text += `\nLien de l'article : ${buildShareUrl(listingId, productLabel)}`;
-  }
-  
+  if (listingId && productLabel) text += `\nLien de l'article : ${buildShareUrl(listingId, productLabel)}`;
   window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(text)}`, "_blank", "noopener");
 };
 
 window.shareListing = async function (id, title, price) {
-  const url = buildShareUrl(id, title);
+  const url  = buildShareUrl(id, title);
   const text = `${title} — ${formatPrice(price)} FCFA sur DEKONme`;
-  
   if (navigator.share) {
-    try {
-      await navigator.share({ title: text, url: url });
-    } catch (e) {
-      console.warn("[Share] Annulé ou non supporté");
-    }
+    try { await navigator.share({ title: text, url: url }); }
+    catch (e) { console.warn("[Share] Annulé ou non supporté"); }
   } else {
     window.open(`https://wa.me/?text=${encodeURIComponent(text + " " + url)}`, "_blank", "noopener");
   }
@@ -536,24 +460,20 @@ async function reportListing(listingId, reason, comment) {
   if (!window.db) return { error: "Non connecté à Supabase" };
   const user = await getCurrentUser();
   const { error } = await window.db.from("reports").insert({
-    listing_id: listingId,
+    listing_id:  listingId,
     reporter_id: user ? user.id : null,
-    reason: reason,
-    comment: comment || null
+    reason:      reason,
+    comment:     comment || null
   });
-  if (error) {
-    console.error("Erreur signalement :", error);
-    return { error: error.message };
-  }
+  if (error) { console.error("Erreur signalement :", error); return { error: error.message }; }
   return { success: true };
 }
 
-/* ==================== RENDU DES GRILLES DE PRODUITS ==================== */
+/* ==================== RENDU GRILLES ==================== */
 
 function productCardHTML(l, fav) {
   const favClass = fav ? "active" : "";
   const image = l.image_url || (l.images && l.images[0]) || `https://picsum.photos/seed/${l.id}/600/600`;
-  
   return `
     <div class="product-card" onclick="goToProduct(${l.id})">
       <div class="img-wrap">
@@ -584,12 +504,12 @@ window.goToProduct = function (id) {
 
 window.performSearch = function () {
   const input = document.getElementById("searchInput");
-  const term = input ? input.value.trim() : "";
+  const term  = input ? input.value.trim() : "";
   if (!term) return;
   window.location.href = `/category.html?q=${encodeURIComponent(term)}`;
 };
 
-/* ==================== INTERFACE UNIFIÉE & THEME ==================== */
+/* ==================== BOTTOM NAV & THEME ==================== */
 
 window.toggleDropdown = function () {
   document.getElementById("dropdownMenu")?.classList.toggle("open");
@@ -598,17 +518,14 @@ window.toggleDropdown = function () {
 function renderBottomNav(active) {
   const mount = document.getElementById("bottomNav");
   if (!mount) return;
-  
   startPresenceHeartbeat();
-
   const items = [
-    { key: "accueil", href: "/index.html", label: "Accueil", icon: "M3 12l9-9 9 9M5 10v10h14V10" },
-    { key: "categories", href: "/category.html?view=categories", label: "Catégories", icon: "M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7H4z" },
-    { key: "publier", href: "#", label: "Publier", icon: "M12 5v14M5 12h14", isPublish: true },
-    { key: "favoris", href: "/favoris.html", label: "Favoris", icon: "M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" },
-    { key: "profil", href: "/profil.html", label: "Compte", icon: "M20 21a8 8 0 10-16 0M12 11a4 4 0 100-8 4 4 0 000 8z" }
+    { key: "accueil",    href: "/index.html",                   label: "Accueil",     icon: "M3 12l9-9 9 9M5 10v10h14V10" },
+    { key: "categories", href: "/category.html?view=categories", label: "Catégories",  icon: "M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7H4z" },
+    { key: "publier",    href: "#",                              label: "Publier",      icon: "M12 5v14M5 12h14", isPublish: true },
+    { key: "favoris",    href: "/favoris.html",                  label: "Favoris",     icon: "M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" },
+    { key: "profil",     href: "/profil.html",                   label: "Compte",      icon: "M20 21a8 8 0 10-16 0M12 11a4 4 0 100-8 4 4 0 000 8z" }
   ];
-
   mount.innerHTML = items.map(it => {
     if (it.isPublish) {
       return `
@@ -634,8 +551,6 @@ window.showPublish = async function () {
   window.location.href = authCheck ? "/publish.html" : "/auth.html?next=publish.html";
 };
 
-/* ==================== THEME DARK / LIGHT ==================== */
-
 function applyTheme() {
   const saved = localStorage.getItem("dekonme-theme");
   const htmlEl = document.documentElement;
@@ -647,16 +562,16 @@ function applyTheme() {
 function updateThemeIcon() {
   const btn = document.getElementById("themeToggleBtn");
   if (!btn) return;
-  const isDark = document.documentElement.classList.contains("dark") || 
-                 (!document.documentElement.classList.contains("light") && window.matchMedia("(prefers-color-scheme: dark)").matches);
+  const isDark = document.documentElement.classList.contains("dark") ||
+    (!document.documentElement.classList.contains("light") && window.matchMedia("(prefers-color-scheme: dark)").matches);
   btn.textContent = isDark ? "☀️" : "🌙";
   btn.title = isDark ? "Passer en mode clair" : "Passer en mode sombre";
 }
 
 window.toggleTheme = function () {
   const htmlEl = document.documentElement;
-  const isDark = htmlEl.classList.contains("dark") || 
-                 (!htmlEl.classList.contains("light") && window.matchMedia("(prefers-color-scheme: dark)").matches);
+  const isDark = htmlEl.classList.contains("dark") ||
+    (!htmlEl.classList.contains("light") && window.matchMedia("(prefers-color-scheme: dark)").matches);
   const nextTheme = isDark ? "light" : "dark";
   htmlEl.classList.remove("dark", "light");
   htmlEl.classList.add(nextTheme);
@@ -683,22 +598,12 @@ async function updateMyProfile({ name, phone, city, avatar_emoji }) {
   if (!window.db) return { error: "Base de données non initialisée" };
   const user = await getCurrentUser();
   if (!user) return { error: "Non connecté" };
-
   const { data, error } = await window.db
     .from("profiles")
-    .update({
-      name: name,
-      phone: toE164(phone), 
-      city: city,
-      avatar_emoji: avatar_emoji
-    })
+    .update({ name, phone: toE164(phone), city, avatar_emoji })
     .eq("id", user.id)
     .select()
     .single();
-
-  if (error) {
-    console.error("Erreur lors de la modification du profil :", error);
-    return { error: error.message };
-  }
+  if (error) { console.error("Erreur modification profil :", error); return { error: error.message }; }
   return { data, success: true };
 }

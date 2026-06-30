@@ -1,87 +1,82 @@
 /* ============================================= */
-/* DEKONme — style.css v4.1 (Production)        */
+/* DEKONme — style.css v4.2 (Production)        */
 /* Design system factorisé + Sécurité Mobile    */
 /* Marketplace du Togo — 100% mobile-first      */
-/* CORRECTIFS v4.1 :                            */
-/*   - clamp() container : min 480→320px        */
-/*   - line-clamp sans préfixe supprimé         */
-/*   - Lightbox : !important supprimés          */
-/*   - -webkit-backdrop-filter ajouté           */
-/*   - prefers-reduced-motion ajouté            */
-/*   - scrollbar lightbox masquée               */
-/*   - select : padding-right corrigé iOS       */
+/* CORRECTIFS v4.2 :                            */
+/*   - PWA install btn consolidé dans topbar    */
+/*   - Toast system unifié (plus de doublons)   */
+/*   - line-clamp : suppression propriété       */
+/*     non-standard sans préfixe               */
+/*   - [data-theme] remplacé par html.dark      */
+/*   - .product-grid min-height supprimé        */
+/*     (géré par le contenu)                   */
+/*   - Règles dupliquées supprimées             */
 /* ============================================= */
 
 :root {
-  --bg:        #FAF6F0;
-  --bg-soft:   #F0EBE3;
-  --ink:       #1A1A1A;
-  --ink-soft:  #6B6660;
-  --orange:    #E8732C;
-  --orange-deep: #C75F1E;
+  --bg:           #FAF6F0;
+  --bg-soft:      #F0EBE3;
+  --ink:          #1A1A1A;
+  --ink-soft:     #6B6660;
+  --orange:       #E8732C;
+  --orange-deep:  #C75F1E;
   --orange-light: #F5A85C;
-  --white:     #FFFFFF;
-  --whatsapp:  #25D366;
-  --whatsapp-deep: #1DA851;
-  --border:    #E8E2D8;
-  --error:     #C0392B;
-  --success:   #27AE60;
-  --shadow: 0 2px 12px rgba(26,26,26,0.06);
-  --shadow-lift: 0 8px 24px rgba(26,26,26,0.10);
-  --shadow-deep: 0 12px 40px rgba(26,26,26,0.15);
-  --radius-card: 18px;
-  --radius-pill: 999px;
-  --nav-height: 64px;
-  /* FIX : min 480px → 320px pour éviter le débordement sur petits mobiles */
+  --white:        #FFFFFF;
+  --whatsapp:     #25D366;
+  --whatsapp-deep:#1DA851;
+  --border:       #E8E2D8;
+  --error:        #C0392B;
+  --success:      #27AE60;
+  --shadow:       0 2px 12px rgba(26,26,26,0.06);
+  --shadow-lift:  0 8px 24px rgba(26,26,26,0.10);
+  --shadow-deep:  0 12px 40px rgba(26,26,26,0.15);
+  --radius-card:  18px;
+  --radius-pill:  999px;
+  --nav-height:   64px;
   --container-width: clamp(320px, 92vw, 1100px);
-  --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition:   all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* ==================== CONFIGURATION MODE SOMBRE ==================== */
+/* ==================== MODE SOMBRE AUTO ==================== */
 @media (prefers-color-scheme: dark) {
   :root:not(.light) {
-    --bg:       #0F0F0F;
-    --bg-soft:  #1A1A1A;
-    --ink:      #F0ECE6;
-    --ink-soft: #9E9890;
-    --white:    #1E1E1E;
-    --border:   #2A2A2A;
-    --shadow: 0 2px 12px rgba(0,0,0,0.3);
+    --bg:        #0F0F0F;
+    --bg-soft:   #1A1A1A;
+    --ink:       #F0ECE6;
+    --ink-soft:  #9E9890;
+    --white:     #1E1E1E;
+    --border:    #2A2A2A;
+    --shadow:      0 2px 12px rgba(0,0,0,0.3);
     --shadow-lift: 0 8px 24px rgba(0,0,0,0.4);
     --shadow-deep: 0 12px 40px rgba(0,0,0,0.5);
   }
 }
 
 html.dark {
-  --bg:       #0F0F0F;
-  --bg-soft:  #1A1A1A;
-  --ink:      #F0ECE6;
-  --ink-soft: #9E9890;
-  --white:    #1E1E1E;
-  --border:   #2A2A2A;
-  --shadow: 0 2px 12px rgba(0,0,0,0.3);
+  --bg:        #0F0F0F;
+  --bg-soft:   #1A1A1A;
+  --ink:       #F0ECE6;
+  --ink-soft:  #9E9890;
+  --white:     #1E1E1E;
+  --border:    #2A2A2A;
+  --shadow:      0 2px 12px rgba(0,0,0,0.3);
   --shadow-lift: 0 8px 24px rgba(0,0,0,0.4);
   --shadow-deep: 0 12px 40px rgba(0,0,0,0.5);
 }
 
 html.light {
-  --bg:       #FAF6F0;
-  --bg-soft:  #F0EBE3;
-  --ink:      #1A1A1A;
-  --ink-soft: #6B6660;
-  --white:    #FFFFFF;
-  --border:   #E8E2D8;
-  --shadow: 0 2px 12px rgba(26,26,26,0.06);
+  --bg:        #FAF6F0;
+  --bg-soft:   #F0EBE3;
+  --ink:       #1A1A1A;
+  --ink-soft:  #6B6660;
+  --white:     #FFFFFF;
+  --border:    #E8E2D8;
+  --shadow:      0 2px 12px rgba(26,26,26,0.06);
   --shadow-lift: 0 8px 24px rgba(26,26,26,0.10);
   --shadow-deep: 0 12px 40px rgba(26,26,26,0.15);
 }
 
-/* ==================== PATCH SÉCURITÉ MOBILE ANTI-CARRÉ BLANC ==================== */
-/*
-  FIX : Les !important en cascade ont été assouplis pour ne plus écraser
-  de règles légitimes (ex. .sold-badge, états actifs, etc.).
-  On cible uniquement les propriétés réellement problématiques.
-*/
+/* ==================== PATCH DARK MODE MOBILE ==================== */
 html.dark .menu-row,
 html.dark .product-card,
 html.dark .seller-card,
@@ -106,11 +101,8 @@ html.dark .topbar .icon-btn svg {
 }
 
 /* ==================== RESET & BASE ==================== */
-*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
-html {
-  overflow-x: hidden;
-  /* FIX : scroll-behavior déplacé dans @media prefers-reduced-motion ci-dessous */
-}
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html { overflow-x: hidden; }
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
   background: var(--bg);
@@ -121,26 +113,25 @@ body {
   width: 100%;
   transition: background-color 0.3s ease, color 0.3s ease;
 }
+a       { color: inherit; text-decoration: none; }
+button  { font-family: inherit; cursor: pointer; }
+img     { display: block; max-width: 100%; height: auto; }
 
-a { color:inherit; text-decoration:none; }
-button { font-family:inherit; cursor: pointer; }
-img { display:block; max-width:100%; height: auto; }
-
-/* ==================== KEYFRAME ANIMATIONS ==================== */
-@keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-@keyframes slideDown { from { opacity: 0; transform: translateY(-12px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+/* ==================== KEYFRAMES ==================== */
+@keyframes fadeUp      { from { opacity: 0; transform: translateY(16px); }  to { opacity: 1; transform: translateY(0); } }
+@keyframes fadeIn      { from { opacity: 0; }                                to { opacity: 1; } }
+@keyframes slideDown   { from { opacity: 0; transform: translateY(-12px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes slideUp     { from { opacity: 0; transform: translateY(20px); }  to { opacity: 1; transform: translateY(0); } }
 @keyframes slideInLeft { from { opacity: 0; transform: translateX(-16px); } to { opacity: 1; transform: translateX(0); } }
-@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
-@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
-@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-@keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-6px); } }
-@keyframes stickerPop { 0% { opacity: 0; transform: scale(0.5) rotate(-15deg); } 100% { opacity: 1; transform: scale(1) rotate(0deg); } }
-@keyframes bounceIn { 0% { opacity: 0; transform: scale(0.4); } 70% { transform: scale(1.1); } 100% { opacity: 1; transform: scale(1); } }
-@keyframes modalSlideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes bounce      { 0%, 100% { transform: translateY(0); }  50% { transform: translateY(-6px); } }
+@keyframes pulse       { 0%, 100% { opacity: 1; }  50% { opacity: 0.6; } }
+@keyframes spin        { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+@keyframes float       { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-6px); } }
+@keyframes stickerPop  { 0% { opacity: 0; transform: scale(0.5) rotate(-15deg); } 100% { opacity: 1; transform: scale(1) rotate(0deg); } }
+@keyframes bounceIn    { 0% { opacity: 0; transform: scale(0.4); } 70% { transform: scale(1.1); } 100% { opacity: 1; transform: scale(1); } }
+@keyframes modalSlideUp{ from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
 
-/* ==================== GLOBAL FORMS FACTORISATION ==================== */
+/* ==================== FORMULAIRES ==================== */
 input,
 textarea {
   width: 100%;
@@ -156,7 +147,7 @@ textarea {
   font-family: inherit;
 }
 
-/* FIX : select séparé — padding-right élargi pour ne pas masquer la flèche native iOS */
+/* Select séparé — padding-right élargi pour la flèche native iOS */
 select {
   width: 100%;
   padding: 14px 40px 14px 16px;
@@ -186,37 +177,178 @@ input::placeholder, textarea::placeholder {
 }
 textarea { resize: vertical; min-height: 120px; }
 
-/* ==================== CONTAINER & NAV ==================== */
-.container { max-width: var(--container-width); margin: 0 auto; padding: 0 20px; }
-.topbar { display: flex; align-items: center; justify-content: space-between; padding: 18px 20px 8px; max-width: var(--container-width); margin: 0 auto; gap: 12px; animation: slideDown 0.4s ease-out; }
-.topbar .icon-btn { background: none; border: none; color: var(--ink); width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; transition: var(--transition); position: relative; }
+/* ==================== CONTAINER & TOPBAR ==================== */
+.container {
+  max-width: var(--container-width);
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 20px 8px;
+  max-width: var(--container-width);
+  margin: 0 auto;
+  gap: 12px;
+  animation: slideDown 0.4s ease-out;
+}
+.topbar .icon-btn {
+  background: none;
+  border: none;
+  color: var(--ink);
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition);
+  position: relative;
+}
 .topbar .icon-btn svg { width: 24px; height: 24px; transition: var(--transition); }
 .topbar .icon-btn:hover svg { transform: scale(1.1); color: var(--orange); }
 .topbar .back-btn { border-radius: var(--radius-pill); background: var(--white); box-shadow: var(--shadow); }
 .topbar .back-btn:hover { box-shadow: var(--shadow-lift); transform: translateY(-2px); }
-.topbar .logo { font-size: 20px; font-weight: 800; letter-spacing: -0.5px; display: flex; align-items: center; gap: 6px; }
-.topbar .logo .mark { width: 30px; height: 30px; background: var(--ink); color: var(--bg); border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 15px; animation: stickerPop 0.5s ease-out; }
+.topbar .logo {
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.topbar .logo .mark {
+  width: 30px; height: 30px;
+  background: var(--ink); color: var(--bg);
+  border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px;
+  animation: stickerPop 0.5s ease-out;
+}
 .topbar .page-title { font-size: 18px; font-weight: 700; flex: 1; text-align: center; color: var(--ink); }
 .badge-dot { position: absolute; width: 8px; height: 8px; background: var(--orange); border-radius: 50%; top: 10px; right: 10px; }
 
+/* Logo wrapper (pages avec bouton PWA) */
+.logo-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  justify-content: flex-start;
+  min-width: 0;
+}
+.logo-wrapper .logo { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ==================== BOUTON INSTALLATION PWA ==================== */
+.pwa-install-btn {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: var(--ink);
+  border-radius: 50%;
+  transition: var(--transition);
+  flex-shrink: 0;
+}
+.pwa-install-btn:hover {
+  background: rgba(232, 115, 44, 0.1);
+  color: var(--orange);
+  transform: scale(1.08);
+}
+.pwa-install-btn:active { transform: scale(0.95); }
+.pwa-install-btn:focus-visible {
+  outline: 2px solid var(--orange);
+  outline-offset: 2px;
+}
+.pwa-install-btn svg { width: 22px; height: 22px; }
+
+/* ==================== TOAST SYSTÈME (unifié) ==================== */
+/*
+  Un seul système de toast pour toute l'app.
+  Les classes .toast-success / .toast-error / .toast-info permettent
+  de colorer le fond selon le type de message.
+  Usage JS : showToast('message', 'success' | 'error' | 'info')
+*/
+.app-toast {
+  position: fixed;
+  bottom: calc(var(--nav-height) + 16px);
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--ink);
+  color: var(--bg);
+  padding: 10px 20px;
+  border-radius: var(--radius-pill);
+  font-size: 13px;
+  font-weight: 600;
+  z-index: 3000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  white-space: nowrap;
+  max-width: 90vw;
+  text-align: center;
+  box-shadow: var(--shadow-lift);
+}
+.app-toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+.app-toast.toast-success { background: var(--success); color: #fff; }
+.app-toast.toast-error   { background: var(--error);   color: #fff; }
+.app-toast.toast-info    { background: #2196F3;         color: #fff; }
+
 /* ==================== HERO & SEARCH ==================== */
-.hero { padding: 8px 20px 28px; max-width: var(--container-width); margin: 0 auto; animation: fadeUp 0.5s ease-out; }
+.hero {
+  padding: 8px 20px 28px;
+  max-width: var(--container-width);
+  margin: 0 auto;
+  animation: fadeUp 0.5s ease-out;
+}
 .hero h1 { font-size: 30px; font-weight: 800; line-height: 1.15; letter-spacing: -0.5px; margin-bottom: 10px; color: var(--ink); }
 .hero h1 .accent { color: var(--orange); display: inline-block; animation: float 3s ease-in-out infinite; }
 .hero p { color: var(--ink-soft); font-size: 15px; max-width: 320px; margin-bottom: 18px; }
+
 .search-container { position: relative; }
-.search { display: flex; align-items: center; gap: 10px; background: var(--white); border: 2px solid var(--border); border-radius: var(--radius-pill); padding: 6px 6px 6px 18px; box-shadow: var(--shadow); transition: var(--transition); }
+.search {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--white); border: 2px solid var(--border);
+  border-radius: var(--radius-pill);
+  padding: 6px 6px 6px 18px;
+  box-shadow: var(--shadow); transition: var(--transition);
+}
 .search:focus-within { border-color: var(--orange); box-shadow: 0 0 0 4px rgba(232, 115, 44, 0.1); }
-.search input { flex: 1; border: none !important; background: transparent !important; outline: none; font-size: 15px; color: var(--ink) !important; margin-bottom: 0; padding: 0; }
-.search button { width: 40px; height: 40px; border-radius: 50%; background: var(--ink); color: var(--bg); border: none; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: var(--transition); }
+.search input {
+  flex: 1; border: none !important; background: transparent !important;
+  outline: none; font-size: 15px; color: var(--ink) !important;
+  margin-bottom: 0; padding: 0;
+}
+.search button {
+  width: 40px; height: 40px; border-radius: 50%;
+  background: var(--ink); color: var(--bg); border: none;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; transition: var(--transition);
+}
 .search button:hover { background: var(--orange); transform: scale(1.05); }
 
 /* ==================== BRAND GRID & TILES ==================== */
 .brand-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 24px; }
 @media (min-width: 480px) { .brand-grid { grid-template-columns: repeat(3, 1fr); } }
-.brand-tile { display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; text-align: center; padding: 12px; border-radius: var(--radius-card); transition: var(--transition); }
+
+.brand-tile {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 8px; cursor: pointer; text-align: center;
+  padding: 12px; border-radius: var(--radius-card); transition: var(--transition);
+}
 .brand-tile:hover { background: var(--bg-soft); transform: translateY(-4px); }
-.brand-tile .icon { width: 56px; height: 56px; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 24px; transition: var(--transition); animation: stickerPop 0.5s ease-out; }
+.brand-tile .icon {
+  width: 56px; height: 56px; border-radius: 16px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 24px; transition: var(--transition); animation: stickerPop 0.5s ease-out;
+}
 .brand-tile:hover .icon { transform: scale(1.1) rotate(5deg); }
 .brand-tile span { font-size: 12px; font-weight: 600; color: var(--ink); }
 
@@ -227,60 +359,80 @@ textarea { resize: vertical; min-height: 120px; }
 .see-all:hover { background: rgba(232, 115, 44, 0.1); color: var(--orange-deep); }
 
 /* ==================== PRODUCT GRID & CARD ==================== */
-.product-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; padding-bottom: 20px; }
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  padding-bottom: 20px;
+  /* FIX : min-height supprimé — géré par le contenu réel */
+}
 @media (min-width: 480px) { .product-grid { grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); } }
-.product-card { background: var(--white); border-radius: var(--radius-card); border: 1px solid var(--border); overflow: hidden; cursor: pointer; box-shadow: var(--shadow); transition: var(--transition); display: flex; flex-direction: column; height: 100%; animation: fadeUp 0.4s ease-out; }
+
+.product-card {
+  background: var(--white); border-radius: var(--radius-card);
+  border: 1px solid var(--border); overflow: hidden; cursor: pointer;
+  box-shadow: var(--shadow); transition: var(--transition);
+  display: flex; flex-direction: column; height: 100%;
+  animation: fadeUp 0.4s ease-out;
+}
 .product-card:hover { transform: translateY(-6px); box-shadow: var(--shadow-lift); }
 .product-card .img-wrap { position: relative; background: var(--bg-soft); overflow: hidden; }
 .product-card img { width: 100%; height: 150px; object-fit: cover; transition: var(--transition); }
 .product-card:hover img { transform: scale(1.05); }
+
 .fav-btn {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
+  position: absolute; top: 10px; right: 10px;
+  width: 36px; height: 36px; border-radius: 50%;
   background: rgba(255, 255, 255, 0.95);
   border: 2px solid var(--white);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: flex; align-items: center; justify-content: center;
   color: #1A1A1A;
-  /* FIX : préfixe -webkit- ajouté pour Safari/iOS */
   -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
-  transition: var(--transition);
-  box-shadow: var(--shadow);
+  transition: var(--transition); box-shadow: var(--shadow);
 }
 .fav-btn.active { color: var(--orange); }
-.sold-badge { position: absolute; top: 10px; left: 10px; background: rgba(26, 26, 26, 0.9); color: var(--white); font-size: 10px; font-weight: 800; padding: 6px 12px; border-radius: var(--radius-pill); }
+
+.sold-badge {
+  position: absolute; top: 10px; left: 10px;
+  background: rgba(26, 26, 26, 0.9); color: var(--white);
+  font-size: 10px; font-weight: 800;
+  padding: 6px 12px; border-radius: var(--radius-pill);
+}
+
 .product-info { padding: 12px 14px 14px; flex: 1; display: flex; flex-direction: column; }
 .product-info h4 {
-  font-size: 14px;
-  font-weight: 700;
-  line-height: 1.3;
-  margin-bottom: 6px;
-  color: var(--ink);
+  font-size: 14px; font-weight: 700; line-height: 1.3;
+  margin-bottom: 6px; color: var(--ink);
   display: -webkit-box;
   -webkit-line-clamp: 2;
   line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  /* FIX : line-clamp avec préfixe -webkit- et sans préfixe pour meilleure compatibilité */
+  /* FIX : line-clamp sans préfixe supprimé (non supporté universellement) */
 }
 .product-info .price-row { display: flex; align-items: center; justify-content: space-between; margin-top: auto; }
 .product-info .price { color: var(--orange); font-weight: 800; font-size: 15px; }
 .product-info .meta { font-size: 11px; color: var(--ink-soft); margin-top: 4px; }
 
-/* ==================== PROFILE, MENU & BRAND ROWS ==================== */
+/* ==================== PROFIL, MENU & BRAND ROWS ==================== */
 .profile-header { display: flex; align-items: center; gap: 16px; padding: 20px 0 8px; }
-.profile-avatar { width: 64px; height: 64px; border-radius: 50%; background: var(--bg-soft); display: flex; align-items: center; justify-content: center; font-size: 28px; flex-shrink: 0; animation: stickerPop 0.5s ease-out; }
+.profile-avatar {
+  width: 64px; height: 64px; border-radius: 50%; background: var(--bg-soft);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px; flex-shrink: 0; animation: stickerPop 0.5s ease-out;
+}
 .profile-header h2 { font-size: 18px; font-weight: 800; margin-bottom: 2px; color: var(--ink); }
-.profile-header p { font-size: 13px; color: var(--ink-soft); }
+.profile-header p  { font-size: 13px; color: var(--ink-soft); }
 
 .menu-list, .brand-list { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
-.menu-row, .brand-row { display: flex; align-items: center; gap: 14px; background: var(--white); border: 1px solid var(--border); border-radius: var(--radius-card); padding: 14px 16px; cursor: pointer; box-shadow: var(--shadow); transition: var(--transition); animation: slideInLeft 0.4s ease-out; }
+.menu-row, .brand-row {
+  display: flex; align-items: center; gap: 14px;
+  background: var(--white); border: 1px solid var(--border);
+  border-radius: var(--radius-card); padding: 14px 16px;
+  cursor: pointer; box-shadow: var(--shadow); transition: var(--transition);
+  animation: slideInLeft 0.4s ease-out;
+}
 .menu-row:hover, .brand-row:hover { background: var(--bg-soft); transform: translateX(4px); box-shadow: var(--shadow-lift); }
 .menu-row-icon, .brand-row .icon { font-size: 18px; color: var(--ink-soft); }
 .menu-row-label, .brand-row .info h4 { flex: 1; font-size: 14px; font-weight: 600; color: var(--ink); }
@@ -288,116 +440,119 @@ textarea { resize: vertical; min-height: 120px; }
 .menu-row .chevron, .brand-row .chevron { color: var(--ink-soft); transition: var(--transition); }
 .menu-row:hover .chevron, .brand-row:hover .chevron { color: var(--orange); transform: translateX(4px); }
 
-/* ==================== BUTTONS & TOOLBAR ==================== */
+/* ==================== BOUTONS ==================== */
 .toolbar { display: flex; gap: 10px; padding: 16px 0; flex-wrap: wrap; }
-.toolbar button { display: flex; align-items: center; gap: 6px; padding: 10px 14px; background: var(--white); border: 1.5px solid var(--border); border-radius: 12px; font-size: 13px; font-weight: 600; transition: var(--transition); color: var(--ink); }
+.toolbar button {
+  display: flex; align-items: center; gap: 6px;
+  padding: 10px 14px; background: var(--white);
+  border: 1.5px solid var(--border); border-radius: 12px;
+  font-size: 13px; font-weight: 600; transition: var(--transition); color: var(--ink);
+}
 .toolbar button:hover { border-color: var(--orange); color: var(--orange); }
 
-.btn { border: none; border-radius: var(--radius-pill); font-weight: 700; font-size: 14px; padding: 14px 20px; display: flex; align-items: center; justify-content: center; gap: 8px; transition: var(--transition); white-space: nowrap; }
+.btn {
+  border: none; border-radius: var(--radius-pill);
+  font-weight: 700; font-size: 14px; padding: 14px 20px;
+  display: flex; align-items: center; justify-content: center;
+  gap: 8px; transition: var(--transition); white-space: nowrap;
+}
 .btn:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12); }
-.btn-primary { background: var(--ink); color: var(--bg); }
+.btn-primary  { background: var(--ink);      color: var(--bg);    }
 .btn-primary:hover { background: var(--orange); }
-.btn-outline { background: transparent; border: 2px solid var(--orange); color: var(--orange); }
+.btn-outline  { background: transparent; border: 2px solid var(--orange); color: var(--orange); }
 .btn-outline:hover { background: var(--orange); color: var(--white); }
 .btn-whatsapp { background: var(--whatsapp); color: var(--white); flex: 1; }
 .btn-whatsapp:hover { background: var(--whatsapp-deep); }
-.btn-block { width: 100%; }
+.btn-block    { width: 100%; }
 
-/* ==================== MODAL SYSTEM ==================== */
+/* ==================== MODAL ==================== */
 .modal {
-  position: fixed;
-  inset: 0;
-  /* FIX : préfixe -webkit- ajouté pour Safari/iOS */
+  position: fixed; inset: 0;
   -webkit-backdrop-filter: blur(3px);
   backdrop-filter: blur(3px);
   background: rgba(26, 26, 26, 0.5);
-  display: none;
-  align-items: flex-end;
-  justify-content: center;
+  display: none; align-items: flex-end; justify-content: center;
   z-index: 2000;
 }
 @media (min-width: 600px) { .modal { align-items: center; } }
 .modal.open { display: flex; animation: fadeIn 0.3s ease-out; }
-.modal-content { background: var(--white); width: 100%; max-width: 480px; padding: 28px 24px 32px; border-radius: 24px 24px 0 0; border: 1px solid var(--border); position: relative; animation: modalSlideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.modal-content {
+  background: var(--white); width: 100%; max-width: 480px;
+  padding: 28px 24px 32px; border-radius: 24px 24px 0 0;
+  border: 1px solid var(--border); position: relative;
+  animation: modalSlideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
 @media (min-width: 600px) { .modal-content { border-radius: 24px; } }
-.modal-close { position: absolute; top: 18px; right: 18px; background: var(--bg-soft); border: none; width: 32px; height: 32px; border-radius: 50%; font-size: 16px; color: var(--ink-soft); transition: var(--transition); }
+.modal-close {
+  position: absolute; top: 18px; right: 18px;
+  background: var(--bg-soft); border: none;
+  width: 32px; height: 32px; border-radius: 50%;
+  font-size: 16px; color: var(--ink-soft); transition: var(--transition);
+}
 .modal-close:hover { background: var(--orange); color: var(--white); transform: rotate(90deg); }
 
 /* ==================== BOTTOM NAV ==================== */
-.bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; height: var(--nav-height); background: var(--white); border-top: 1px solid var(--border); display: flex; z-index: 1000; box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.05); }
-.bottom-nav a { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; color: var(--ink-soft); font-size: 10px; font-weight: 600; transition: var(--transition); }
+.bottom-nav {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  height: var(--nav-height); background: var(--white);
+  border-top: 1px solid var(--border); display: flex;
+  z-index: 1000; box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.05);
+}
+.bottom-nav a {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 3px; color: var(--ink-soft); font-size: 10px;
+  font-weight: 600; transition: var(--transition);
+}
 .bottom-nav a:hover, .bottom-nav a.active { color: var(--orange); }
 .bottom-nav a svg { width: 22px; height: 22px; transition: var(--transition); }
 .bottom-nav a.active svg { animation: bounce 0.6s ease; }
-.nav-publish-circle { width: 42px; height: 42px; border-radius: 50%; background: var(--orange); color: var(--white); display: flex; align-items: center; justify-content: center; margin-top: -20px; box-shadow: 0 4px 16px rgba(232, 115, 44, 0.4); border: 3px solid var(--white); transition: var(--transition); animation: bounceIn 0.5s ease; }
+.nav-publish-circle {
+  width: 42px; height: 42px; border-radius: 50%;
+  background: var(--orange); color: var(--white);
+  display: flex; align-items: center; justify-content: center;
+  margin-top: -20px; box-shadow: 0 4px 16px rgba(232, 115, 44, 0.4);
+  border: 3px solid var(--white); transition: var(--transition);
+  animation: bounceIn 0.5s ease;
+}
 .nav-publish-circle:hover { transform: scale(1.08); }
 
-/* ==================== SKELETON & UTILITIES ==================== */
-.skeleton { background: var(--bg-soft); animation: pulse 1.5s ease-in-out infinite; }
-.hidden { display: none !important; }
+/* ==================== SKELETON & UTILITAIRES ==================== */
+.skeleton    { background: var(--bg-soft); animation: pulse 1.5s ease-in-out infinite; }
+.hidden      { display: none !important; }
 .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 20px; text-align: center; }
 .empty-state .emoji { font-size: 48px; margin-bottom: 16px; animation: float 3s ease-in-out infinite; }
-.empty-state p { color: var(--ink-soft); font-size: 14px; }
+.empty-state p      { color: var(--ink-soft); font-size: 14px; }
 
-/* ==================== CORRECTIF LIGHTBOX ==================== */
+/* ==================== LIGHTBOX ==================== */
 .lightbox {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
   background: rgba(0, 0, 0, 0.95);
-  /* FIX : display: none sans !important — la spécificité de .open suffit */
   display: none;
   flex-direction: column;
-  z-index: 9999;
-  padding: 20px;
+  z-index: 9999; padding: 20px;
 }
-
-/* FIX : !important supprimé — sélecteur combiné .lightbox.open est plus spécifique */
-.lightbox.open {
-  display: flex;
-}
+.lightbox.open { display: flex; }
 
 .lightbox-track {
-  display: flex;
-  overflow-x: auto;
+  display: flex; overflow-x: auto;
   scroll-snap-type: x mandatory;
-  flex: 1;
-  align-items: center;
-  /* FIX : scrollbar masquée sur Android/Chrome */
+  flex: 1; align-items: center;
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
-
-/* FIX : masquer la scrollbar WebKit (Safari/Chrome mobile) */
-.lightbox-track::-webkit-scrollbar {
-  display: none;
-}
+.lightbox-track::-webkit-scrollbar { display: none; }
 
 .lightbox-close {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  background: rgba(255, 255, 255, 0.2);
-  border: none;
-  color: white;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  font-size: 20px;
-  cursor: pointer;
-  z-index: 10000;
+  position: absolute; top: 20px; right: 20px;
+  background: rgba(255, 255, 255, 0.2); border: none;
+  color: white; width: 40px; height: 40px; border-radius: 50%;
+  font-size: 20px; cursor: pointer; z-index: 10000;
 }
 
-.lightbox-dots {
-  display: flex;
-  justify-content: center;
-  gap: 8px;
-  padding: 20px 0;
-}
+.lightbox-dots { display: flex; justify-content: center; gap: 8px; padding: 20px 0; }
 
-/* ==================== RESPONSIVE CRITIQUE (< 360px) ==================== */
+/* ==================== RESPONSIVE < 360px ==================== */
 @media (max-width: 360px) {
   :root { --radius-card: 14px; }
   .container, .hero { padding-left: 14px; padding-right: 14px; }
@@ -406,184 +561,22 @@ textarea { resize: vertical; min-height: 120px; }
   .brand-tile .icon { width: 46px; height: 46px; font-size: 18px; }
   .product-grid { gap: 10px; }
   .product-info h4 { font-size: 13px; }
+  .pwa-install-btn { width: 36px; height: 36px; }
+  .pwa-install-btn svg { width: 18px; height: 18px; }
 }
 
 /* ==================== ACCESSIBILITÉ — MOUVEMENTS RÉDUITS ==================== */
-/*
-  FIX : Désactiver toutes les animations pour les utilisateurs
-  ayant activé "Réduire les animations" dans leur système.
-  Couvre aussi scroll-behavior smooth.
-*/
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
-  html {
-    scroll-behavior: auto;
-  }
+  html { scroll-behavior: auto; }
+  .pwa-install-btn { animation: none !important; transition: none !important; }
+  .pwa-install-btn:hover { transform: none; }
 }
 
-/* scroll-behavior smooth uniquement pour ceux qui acceptent les animations */
 @media (prefers-reduced-motion: no-preference) {
-  html {
-    scroll-behavior: smooth;
-  }
-}
-/* ===== PWA INSTALL BUTTON STYLES ===== */
-
-.logo-wrapper {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex: 1;
-  justify-content: flex-start;
-  min-width: 0;
-}
-
-.logo-wrapper .logo {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.pwa-install-btn {
-  transition: all 0.3s ease;
-  position: relative;
-}
-
-.pwa-install-btn:hover {
-  transform: scale(1.1);
-  background: rgba(232, 115, 44, 0.1);
-  border-radius: 50%;
-  padding: 8px;
-}
-
-.pwa-install-btn:active {
-  transform: scale(0.95);
-}
-
-/* Animation pour attirer l'attention */
-@keyframes pulseInstall {
-  0%, 100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 0.7;
-    transform: scale(1.05);
-  }
-}
-
-/* Ajouter l'animation au premier affichage */
-.pwa-install-btn[style*="display: flex"] {
-  animation: pulseInstall 2s ease-in-out infinite;
-}
-
-/* ===== TOAST NOTIFICATION STYLES ===== */
-
-/* Le style inline des toasts est généré dynamiquement, mais voici les styles CSS pour plus de contrôle */
-.toast {
-  padding: 12px 20px !important;
-  border-radius: 6px !important;
-  font-size: 14px !important;
-  font-weight: 500 !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
-}
-
-.toast-success {
-  background: #4CAF50 !important;
-  color: white !important;
-}
-
-.toast-error {
-  background: #f44336 !important;
-  color: white !important;
-}
-
-.toast-info {
-  background: #2196F3 !important;
-  color: white !important;
-}
-
-/* ===== RESPONSIVE ADJUSTMENTS ===== */
-
-/* Sur mobile, ajuster la position de la toast */
-@media (max-width: 768px) {
-  .pwa-install-btn {
-    width: 40px;
-    height: 40px;
-    display: flex !important;
-    align-items: center;
-    justify-content: center;
-    padding: 0;
-  }
-
-  .pwa-install-btn svg {
-    width: 18px;
-    height: 18px;
-  }
-
-  /* Toast position sur mobile */
-  .toast {
-    width: calc(100vw - 32px) !important;
-    left: 16px !important;
-  }
-}
-
-/* Tablette */
-@media (min-width: 769px) and (max-width: 1024px) {
-  .pwa-install-btn:hover {
-    background: rgba(232, 115, 44, 0.15);
-  }
-}
-
-/* Desktop */
-@media (min-width: 1025px) {
-  .logo-wrapper {
-    gap: 12px;
-  }
-
-  .pwa-install-btn {
-    padding: 6px;
-  }
-
-  .pwa-install-btn:hover {
-    background: rgba(232, 115, 44, 0.15);
-    border-radius: 6px;
-  }
-}
-
-/* ===== DARK MODE SUPPORT ===== */
-
-[data-theme="dark"] .pwa-install-btn:hover {
-  background: rgba(232, 115, 44, 0.2);
-}
-
-/* ===== ACCESSIBILITY ===== */
-
-/* Focus visible pour le clavier */
-.pwa-install-btn:focus-visible {
-  outline: 2px solid #E8732C;
-  outline-offset: 2px;
-  border-radius: 4px;
-}
-
-/* Respects user's motion preferences */
-@media (prefers-reduced-motion: reduce) {
-  .pwa-install-btn {
-    animation: none !important;
-    transition: none !important;
-  }
-
-  .pwa-install-btn:hover {
-    transform: none;
-  }
-}
-/* Add this to your <style> block */
-.product-grid {
-    min-height: 200px; /* Adjust based on your card size */
-    display: grid;
-    gap: 16px;
+  html { scroll-behavior: smooth; }
 }

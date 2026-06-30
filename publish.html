@@ -9,41 +9,189 @@
   <title id="docTitle">DEKONme - Publier une annonce</title>
   <link rel="stylesheet" href="css/style.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-  
+
   <style>
-    .publish-container { margin-top: 16px; padding-bottom: 40px; }
-    .field-label { display: block; font-size: 13px; font-weight: 700; margin-bottom: 6px; color: var(--ink); margin-top: 16px; }
-    #publishForm input[type="text"], #publishForm input[type="number"], #publishForm input[type="tel"], #publishForm select, #publishForm textarea {
-      width: 100%; padding: 14px 16px; background: var(--white); border: 2px solid var(--border); border-radius: 12px; font-size: 14px; color: var(--ink); outline: none;
+    .publish-container { margin-top: 16px; padding-bottom: 60px; }
+
+    .field-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 6px;
+      margin-top: 16px;
+      color: var(--ink);
     }
-    /* Styles pour les photos, etc. conservés inchangés... */
+
+    /* Héritage du design system global — pas de surcharge ici */
+
+    /* Groupe numéro de téléphone */
+    .phone-input-group {
+      display: flex;
+      align-items: center;
+      background: var(--white);
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      transition: var(--transition);
+    }
+    .phone-input-group:focus-within {
+      border-color: var(--orange);
+      box-shadow: 0 0 0 4px rgba(232, 115, 44, 0.15);
+    }
+    .phone-prefix {
+      padding: 14px 12px;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--ink-soft);
+      border-right: 2px solid var(--border);
+      background: var(--bg-soft);
+      white-space: nowrap;
+    }
+    .phone-input-group input {
+      border: none !important;
+      border-radius: 0 !important;
+      box-shadow: none !important;
+      margin-bottom: 0;
+      flex: 1;
+    }
+    .phone-input-group input:focus {
+      box-shadow: none !important;
+    }
+
+    /* Grille aperçu photos */
+    .photo-preview-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .photo-preview-item {
+      position: relative;
+      aspect-ratio: 1;
+      border-radius: 12px;
+      overflow: hidden;
+      background: var(--bg-soft);
+      border: 2px solid var(--border);
+    }
+    .photo-preview-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .photo-remove-btn {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: rgba(26, 26, 26, 0.7);
+      border: none;
+      color: #fff;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    .photo-remove-btn:hover { background: var(--error); }
+
+    .photo-add-slot {
+      aspect-ratio: 1;
+      border-radius: 12px;
+      border: 2px dashed var(--border);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      cursor: pointer;
+      color: var(--ink-soft);
+      font-size: 13px;
+      font-weight: 600;
+      transition: var(--transition);
+      background: var(--bg-soft);
+    }
+    .photo-add-slot:hover { border-color: var(--orange); color: var(--orange); }
+    .photo-add-slot .icon { font-size: 24px; }
+
+    /* Compteur photos */
+    .photo-counter {
+      font-size: 12px;
+      color: var(--ink-soft);
+      margin-top: 6px;
+      text-align: right;
+    }
+    .photo-counter.error { color: var(--error); font-weight: 700; }
+
+    /* Bannière succès */
+    .success-banner {
+      background: rgba(39, 174, 96, 0.1);
+      border: 1px solid var(--success);
+      color: var(--success);
+      padding: 12px 16px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+
+    /* Toast */
+    #toast {
+      position: fixed;
+      bottom: calc(var(--nav-height) + 16px);
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--ink);
+      color: var(--bg);
+      padding: 10px 20px;
+      border-radius: var(--radius-pill);
+      font-size: 13px;
+      font-weight: 600;
+      z-index: 3000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease, transform 0.25s ease;
+      white-space: nowrap;
+      max-width: 90vw;
+      text-align: center;
+    }
+    #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
   </style>
 </head>
 <body>
 
 <div class="topbar">
-  <button class="icon-btn back-btn" onclick="history.length > 1 ? history.back() : window.location.href='index.html'">
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+  <button class="icon-btn back-btn"
+    onclick="history.length > 1 ? history.back() : window.location.href='index.html'"
+    aria-label="Retour">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M15 18l-6-6 6-6"/>
+    </svg>
   </button>
   <div class="page-title" id="pageTitle">Publier une annonce</div>
+  <button id="themeToggleBtn" class="icon-btn" onclick="toggleTheme()" aria-label="Changer de thème">🌙</button>
 </div>
 
 <div class="container publish-container">
-  <form id="publishForm" onsubmit="return handlePublish(event)">
-    
+  <form id="publishForm">
+
     <label class="field-label" for="pTitle">Titre de l'annonce</label>
-    <input type="text" id="pTitle" placeholder="Ex : iPhone 13 128 Go..." required>
+    <input type="text" id="pTitle" placeholder="Ex : iPhone 13 128 Go…" required autocomplete="off">
 
+    <!-- FIX : select category rempli dynamiquement par populateCategorySelect() -->
     <label class="field-label" for="pCategory">Catégorie</label>
-    <select id="pCategory" required></select>
-
-    <select id="pBrand" style="display:none;"><option value="Non spécifié" selected>Non spécifié</option></select>
+    <select id="pCategory" required>
+      <option value="">Chargement…</option>
+    </select>
 
     <label class="field-label" for="pModel">Modèle / Détails</label>
-    <input type="text" id="pModel" placeholder="Ex : 128 Go, Couleur rouge..." required>
+    <input type="text" id="pModel" placeholder="Ex : 128 Go, Couleur rouge…" required autocomplete="off">
 
     <label class="field-label" for="pPrice">Prix (FCFA)</label>
-    <input type="number" id="pPrice" placeholder="Ex : 250000" required>
+    <input type="number" id="pPrice" placeholder="Ex : 250000" min="0" required>
 
     <label class="field-label" for="pCondition">État</label>
     <select id="pCondition" required>
@@ -59,60 +207,311 @@
       <option value="Lomé">Lomé</option>
       <option value="Kara">Kara</option>
       <option value="Sokodé">Sokodé</option>
+      <option value="Kpalimé">Kpalimé</option>
+      <option value="Atakpamé">Atakpamé</option>
+      <option value="Dapaong">Dapaong</option>
+      <option value="Tsévié">Tsévié</option>
+      <option value="Aného">Aného</option>
     </select>
 
     <label class="field-label" for="pDescription">Description</label>
-    <textarea id="pDescription" rows="4" required></textarea>
+    <textarea id="pDescription" rows="4" placeholder="Décrivez l'article (état, accessoires inclus, raison de la vente…)" required></textarea>
 
-    <label class="field-label" for="pWhatsapp">Numéro WhatsApp</label>
+    <label class="field-label" for="pWhatsapp">Numéro WhatsApp (sans +228)</label>
     <div class="phone-input-group">
       <span class="phone-prefix">+228</span>
-      <input type="tel" id="pWhatsapp" placeholder="90 11 22 33" required>
+      <input type="tel" id="pWhatsapp" placeholder="90 11 22 33"
+             pattern="[0-9\s]{8,9}" maxlength="9" inputmode="numeric" required>
     </div>
 
-    <label class="field-label" for="pImageFiles">Photos (exactement 2)</label>
-    <input type="file" id="pImageFiles" accept="image/*" multiple>
-    
-    <div id="imagePreviewWrap" class="photo-preview-grid hidden"></div>
-    <button type="submit" class="btn btn-primary btn-block" id="submitBtn" style="margin-top: 24px;">Publier</button>
+    <label class="field-label">Photos (exactement 2)</label>
+    <div id="photoGrid" class="photo-preview-grid"></div>
+    <p class="photo-counter" id="photoCounter">0 / 2 photos</p>
+    <!-- Input fichier caché — déclenché par les slots -->
+    <input type="file" id="pImageFiles" accept="image/*" multiple style="display:none;">
+
+    <button type="submit" class="btn btn-primary btn-block" id="submitBtn" style="margin-top: 24px;">
+      Publier l'annonce
+    </button>
   </form>
 </div>
 
+<div id="toast" role="status" aria-live="polite"></div>
+
 <script src="js/supabase-config.js"></script>
 <script src="js/app.js"></script>
-
 <script>
-  // ... (Gardez vos fonctions init, renderPreviews, compressImage, etc. telles quelles) ...
+  /* ============================================================
+     État local
+  ============================================================ */
+  let existingImages = []; // URLs déjà en base (mode édition)
+  let newFiles       = []; // Fichiers File() en attente d'upload
+  let editId         = null;
 
-  async function handlePublish(e) {
+  /* ============================================================
+     Toast
+  ============================================================ */
+  let _toastTimer = null;
+  function showToast(msg) {
+    const el = document.getElementById('toast');
+    if (!el) return;
+    el.textContent = msg;
+    el.classList.add('show');
+    clearTimeout(_toastTimer);
+    _toastTimer = setTimeout(() => el.classList.remove('show'), 3000);
+  }
+
+  /* ============================================================
+     FIX : Remplissage du select catégorie via getCategories()
+     Appelé au DOMContentLoaded — getCategories() est défini dans app.js
+  ============================================================ */
+  async function populateCategorySelect(selectedValue) {
+    const select = document.getElementById('pCategory');
+    if (!select) return;
+
+    try {
+      const cats = await getCategories();
+
+      if (!cats || cats.length === 0) {
+        select.innerHTML = '<option value="">Aucune catégorie disponible</option>';
+        return;
+      }
+
+      select.innerHTML =
+        '<option value="">Choisir une catégorie</option>' +
+        cats.map(c =>
+          `<option value="${c.name}" ${selectedValue === c.name ? 'selected' : ''}>${c.emoji} ${c.name}</option>`
+        ).join('');
+    } catch (err) {
+      console.error('Erreur chargement catégories :', err);
+      select.innerHTML = '<option value="">Erreur de chargement</option>';
+    }
+  }
+
+  /* ============================================================
+     Rendu de la grille photo
+  ============================================================ */
+  function renderPhotoGrid() {
+    const grid    = document.getElementById('photoGrid');
+    const counter = document.getElementById('photoCounter');
+    const total   = existingImages.length + newFiles.length;
+
+    counter.textContent = `${total} / 2 photos`;
+    counter.className   = 'photo-counter' + (total > 2 ? ' error' : '');
+
+    let html = '';
+
+    // Photos existantes (mode édition)
+    existingImages.forEach((url, i) => {
+      html += `
+        <div class="photo-preview-item">
+          <img src="${url}" alt="Photo existante ${i + 1}">
+          <button type="button" class="photo-remove-btn" onclick="removeExistingImage(${i})" aria-label="Supprimer">✕</button>
+        </div>
+      `;
+    });
+
+    // Nouveaux fichiers
+    newFiles.forEach((file, i) => {
+      const objectUrl = URL.createObjectURL(file);
+      html += `
+        <div class="photo-preview-item">
+          <img src="${objectUrl}" alt="Nouvelle photo ${i + 1}">
+          <button type="button" class="photo-remove-btn" onclick="removeNewFile(${i})" aria-label="Supprimer">✕</button>
+        </div>
+      `;
+    });
+
+    // Slot d'ajout (visible si < 2 photos)
+    if (total < 2) {
+      html += `
+        <div class="photo-add-slot" onclick="document.getElementById('pImageFiles').click()" role="button" tabindex="0"
+             onkeydown="if(event.key==='Enter'||event.key===' ') document.getElementById('pImageFiles').click()">
+          <span class="icon">📷</span>
+          <span>Ajouter une photo</span>
+        </div>
+      `;
+    }
+
+    grid.innerHTML = html;
+  }
+
+  function removeExistingImage(i) {
+    existingImages.splice(i, 1);
+    renderPhotoGrid();
+  }
+
+  function removeNewFile(i) {
+    newFiles.splice(i, 1);
+    renderPhotoGrid();
+  }
+
+  document.getElementById('pImageFiles').addEventListener('change', (e) => {
+    const files   = Array.from(e.target.files);
+    const total   = existingImages.length + newFiles.length;
+    const canAdd  = 2 - total;
+    const toAdd   = files.slice(0, canAdd);
+
+    if (files.length > canAdd) {
+      showToast(`Seulement ${canAdd} photo(s) supplémentaire(s) autorisée(s).`);
+    }
+
+    newFiles = [...newFiles, ...toAdd];
+    e.target.value = ''; // reset pour pouvoir re-sélectionner les mêmes fichiers
+    renderPhotoGrid();
+  });
+
+  /* ============================================================
+     Compression image (qualité mobile)
+  ============================================================ */
+  function compressImage(file, maxWidth = 1200, quality = 0.82) {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const img = new Image();
+        img.onload = () => {
+          const ratio  = Math.min(1, maxWidth / img.width);
+          const canvas = document.createElement('canvas');
+          canvas.width  = img.width  * ratio;
+          canvas.height = img.height * ratio;
+          canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+          canvas.toBlob((blob) => {
+            resolve(new File([blob], file.name, { type: 'image/jpeg' }));
+          }, 'image/jpeg', quality);
+        };
+        img.src = ev.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  /* ============================================================
+     Soumission du formulaire
+  ============================================================ */
+  document.getElementById('publishForm').addEventListener('submit', async (e) => {
     e.preventDefault();
-    const totalPhotos = existingImages.length + newFiles.length;
-    if (totalPhotos !== 2) { alert('Merci d\'ajouter exactement 2 photos.'); return false; }
+
+    const total = existingImages.length + newFiles.length;
+    if (total !== 2) {
+      showToast('Ajoutez exactement 2 photos avant de publier.');
+      return;
+    }
 
     const submitBtn = document.getElementById('submitBtn');
     submitBtn.disabled = true;
+    submitBtn.textContent = 'Publication en cours…';
 
-    let uploadedUrls = [];
-    if (newFiles.length > 0 && typeof uploadListingPhotos === 'function') {
-      const result = await uploadListingPhotos(newFiles);
-      uploadedUrls = result.urls || [];
+    try {
+      // Compression + upload des nouvelles photos
+      let uploadedUrls = [];
+      if (newFiles.length > 0 && typeof uploadListingPhotos === 'function') {
+        const compressed = await Promise.all(newFiles.map(f => compressImage(f)));
+        const result = await uploadListingPhotos(compressed);
+        if (result.error) {
+          showToast('Erreur lors de l\'upload des photos.');
+          submitBtn.disabled = false;
+          submitBtn.textContent = editId ? 'Modifier l\'annonce' : 'Publier l\'annonce';
+          return;
+        }
+        uploadedUrls = result.urls || [];
+      }
+
+      const phone = document.getElementById('pWhatsapp').value.trim().replace(/\s+/g, '');
+
+      const payload = {
+        title:       document.getElementById('pTitle').value.trim(),
+        category:    document.getElementById('pCategory').value,
+        brand:       'Non spécifié',
+        model:       document.getElementById('pModel').value.trim(),
+        price:       Number(document.getElementById('pPrice').value),
+        city:        document.getElementById('pCity').value,
+        condition:   document.getElementById('pCondition').value,
+        description: document.getElementById('pDescription').value.trim(),
+        whatsapp:    phone,
+        images:      [...existingImages, ...uploadedUrls]
+      };
+
+      let result;
+      if (editId) {
+        result = await updateListing(editId, payload);
+      } else {
+        result = await createListing(payload);
+      }
+
+      if (result.error) {
+        showToast('Erreur : ' + result.error);
+        submitBtn.disabled = false;
+        submitBtn.textContent = editId ? 'Modifier l\'annonce' : 'Publier l\'annonce';
+        return;
+      }
+
+      const newId = result.data?.id || editId;
+      const flag  = editId ? 'updated=1' : 'published=1';
+      window.location.href = `/product.html?id=${newId}&${flag}`;
+
+    } catch (err) {
+      console.error('Erreur publication :', err);
+      showToast('Une erreur est survenue. Veuillez réessayer.');
+      submitBtn.disabled = false;
+      submitBtn.textContent = editId ? 'Modifier l\'annonce' : 'Publier l\'annonce';
     }
+  });
 
-    const payload = {
-      title: document.getElementById('pTitle').value.trim(),
-      category: document.getElementById('pCategory').value,
-      brand: 'Non spécifié', // Force la valeur par défaut ici
-      model: document.getElementById('pModel').value.trim(),
-      price: Number(document.getElementById('pPrice').value),
-      city: document.getElementById('pCity').value,
-      condition: document.getElementById('pCondition').value,
-      description: document.getElementById('pDescription').value.trim(),
-      whatsapp: document.getElementById('pWhatsapp').value.trim().replace(/\s+/g, ''),
-      images: [...existingImages, ...uploadedUrls]
-    };
+  /* ============================================================
+     Initialisation — mode création ou édition
+  ============================================================ */
+  async function init() {
+    // Vérification authentification
+    const ok = await requireAuth('publish.html');
+    if (!ok) return;
 
-    // ... (votre logique d'envoi reste inchangée) ...
+    // Remplissage catégories (FIX principal)
+    const params = new URLSearchParams(window.location.search);
+    editId = params.get('id') ? Number(params.get('id')) : null;
+
+    // Mode édition : charger l'annonce existante
+    if (editId) {
+      document.getElementById('pageTitle').textContent = 'Modifier l\'annonce';
+      document.getElementById('docTitle').textContent  = 'DEKONme - Modifier l\'annonce';
+      document.getElementById('submitBtn').textContent = 'Modifier l\'annonce';
+
+      try {
+        const listing = await getListingById(editId);
+        if (listing) {
+          // Pré-remplir les catégories avec la valeur actuelle
+          await populateCategorySelect(listing.category);
+
+          document.getElementById('pTitle').value       = listing.title       || '';
+          document.getElementById('pModel').value       = listing.model       || '';
+          document.getElementById('pPrice').value       = listing.price       || '';
+          document.getElementById('pCondition').value   = listing.condition   || '';
+          document.getElementById('pCity').value        = listing.city        || '';
+          document.getElementById('pDescription').value = listing.description || '';
+          document.getElementById('pWhatsapp').value    = listing.whatsapp
+            ? String(listing.whatsapp).replace('+228', '')
+            : '';
+
+          existingImages = listing.images && listing.images.length
+            ? listing.images
+            : (listing.image_url ? [listing.image_url] : []);
+
+          renderPhotoGrid();
+        } else {
+          showToast('Annonce introuvable.');
+          window.location.href = '/profil.html';
+        }
+      } catch (err) {
+        console.error('Erreur chargement annonce :', err);
+        showToast('Impossible de charger l\'annonce.');
+      }
+    } else {
+      // Mode création
+      await populateCategorySelect('');
+      renderPhotoGrid();
+    }
   }
+
+  document.addEventListener('DOMContentLoaded', init);
 </script>
 </body>
 </html>
