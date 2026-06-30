@@ -16,7 +16,14 @@ const PHONE_BRANDS = ["Apple", "Samsung", "Tecno", "Infinix", "Itel", "Huawei", 
 
 let _heartbeatTimer = null;
 
-/* ==================== FORMATTAGE & UTILS ==================== */
+/* ==================== SÉCURITÉ & FORMATAGE ==================== */
+
+// Protection contre les failles XSS[cite: 9, 11, 12]
+function escapeHtml(text) {
+  if (text == null) return "";
+  const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+  return String(text).replace(/[&<>"']/g, m => map[m]);
+}
 
 function formatPrice(n) {
   if (!n) return "0";
@@ -462,21 +469,6 @@ function stopPresenceHeartbeat() {
   }
 }
 
-function getOnlineStatus(lastSeen) {
-  if (!lastSeen) return { label: "", dot: "" };
-  
-  // Correction de la faute de frappe critique ici :
-  const diffMin = Math.floor((Date.now() - new Date(lastSeen)) / 60000);
-  
-  if (diffMin < 3) return { label: "En ligne", dot: "🟢" };
-  if (diffMin < 60) return { label: `Vu il y a ${diffMin} min`, dot: "🟡" };
-  
-  const diffH = Math.floor(diffMin / 60);
-  if (diffH < 24) return { label: `Vu il y a ${diffH}h`, dot: "⚪" };
-  
-  return { label: "", dot: "" };
-}
-
 function getPresenceStatus(lastSeen) {
   if (!lastSeen) return null;
   const diffMs = Date.now() - new Date(lastSeen).getTime();
@@ -503,7 +495,6 @@ function presenceBadgeHTML(lastSeen) {
 window.contactWhatsApp = function (phone, productLabel, price, listingId) {
   if (!phone) return;
 
-  // Pop-up d'interception de sécurité native anti-fraude intégrée
   const acceptSecurity = confirm(
     "⚠️ RAPPEL DE SÉCURITÉ DEKONme :\n\n" +
     "Ne payez JAMAIS d'acompte (via Flooz ou T-Money) avant d'avoir vu, testé et rigoureusement vérifié le produit en personne.\n\n" +
@@ -566,17 +557,17 @@ function productCardHTML(l, fav) {
   return `
     <div class="product-card" onclick="goToProduct(${l.id})">
       <div class="img-wrap">
-        <img data-src="${image}" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'%3E%3C/svg%3E" alt="${l.title}">
+        <img data-src="${image}" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'%3E%3C/svg%3E" alt="${escapeHtml(l.title)}">
         <button class="fav-btn ${favClass}" onclick="event.stopPropagation(); toggleFavorite(${l.id}, this)" aria-label="Favori">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="${fav ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2.5"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
         </button>
       </div>
       <div class="product-info">
-        <h4>${l.title}</h4>
+        <h4>${escapeHtml(l.title)}</h4>
         <div class="price-row">
-          <span class="price">${formatPrice(l.price)} F</span>
+          <span class="price">${formatPrice(l.price)} FCFA</span>
         </div>
-        <p class="meta">${l.city || "Lomé"} · ${l.condition || "Non spécifié"}</p>
+        <p class="meta">${escapeHtml(l.city || "Lomé")} · ${escapeHtml(l.condition || "Non spécifié")}</p>
       </div>
     </div>
   `;
@@ -673,26 +664,21 @@ window.toggleTheme = function () {
   updateThemeIcon();
 };
 
-// Initialisation du thème
 applyTheme();
 window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => {
   if (!localStorage.getItem("dekonme-theme")) updateThemeIcon();
 });
 
-/* ==================== SERVICE WORKER REGISTRATION ==================== */
+/* ==================== SERVICE WORKER ==================== */
 
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker.register("/service-worker.js")
-      .then(reg => {
-        // Mise à jour en tâche de fond toutes les heures
-        setInterval(() => { reg.update(); }, 3600000);
-      })
-      .catch(err => {
-        console.warn("[PWA] Service worker non enregistré :", err.message);
-      });
+      .then(reg => { setInterval(() => { reg.update(); }, 3600000); })
+      .catch(err => { console.warn("[PWA] Service worker non enregistré :", err.message); });
   });
 }
+
 async function updateMyProfile({ name, phone, city, avatar_emoji }) {
   if (!window.db) return { error: "Base de données non initialisée" };
   const user = await getCurrentUser();
@@ -704,7 +690,7 @@ async function updateMyProfile({ name, phone, city, avatar_emoji }) {
       name: name,
       phone: toE164(phone), 
       city: city,
-      avatar_emoji: avatar_emoji // Ajout de l'émoji ici pour garder le fichier de fonctions à jour
+      avatar_emoji: avatar_emoji
     })
     .eq("id", user.id)
     .select()

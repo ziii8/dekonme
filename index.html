@@ -27,9 +27,18 @@
       </svg>
     </button>
     
-    <a href="index.html" class="logo" aria-label="Accueil DEKONme">
-      <span class="mark">D</span>EKONme
-    </a>
+    <div class="logo-wrapper">
+      <a href="index.html" class="logo" aria-label="Accueil DEKONme">
+        <span class="mark">D</span>EKONme
+      </a>
+      <button class="icon-btn pwa-install-btn" id="pwaInstallBtn" aria-label="Installer DEKONme" title="Installer l'application sur votre appareil" style="display: none;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="7 10 12 15 17 10"/>
+          <line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+      </button>
+    </div>
     
     <button class="icon-btn" id="themeToggleBtn" aria-label="Changer de thème">🌙</button>
     
@@ -45,13 +54,8 @@
   <section class="hero">
     <h1>Achète et vends<br><span class="accent">partout au Togo.</span></h1>
     
-    <!-- Bannière d'installation PWA (s'affiche uniquement si installable) -->
-    <div id="pwaBanner" style="display: none; background-color: rgba(232, 115, 44, 0.1); color: #E8732C; border: 1px solid rgba(232, 115, 44, 0.25); padding: 12px; border-radius: 8px; justify-content: space-between; align-items: center; font-size: 14px; font-weight: 500; margin: 15px auto; max-width: 480px; text-align: left;">
-      <span style="display: flex; align-items: center; gap: 6px; color: currentColor;">📲 Installer l'application sur votre écran</span>
-      <button id="pwaInstallBtn" style="background-color: #E8732C; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px; white-space: nowrap;">Installer</button>
-    </div>
     
-    <div class="search-container" style="margin-top: 15px;">
+    <div class="search-container">
       <div class="search">
         <input 
           id="searchInput" 
@@ -104,26 +108,146 @@
   <nav class="bottom-nav" id="bottomNav" role="navigation" aria-label="Navigation principale"></nav>
 
   <!-- DROPDOWN MENU -->
-  <div class="dropdown-menu hidden" id="dropdownMenu" role="dialog" aria-label="Menu de navigation" aria-hidden="true">
+  <div class="dropdown-menu" id="dropdownMenu" role="dialog" aria-label="Menu de navigation" aria-hidden="true">
     <div class="dropdown-panel"></div>
   </div>
 
   <!-- EXTERNAL SCRIPTS WITH DEFER -->
-  <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-  <script defer src="js/supabase-config.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js" crossorigin="anonymous"></script>  <script defer src="js/supabase-config.js"></script>
   <script defer src="js/app.js"></script>
   <script defer src="js/lazy-load.js"></script>
 
   <!-- INLINE SCRIPT - APP LOGIC -->
   <script>
-    // Configuration
+    // ============================================
+    // CONFIGURATION & STATE
+    // ============================================
     const PAGE_SIZE = 6;
     let currentOffset = 0;
     let totalListings = 0;
     let isLoading = false;
-    let deferredPrompt = null; 
+    let deferredPrompt = null;
 
-    // ===== CATEGORY GRID RENDERING =====
+    // ============================================
+    // PWA INSTALL PROMPT HANDLING
+    // ============================================
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      
+      const pwaInstallBtn = document.getElementById('pwaInstallBtn');
+      if (pwaInstallBtn) {
+        pwaInstallBtn.style.display = 'flex';
+      }
+      console.log('PWA Install prompt disponible');
+    });
+
+    function handlePWAInstall() {
+      if (!deferredPrompt) {
+        showToast('L\'application est déjà installée! 📱', 'success');
+        return;
+      }
+
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then((choiceResult) => {
+        if (choiceResult.outcome === 'accepted') {
+          console.log('Utilisateur a accepté l\'installation');
+          showToast('✅ DEKONme a été installée!', 'success');
+          const pwaInstallBtn = document.getElementById('pwaInstallBtn');
+          if (pwaInstallBtn) {
+            pwaInstallBtn.style.display = 'none';
+          }
+        } else {
+          console.log('Utilisateur a refusé l\'installation');
+          showToast('Installation annulée', 'info');
+        }
+        deferredPrompt = null;
+      });
+    }
+
+    // Écouter l'événement appinstalled
+    window.addEventListener('appinstalled', () => {
+      console.log('✅ DEKONme a été installée avec succès!');
+      const pwaInstallBtn = document.getElementById('pwaInstallBtn');
+      if (pwaInstallBtn) {
+        pwaInstallBtn.style.display = 'none';
+      }
+      showToast('✅ DEKONme est maintenant sur votre écran d\'accueil!', 'success');
+      deferredPrompt = null;
+    });
+
+    // ============================================
+    // TOAST NOTIFICATION
+    // ============================================
+    function showToast(message, type = 'info') {
+      const toast = document.createElement('div');
+      toast.setAttribute('role', 'status');
+      toast.setAttribute('aria-live', 'polite');
+      toast.textContent = message;
+      
+      const bgColor = {
+        'success': '#4CAF50',
+        'error': '#f44336',
+        'info': '#2196F3'
+      }[type] || '#2196F3';
+
+      toast.style.cssText = `
+        position: fixed;
+        bottom: 80px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: ${bgColor};
+        color: white;
+        padding: 12px 20px;
+        border-radius: 6px;
+        font-size: 14px;
+        font-weight: 500;
+        z-index: 9999;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        animation: slideUp 0.3s ease-out;
+      `;
+
+      document.body.appendChild(toast);
+
+      // Ajouter les animations CSS si elles n'existent pas
+      if (!document.querySelector('style[data-toast-animation]')) {
+        const style = document.createElement('style');
+        style.setAttribute('data-toast-animation', 'true');
+        style.textContent = `
+          @keyframes slideUp {
+            from { 
+              opacity: 0;
+              transform: translateX(-50%) translateY(20px);
+            }
+            to { 
+              opacity: 1;
+              transform: translateX(-50%) translateY(0);
+            }
+          }
+          @keyframes slideDown {
+            from { 
+              opacity: 1;
+              transform: translateX(-50%) translateY(0);
+            }
+            to { 
+              opacity: 0;
+              transform: translateX(-50%) translateY(20px);
+            }
+          }
+        `;
+        document.head.appendChild(style);
+      }
+
+      // Auto-hide après 3 secondes
+      setTimeout(() => {
+        toast.style.animation = 'slideDown 0.3s ease-out forwards';
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+
+    // ============================================
+    // CATEGORY GRID RENDERING
+    // ============================================
     function renderCategoryGrid() {
       const grid = document.getElementById('brandGrid');
       if (!grid || typeof CATEGORIES === 'undefined') return;
@@ -137,7 +261,9 @@
       `).join('');
     }
 
-    // ===== HOME PRODUCTS RENDERING =====
+    // ============================================
+    // HOME PRODUCTS RENDERING
+    // ============================================
     async function renderHomeProducts() {
       const grid = document.getElementById('productGrid');
       if (!grid) return;
@@ -173,7 +299,9 @@
       updateLoadMoreBtn();
     }
 
-    // ===== LOAD MORE FUNCTIONALITY =====
+    // ============================================
+    // LOAD MORE FUNCTIONALITY
+    // ============================================
     async function loadMore() {
       if (isLoading) return;
       
@@ -215,7 +343,9 @@
       }
     }
 
-    // ===== UPDATE LOAD MORE BUTTON =====
+    // ============================================
+    // UPDATE LOAD MORE BUTTON
+    // ============================================
     function updateLoadMoreBtn() {
       const wrap = document.getElementById('loadMoreWrap');
       if (wrap) {
@@ -223,19 +353,24 @@
       }
     }
 
-    // ===== SEARCH FUNCTIONALITY =====
+    // ============================================
+    // SEARCH FUNCTIONALITY
+    // ============================================
     function performSearch() {
       const input = document.getElementById('searchInput');
       if (!input || !input.value.trim()) {
-        alert('Veuillez entrer un terme de recherche');
+        showToast('Veuillez entrer un terme de recherche', 'info');
+        input?.focus();
         return;
       }
       
       const searchTerm = encodeURIComponent(input.value.trim());
-      window.location.href = `category.html?search=${searchTerm}`;
+      window.location.href = `/category.html?search=${searchTerm}`;
     }
 
-    // ===== THEME TOGGLE =====
+    // ============================================
+    // THEME TOGGLE
+    // ============================================
     function toggleTheme() {
       const btn = document.getElementById('themeToggleBtn');
       const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
@@ -247,17 +382,21 @@
       btn.textContent = newTheme === 'dark' ? '☀️' : '🌙';
     }
 
-    // ===== DROPDOWN MENU TOGGLE =====
+    // ============================================
+    // DROPDOWN MENU TOGGLE
+    // ============================================
     function toggleDropdown() {
       const menu = document.getElementById('dropdownMenu');
       const btn = document.getElementById('menuBtn');
-      const isHidden = menu.classList.toggle('hidden');
+      const isOpen = menu.classList.toggle('hidden');
       
-      btn.setAttribute('aria-expanded', !isHidden);
-      menu.setAttribute('aria-hidden', isHidden);
+      btn.setAttribute('aria-expanded', !isOpen);
+      menu.setAttribute('aria-hidden', isOpen);
     }
 
-    // ===== HELPER: ESCAPE HTML =====
+    // ============================================
+    // HELPER: ESCAPE HTML
+    // ============================================
     function escapeHtml(text) {
       const map = {
         '&': '&amp;',
@@ -269,18 +408,11 @@
       return String(text).replace(/[&<>"']/g, m => map[m]);
     }
 
-    // ===== GESTION DE L'INSTALLATION PWA =====
-    window.addEventListener('beforeinstallprompt', (e) => {
-      e.preventDefault();
-      deferredPrompt = e; 
-      const pwaBanner = document.getElementById('pwaBanner');
-      if (pwaBanner) {
-        pwaBanner.style.display = 'flex';
-      }
-    });
-
-    // ===== EVENT LISTENERS =====
+    // ============================================
+    // INITIALIZATION
+    // ============================================
     document.addEventListener('DOMContentLoaded', function() {
+      // Initialize components
       renderCategoryGrid();
       renderHomeProducts();
       
@@ -288,49 +420,15 @@
         renderBottomNav('accueil');
       }
 
-      // Action clic installation PWA
-      const pwaBtn = document.getElementById('pwaInstallBtn');
-      const pwaBanner = document.getElementById('pwaBanner');
-      if (pwaBtn) {
-        pwaBtn.addEventListener('click', async () => {
-          if (!deferredPrompt) return;
-          pwaBtn.disabled = true;
-          deferredPrompt.prompt(); 
-          const { outcome } = await deferredPrompt.userChoice;
-          console.log(`PWA installation: ${outcome}`);
-          deferredPrompt = null;
-          if (pwaBanner) pwaBanner.style.display = 'none';
-        });
-      }
-
-      // NOUVEAU : INTERCEPTION DU CLIC "CONTACTER LE VENDEUR"
-      // Écoute de manière globale pour cibler les liens WhatsApp générés dynamiquement
-      document.addEventListener('click', function(e) {
-        // Détecte si l'élément cliqué (ou son parent) est un lien WhatsApp ou possède une classe de contact
-        const contactTarget = e.target.closest('a[href*="wa.me"], a[href*="whatsapp.com"], .btn-whatsapp, .contact-btn');
-        
-        if (contactTarget) {
-          // Affiche une fenêtre de confirmation native (propre, bloquante et ultra-visible sur mobile)
-          const acceptSecurity = confirm(
-            "⚠️ RAPPEL DE SÉCURITÉ DEKONme :\n\n" +
-            "Ne payez JAMAIS d'acompte (Flooz / T-Money) avant d'avoir vu et rigoureusement vérifié le produit en personne.\n\n" +
-            "Souhaitez-vous toujours ouvrir WhatsApp pour contacter ce vendeur ?"
-          );
-          
-          // Si l'utilisateur clique sur "Annuler", on bloque la redirection vers WhatsApp
-          if (!acceptSecurity) {
-            e.preventDefault();
-          }
-        }
-      });
-
       // Restore theme preference
       const savedTheme = localStorage.getItem('theme') || 'light';
       document.documentElement.setAttribute('data-theme', savedTheme);
-      const btn = document.getElementById('themeToggleBtn');
-      if (btn) {
-        btn.textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+      const themeBtn = document.getElementById('themeToggleBtn');
+      if (themeBtn) {
+        themeBtn.textContent = savedTheme === 'dark' ? '☀️' : '🌙';
       }
+
+      // ===== EVENT LISTENERS =====
 
       // Search input - Enter key
       const searchInput = document.getElementById('searchInput');
@@ -355,9 +453,15 @@
       }
 
       // Theme toggle button
-      const themeBtn = document.getElementById('themeToggleBtn');
-      if (themeBtn) {
-        themeBtn.addEventListener('click', toggleTheme);
+      const themeBtnElement = document.getElementById('themeToggleBtn');
+      if (themeBtnElement) {
+        themeBtnElement.addEventListener('click', toggleTheme);
+      }
+
+      // PWA Install button
+      const pwaBtn = document.getElementById('pwaInstallBtn');
+      if (pwaBtn) {
+        pwaBtn.addEventListener('click', handlePWAInstall);
       }
 
       // Load more button
@@ -372,7 +476,7 @@
         const searchContainer = document.querySelector('.search-container');
         const menuBtn = document.getElementById('menuBtn');
         
-        if (dropdown && !dropdown.classList.contains('hidden') && 
+        if (!dropdown.classList.contains('hidden') && 
             !dropdown.contains(e.target) && 
             !menuBtn.contains(e.target)) {
           toggleDropdown();
@@ -390,7 +494,7 @@
       document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {
           const dropdown = document.getElementById('dropdownMenu');
-          if (dropdown && !dropdown.classList.contains('hidden')) {
+          if (!dropdown.classList.contains('hidden')) {
             toggleDropdown();
           }
         }

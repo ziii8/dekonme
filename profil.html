@@ -12,109 +12,186 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 
   <style>
+    /* CSS allégé et modernisé */
     .profile-page-wrapper { margin-top: 16px; padding-bottom: 40px; }
-    .btn-danger { background: transparent; border: 2px solid var(--error) !important; color: var(--error) !important; }
-    .btn-danger:hover { background: var(--error) !important; color: var(--white) !important; box-shadow: 0 4px 16px rgba(192, 57, 43, 0.2); }
-    .profile-header { animation: fadeIn 0.4s ease-out; }
-    .profile-stats-bar { display: flex; justify-content: space-around; background: var(--white); border: 1px solid var(--border); border-radius: 14px; padding: 12px; margin-top: 16px; text-align: center; box-shadow: var(--shadow); }
+    
+    .btn-danger { 
+      background: transparent; 
+      border: 2px solid var(--error, #e74c3c); 
+      color: var(--error, #e74c3c); 
+    }
+    .btn-danger:hover { 
+      background: var(--error, #e74c3c); 
+      color: var(--white, #fff); 
+      box-shadow: 0 4px 16px rgba(192, 57, 43, 0.2); 
+    }
+    
+    .profile-header { animation: fadeIn 0.4s ease-out; display: flex; align-items: center; gap: 16px; }
+    .profile-avatar { font-size: 40px; }
+    
+    .profile-stats-bar { 
+      display: flex; justify-content: space-around; 
+      background: var(--white, #fff); border: 1px solid var(--border, #eee); 
+      border-radius: 14px; padding: 12px; margin-top: 16px; 
+      text-align: center; box-shadow: var(--shadow, 0 2px 8px rgba(0,0,0,0.05)); 
+    }
     .stat-item { display: flex; flex-direction: column; flex: 1; }
-    .stat-item:not(:last-child) { border-right: 1px solid var(--border); }
-    .stat-item strong { font-size: 18px; color: var(--orange); }
-    .stat-item span { font-size: 12px; color: var(--ink-soft); margin-top: 2px; }
-    .profile-actions-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin: 20px 0; }
-    .action-cat-card { background: var(--white); border: 1px solid var(--border); border-radius: 16px; padding: 12px 6px; text-align: center; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 6px; box-shadow: var(--shadow); transition: transform 0.2s, box-shadow 0.2s; font-family: inherit; width: 100%; }
+    .stat-item:not(:last-child) { border-right: 1px solid var(--border, #eee); }
+    .stat-item strong { font-size: 18px; color: var(--orange, #E8732C); }
+    .stat-item span { font-size: 12px; color: var(--ink-soft, #666); margin-top: 2px; }
+    
+    .profile-actions-grid { 
+      display: grid; grid-template-columns: repeat(2, 1fr); 
+      gap: 10px; margin: 20px 0; 
+    }
+    
+    .action-cat-card { 
+      background: var(--white, #fff); border: 1px solid var(--border, #eee); 
+      border-radius: 16px; padding: 12px 6px; text-align: center; 
+      cursor: pointer; display: flex; flex-direction: column; 
+      align-items: center; gap: 6px; box-shadow: var(--shadow, 0 2px 8px rgba(0,0,0,0.05)); 
+      transition: transform 0.2s, box-shadow 0.2s; font-family: inherit; width: 100%; 
+    }
     .action-cat-card:active { transform: scale(0.95); }
-    .action-cat-icon { width: 42px; height: 42px; background: rgba(232, 115, 44, 0.08); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; }
-    .action-cat-label { font-size: 11px; font-weight: 600; line-height: 1.2; color: var(--ink); }
-    .edit-profile-wrapper { background: var(--bg-soft); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 16px; animation: fadeIn 0.3s ease-out; }
+    .action-cat-card:focus-visible { outline: 2px solid var(--orange, #E8732C); outline-offset: 2px; }
+    
+    .action-cat-icon { 
+      width: 42px; height: 42px; 
+      background: rgba(232, 115, 44, 0.08); border-radius: 50%; 
+      display: flex; align-items: center; justify-content: center; font-size: 18px; 
+    }
+    .action-cat-label { font-size: 11px; font-weight: 600; line-height: 1.2; color: var(--ink, #111); }
+    
+    .edit-profile-wrapper { 
+      background: var(--bg-soft, #fafafa); border: 1px solid var(--border, #eee); 
+      border-radius: 12px; padding: 16px; margin-bottom: 16px; 
+      animation: fadeIn 0.3s ease-out; 
+    }
     .edit-form-group { margin-bottom: 14px; }
-    .edit-form-group label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--ink); }
-    #toast { position: fixed; bottom: calc(var(--nav-height) + 16px); left: 50%; transform: translateX(-50%) translateY(20px); background: var(--ink); color: var(--bg); padding: 10px 20px; border-radius: var(--radius-pill); font-size: 13px; font-weight: 600; z-index: 3000; opacity: 0; pointer-events: none; transition: opacity 0.25s ease, transform 0.25s ease; white-space: nowrap; }
+    .edit-form-group label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--ink, #111); }
+    .edit-form-group input, .edit-form-group select {
+      width: 100%; padding: 10px; border: 1px solid var(--border, #ccc); border-radius: 8px;
+    }
+    
+    .load-more-container { text-align: center; margin-top: 14px; margin-bottom: 8px; }
+    
+    #toast { 
+      position: fixed; bottom: calc(var(--nav-height, 60px) + 16px); 
+      left: 50%; transform: translateX(-50%) translateY(20px); 
+      background: var(--ink, #111); color: var(--bg, #fff); 
+      padding: 10px 20px; border-radius: 30px; font-size: 13px; 
+      font-weight: 600; z-index: 3000; opacity: 0; pointer-events: none; 
+      transition: opacity 0.25s ease, transform 0.25s ease; 
+      white-space: nowrap; max-width: 90vw; text-align: center; 
+    }
     #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    
+    /* Utility class for hiding elements */
+    .hidden { display: none !important; }
   </style>
 </head>
 <body>
 
-<div class="topbar">
+<!-- Remplacement par une balise HEADER sémantique -->
+<header class="topbar" style="display: flex; align-items: center; padding: 10px 16px;">
   <button class="icon-btn back-btn" onclick="history.length > 1 ? history.back() : window.location.href='index.html'" aria-label="Retour">
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
   </button>
-  <div class="page-title">Mon profil</div>
+  <div class="page-title" style="flex:1; text-align:center; font-weight:bold;">Mon profil</div>
   <button id="themeToggleBtn" class="icon-btn" onclick="toggleTheme()" aria-label="Changer de thème">🌙</button>
-</div>
+</header>
 
-<div class="container">
+<!-- Remplacement par une balise MAIN sémantique -->
+<main class="container">
   <div id="profileContainer" class="profile-page-wrapper">
-    <p class="loading-text">Vérification de la session…</p>
+    <p class="loading-text" style="text-align:center;">Vérification de la session…</p>
   </div>
-</div>
+</main>
 
-<div class="bottom-nav" id="bottomNav"></div>
+<nav class="bottom-nav" id="bottomNav"></nav>
 <div id="toast" role="status" aria-live="polite"></div>
 
 <script src="js/supabase-config.js"></script>
 <script src="js/app.js"></script>
 <script src="js/lazy-load.js"></script>
 <script>
+  /* Variables Globales */
   let allActiveListings = [];
   let allSoldListings   = [];
   let visibleActiveCount = 2;
   let visibleSoldCount   = 2;
 
-  function escapeHTML(str) {
-    return String(str == null ? '' : str)
-      .replace(/&/g,  '&amp;').replace(/</g,  '&lt;').replace(/>/g,  '&gt;').replace(/"/g,  '&quot;').replace(/'/g,  '&#39;');
-  }
+  /* Utilitaires */
+  const escapeHTML = (str) => String(str ?? '').replace(/[&<>"']/g, match => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  })[match]);
 
-  function showToast(msg) {
+  let _toastTimer = null;
+  const showToast = (msg) => {
     const el = document.getElementById('toast');
     if (!el) return;
     el.textContent = msg;
     el.classList.add('show');
-    setTimeout(() => el.classList.remove('show'), 2800);
-  }
+    clearTimeout(_toastTimer);
+    _toastTimer = setTimeout(() => el.classList.remove('show'), 2800);
+  };
 
-  function renderLoggedOut() {
+  /* Affichage Déconnecté */
+  const renderLoggedOut = () => {
     document.getElementById('profileContainer').innerHTML = `
-      <div class="empty-state" style="padding-top: 40px;">
-        <div class="emoji">👤</div>
-        <p>Connectez-vous pour accéder à votre profil.</p>
-        <button class="btn btn-primary btn-block" onclick="window.location.href='auth.html?next=profil.html'">Se connecter</button>
+      <div class="empty-state" style="padding-top: 40px; text-align: center;">
+        <div class="emoji" style="font-size: 48px; margin-bottom: 16px;">👤</div>
+        <p>Connectez-vous pour accéder à votre profil, vos annonces et vos favoris.</p>
+        <div style="margin-top:24px; display:flex; flex-direction:column; gap:10px; width:100%; max-width:280px; margin-left:auto; margin-right:auto;">
+          <button class="btn btn-primary btn-block" style="padding: 12px; background: var(--orange, #E8732C); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;" onclick="window.location.href='auth.html?next=profil.html'">Se connecter</button>
+        </div>
       </div>
     `;
     if (typeof renderBottomNav === 'function') renderBottomNav('profil');
-  }
+  };
 
-  async function renderLoggedIn(profile) {
+  /* Affichage Connecté */
+  const renderLoggedIn = async (profile) => {
     const cleanPhone = profile.phone ? profile.phone.replace('+228', '') : '';
+
     try {
       if (typeof getMyListings === 'function') {
         const myListings = await getMyListings() || [];
         allActiveListings = myListings.filter(l => l.status !== 'sold');
         allSoldListings   = myListings.filter(l => l.status === 'sold');
       }
-    } catch (e) { console.error('Erreur stats :', e); }
+    } catch (e) { 
+      console.error('Erreur stats :', e); 
+    }
 
-    const safeName  = escapeHTML(profile.name);
-    const safeCity  = escapeHTML(profile.city  || '');
-    const safePhone = escapeHTML(profile.phone || '');
-    const safeId    = escapeHTML(profile.id);
+    const safeName       = escapeHTML(profile.name);
+    const safeCity       = escapeHTML(profile.city || '');
+    const safePhone      = escapeHTML(profile.phone || '');
+    const safeAvatar     = escapeHTML(profile.avatar_emoji || '👤');
+    const safeCleanPhone = escapeHTML(cleanPhone);
+    const safeId         = escapeHTML(profile.id);
 
     document.getElementById('profileContainer').innerHTML = `
-      <div class="profile-header">
-        <div class="profile-avatar">${escapeHTML(profile.avatar_emoji || '👤')}</div>
+      <header class="profile-header">
+        <div class="profile-avatar" aria-hidden="true">${safeAvatar}</div>
         <div class="info">
-          <h2>${safeName}</h2>
-          <p>${safeCity ? safeCity + ' · ' : ''}${safePhone}</p>
+          <h2 style="margin: 0;">${safeName}</h2>
+          <p style="margin: 4px 0 0; color: var(--ink-soft, #666);">${safeCity ? safeCity + ' · ' : ''}${safePhone}</p>
         </div>
-      </div>
+      </header>
 
-      <div class="profile-stats-bar">
-        <div class="stat-item"><strong>${allActiveListings.length}</strong><span>En cours</span></div>
-        <div class="stat-item"><strong>${allSoldListings.length}</strong><span>Vendues</span></div>
-      </div>
+      <section class="profile-stats-bar">
+        <div class="stat-item">
+          <strong>${allActiveListings.length}</strong>
+          <span>En cours</span>
+        </div>
+        <div class="stat-item">
+          <strong>${allSoldListings.length}</strong>
+          <span>Vendues</span>
+        </div>
+      </section>
 
-      <div class="profile-actions-grid">
+      <nav class="profile-actions-grid">
         <button type="button" class="action-cat-card" id="btnToggleEdit" aria-label="Modifier mes informations">
           <div class="action-cat-icon">📝</div>
           <span class="action-cat-label">Modifier<br>Infos</span>
@@ -131,60 +208,264 @@
           <div class="action-cat-icon">💬</div>
           <span class="action-cat-label">Besoin<br>d'aide ?</span>
         </button>
-      </div>
+      </nav>
 
-      <div id="editProfileWrapper" class="edit-profile-wrapper" style="display: none;" aria-hidden="true">
+      <section id="editProfileWrapper" class="edit-profile-wrapper hidden" aria-hidden="true">
         <form id="editProfileForm">
           <div class="edit-form-group">
             <label for="editName">Nom complet / Nom de boutique</label>
-            <input type="text" id="editName" value="${safeName}" required>
+            <input type="text" id="editName" value="${safeName}" required autocomplete="name">
           </div>
           <div class="edit-form-group">
             <label for="editPhone">Numéro WhatsApp (sans +228)</label>
-            <input type="tel" id="editPhone" value="${escapeHTML(cleanPhone)}" required pattern="[0-9]{8}" maxlength="8">
+            <input type="tel" id="editPhone" value="${safeCleanPhone}" required placeholder="Ex: 90123456" pattern="[0-9]{8}" maxlength="8" inputmode="numeric" autocomplete="tel-national">
           </div>
-          <button type="submit" id="btnSaveProfile" class="btn btn-primary btn-block">Enregistrer</button>
+          <div class="edit-form-group">
+            <label for="editCity">Ville</label>
+            <select id="editCity">
+              ${['Lomé','Kara','Sokodé','Kpalimé','Atakpamé','Dapaong','Tsévié','Aného'].map(city =>
+                `<option value="${escapeHTML(city)}" ${profile.city === city ? 'selected' : ''}>${escapeHTML(city)}</option>`
+              ).join('')}
+            </select>
+          </div>
+          <button type="submit" id="btnSaveProfile" class="btn btn-primary btn-block" style="width: 100%; padding: 12px; background: var(--orange, #E8732C); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 8px;">Enregistrer les modifications</button>
         </form>
-      </div>
+      </section>
 
-      <div class="section-head" style="margin-top: 24px;"><h3>Mes annonces actives</h3></div>
+      <section class="section-head" style="margin-top: 24px;">
+        <h3>Mes annonces actives</h3>
+      </section>
       <div class="product-grid" id="myListingsGrid"></div>
       <div id="activeMoreContainer" class="load-more-container"></div>
-      <button class="btn btn-outline btn-block btn-danger" id="btnLogout" style="margin-top: 40px;">Déconnexion</button>
+      
+      <section class="section-head" style="margin-top: 32px;" id="soldSectionHead"></section>
+      <div class="product-grid" id="mySoldGrid"></div>
+      <div id="soldMoreContainer" class="load-more-container"></div>
+      
+      <button class="btn btn-block btn-danger" id="btnLogout" style="width: 100%; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 40px;">Déconnexion</button>
     `;
 
-    document.getElementById('btnToggleEdit').addEventListener('click', () => {
-      const w = document.getElementById('editProfileWrapper');
-      w.style.display = w.style.display === 'none' ? 'block' : 'none';
-    });
-    document.getElementById('editProfileForm').addEventListener('submit', handleProfileUpdate);
-    document.getElementById('btnLogout').addEventListener('click', handleLogout);
-    
-    renderActiveGrid();
-    if (typeof renderBottomNav === 'function') renderBottomNav('profil');
-  }
+    // Événements
+    document.getElementById('btnToggleEdit')?.addEventListener('click', toggleEditForm);
 
-  // --- Fonctions utilitaires gardées du code initial ---
-  async function handleProfileUpdate(e) {
-    e.preventDefault();
-    const name = document.getElementById('editName').value;
-    const phone = '+228' + document.getElementById('editPhone').value;
-    const { data: { user } } = await window.db.auth.getUser();
-    await window.db.from('profiles').update({ name, phone }).eq('id', user.id);
-    showToast('Profil mis à jour !');
-    location.reload();
-  }
-
-  async function handleLogout() { if(typeof logoutUser === 'function') await logoutUser(); window.location.href='index.html'; }
-  async function renderActiveGrid() { /* ... votre logique de grille ... */ }
-
-  async function init() {
-    if (typeof getMyProfile === 'function') {
-      const profile = await getMyProfile();
-      profile ? renderLoggedIn(profile) : renderLoggedOut();
+    const btnShare = document.getElementById('btnShareShop');
+    if (btnShare) {
+      btnShare.addEventListener('click', () => shareMyShop(btnShare.dataset.id, btnShare.dataset.name));
     }
-  }
+
+    document.getElementById('editProfileForm')?.addEventListener('submit', handleProfileUpdate);
+    document.getElementById('btnLogout')?.addEventListener('click', handleLogout);
+
+    renderActiveGrid();
+    renderSoldGrid();
+    
+    if (typeof renderBottomNav === 'function') renderBottomNav('profil');
+  };
+
+  /* Génération de carte annonce */
+  const myListingCardHTML = (l, editable) => {
+    // CORRECTION : Protection robuste contre les images manquantes ou les types inattendus
+    const imageUrl = Array.isArray(l.images) && l.images.length > 0 ? l.images[0] : (l.image_url ?? `https://picsum.photos/seed/${encodeURIComponent(l.id)}/600/600`);
+    const target = editable ? `publish.html?id=${encodeURIComponent(l.id)}` : `product.html?id=${encodeURIComponent(l.id)}`;
+    const formattedPrice = typeof formatPrice === 'function' ? formatPrice(l.price) : l.price;
+    
+    return `
+  <div class="product-card" style="position: relative;">
+    <div onclick="window.location.href='${escapeHTML(target)}'" style="cursor: pointer;">
+      <div class="img-wrap" style="position: relative;">
+        <img data-src="${escapeHTML(imageUrl)}" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'%3E%3C/svg%3E" alt="${escapeHTML(l.title)}" class="lazy" style="width: 100%; border-radius: 8px;">
+        ${l.status === 'sold' ? '<span class="sold-badge" style="position: absolute; top: 8px; right: 8px; background: red; color: white; padding: 4px 8px; font-size: 10px; font-weight: bold; border-radius: 4px;">VENDU</span>' : ''}
+      </div>
+      <div class="product-info" style="margin-top: 8px;">
+        <h4 style="margin: 0; font-size: 14px;">${escapeHTML(l.title)}</h4>
+        <div class="price-row" style="margin-top: 4px;"><span class="price" style="color: var(--orange, #E8732C); font-weight: bold;">${escapeHTML(String(formattedPrice))} F</span></div>
+        <p class="meta" style="font-size: 12px; color: var(--ink-soft, #666); margin: 4px 0 0;">${escapeHTML(l.city || '')} ${l.city && l.condition ? ' · ' : ''} ${escapeHTML(l.condition || '')}</p>
+      </div>
+    </div>
+
+    <button type="button" onclick="confirmDelete('${l.id}')" 
+            style="width: 100%; margin-top: 8px; padding: 6px; background: #fff0f0; color: #e74c3c; 
+            border: 1px solid #e74c3c; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold;">
+      🗑️ Supprimer
+    </button>
+  </div>
+`;
+  };
+
+  /* Grilles d'annonces */
+  const renderActiveGrid = () => {
+    const grid = document.getElementById('myListingsGrid');
+    const btnContainer = document.getElementById('activeMoreContainer');
+    if (!grid || !btnContainer) return;
+    
+    const visibleListings = allActiveListings.slice(0, visibleActiveCount);
+    
+    grid.innerHTML = allActiveListings.length 
+      ? visibleListings.map(l => myListingCardHTML(l, false)).join('') 
+      : `<div class="empty-state" style="grid-column:1/-1; padding: 30px 20px; text-align: center;"><div class="emoji" style="font-size: 32px; margin-bottom: 8px;">📭</div><p>Vous n'avez aucune annonce active.</p></div>`;
+    
+    btnContainer.innerHTML = allActiveListings.length > visibleActiveCount ? `<button class="btn btn-outline btn-sm" id="btnMoreActive" style="padding: 8px 16px; border: 1px solid var(--orange, #E8732C); color: var(--orange, #E8732C); background: transparent; border-radius: 20px; cursor: pointer;">Voir plus</button>` : '';
+    
+    if (allActiveListings.length > visibleActiveCount) {
+      document.getElementById('btnMoreActive')?.addEventListener('click', loadMoreActive);
+    }
+    
+    if (typeof initLazyLoad === 'function') initLazyLoad();
+  };
+
+  const loadMoreActive = () => { visibleActiveCount += 2; renderActiveGrid(); };
+
+  const renderSoldGrid = () => {
+    const soldHead = document.getElementById('soldSectionHead');
+    const grid = document.getElementById('mySoldGrid');
+    const btnContainer = document.getElementById('soldMoreContainer');
+    
+    if (!grid || !btnContainer) return;
+    
+    if (allSoldListings.length) {
+      if (soldHead) soldHead.innerHTML = '<h3>Annonces vendues</h3>';
+      grid.innerHTML = allSoldListings.slice(0, visibleSoldCount).map(l => myListingCardHTML(l, false)).join('');
+      btnContainer.innerHTML = allSoldListings.length > visibleSoldCount ? `<button class="btn btn-outline btn-sm" id="btnMoreSold" style="padding: 8px 16px; border: 1px solid var(--orange, #E8732C); color: var(--orange, #E8732C); background: transparent; border-radius: 20px; cursor: pointer;">Voir plus</button>` : '';
+      
+      if (allSoldListings.length > visibleSoldCount) {
+        document.getElementById('btnMoreSold')?.addEventListener('click', loadMoreSold);
+      }
+    } else {
+      if (soldHead) soldHead.innerHTML = '';
+      grid.innerHTML = '';
+      btnContainer.innerHTML = '';
+    }
+    
+    if (typeof initLazyLoad === 'function') initLazyLoad();
+  };
+
+  const loadMoreSold = () => { visibleSoldCount += 2; renderSoldGrid(); };
+
+  /* Formulaire d'édition */
+  const toggleEditForm = () => {
+    const wrapper = document.getElementById('editProfileWrapper');
+    if (!wrapper) return;
+    wrapper.classList.toggle('hidden');
+    wrapper.setAttribute('aria-hidden', wrapper.classList.contains('hidden').toString());
+  };
+
+  /* Partage - CORRECTION : lien vers seller.html */
+  const shareMyShop = async (id, name) => {
+    const shopUrl = `${window.location.origin}/seller.html?id=${encodeURIComponent(id)}`;
+    const shareText = `Découvrez ma vitrine "${name}" sur DEKONme ! Retrouvez tous mes articles disponibles ici :`;
+    
+    if (navigator.share) {
+      try { 
+        await navigator.share({ title: name, text: shareText, url: shopUrl }); 
+      } catch (err) { 
+        if (err.name !== 'AbortError') console.error(err); 
+      }
+    } else {
+      try { 
+        await navigator.clipboard.writeText(`${shareText} ${shopUrl}`); 
+        showToast('Lien copié ! Collez-le dans votre statut WhatsApp 📋'); 
+      } catch (err) { 
+        showToast('Votre lien : ' + shopUrl); 
+      }
+    }
+  };
+
+  /* Mise à jour du profil - CORRECTION : Destructuration sécurisée */
+  const handleProfileUpdate = async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('btnSaveProfile');
+    if (!window.db) return;
+    if (btn) { btn.disabled = true; btn.textContent = 'Mise à jour…'; }
+    
+    const name = document.getElementById('editName').value.trim();
+    const phone = document.getElementById('editPhone').value.trim();
+    const city = document.getElementById('editCity').value;
+    
+    try {
+      const { data, error: authError } = await window.db.auth.getUser();
+      if (authError || !data?.user) { 
+        window.location.href = 'auth.html'; 
+        return; 
+      }
+      
+      const formattedPhone = typeof toE164 === 'function' ? toE164(phone) : (`+228${phone.replace(/\D/g, '')}`);
+      
+      const { error: dbError } = await window.db.from('profiles').update({ name, phone: formattedPhone, city }).eq('id', data.user.id);
+      if (dbError) throw dbError;
+      
+      const h2 = document.querySelector('.profile-header h2');
+      const subtitle = document.querySelector('.profile-header p');
+      
+      if (h2) h2.textContent = name;
+      if (subtitle) subtitle.textContent = `${city ? city + ' · ' : ''}${formattedPhone}`;
+      
+      const wrapper = document.getElementById('editProfileWrapper');
+      if (wrapper) { wrapper.classList.add('hidden'); wrapper.setAttribute('aria-hidden', 'true'); }
+      
+      showToast('Profil mis à jour ✨');
+    } catch (err) { 
+      console.error(err); 
+      showToast('Erreur lors de la modification.'); 
+    } finally { 
+      if (btn) { btn.disabled = false; btn.textContent = 'Enregistrer les modifications'; } 
+    }
+  };
+
+  /* Déconnexion */
+  const handleLogout = async () => { 
+    if (typeof logoutUser === 'function') { 
+      await logoutUser(); 
+      window.location.href = 'index.html'; 
+    } 
+  };
+
+  /* Initialisation */
+  const init = async () => {
+    try {
+      if (typeof getMyProfile === 'function') {
+        const profile = await getMyProfile();
+        profile ? renderLoggedIn(profile) : renderLoggedOut();
+      } else { 
+        renderLoggedOut(); 
+      }
+    } catch (err) { 
+      console.error("Erreur lors de l'initialisation du profil :", err); 
+      renderLoggedOut(); 
+    }
+  };
+
   document.addEventListener('DOMContentLoaded', init);
+
+
+window.confirmDelete = (id) => {
+  if (confirm("Êtes-vous sûr de vouloir supprimer cette annonce ?")) {
+    deleteListing(id);
+  }
+};
+
+async function deleteListing(id) {
+  try {
+    // On utilise window.db (ton instance Supabase)
+    const { error } = await window.db.from('listings').delete().eq('id', id);
+    
+    if (error) throw error;
+    
+    showToast("Annonce supprimée ! ✅");
+    
+    // On retire l'annonce de la liste locale pour mettre à jour l'écran immédiatement
+    allActiveListings = allActiveListings.filter(l => l.id !== id);
+    allSoldListings = allSoldListings.filter(l => l.id !== id);
+    
+    // On redessine les grilles
+    renderActiveGrid();
+    renderSoldGrid();
+    
+  } catch (err) {
+    console.error(err);
+    showToast("Erreur lors de la suppression ❌");
+  }
+}
+
 </script>
 </body>
 </html>

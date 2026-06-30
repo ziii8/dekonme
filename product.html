@@ -9,11 +9,10 @@
   <title>DEKONme - Détail produit</title>
   <link rel="stylesheet" href="css/style.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-  
+
   <style>
-    /* Styles spécifiques pour l'affichage de la galerie et des actions */
     .product-page-wrapper {
-      padding-bottom: 100px; /* Espace pour les actions fixes en bas */
+      padding-bottom: 100px;
     }
     .detail-gallery-track {
       display: flex;
@@ -24,6 +23,7 @@
       border-radius: 16px;
       margin-bottom: 12px;
       background: var(--border);
+      scrollbar-width: none;
     }
     .detail-gallery-track::-webkit-scrollbar {
       display: none;
@@ -33,6 +33,11 @@
       scroll-snap-align: start;
       aspect-ratio: 4/3;
       cursor: pointer;
+    }
+    /* FIX A11y : focus visible sur les slides devenues focusables */
+    .detail-gallery-slide:focus-visible {
+      outline: 2px solid var(--orange);
+      outline-offset: -2px;
     }
     .detail-gallery-slide img {
       width: 100%;
@@ -80,6 +85,31 @@
     .pill.tag {
       background: rgba(232, 115, 44, 0.1);
       color: var(--orange);
+    }
+
+    /* FIX UX : toast (cohérent avec profil.html) */
+    #toast {
+      position: fixed;
+      bottom: calc(var(--nav-height) + 16px);
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--ink);
+      color: var(--bg);
+      padding: 10px 20px;
+      border-radius: var(--radius-pill);
+      font-size: 13px;
+      font-weight: 600;
+      z-index: 3000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease, transform 0.25s ease;
+      white-space: nowrap;
+      max-width: 90vw;
+      text-align: center;
+    }
+    #toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
     }
   </style>
 </head>
@@ -145,10 +175,42 @@
 <!-- BOTTOM NAV -->
 <div class="bottom-nav" id="bottomNav"></div>
 
+<!-- FIX UX : Toast global -->
+<div id="toast" role="status" aria-live="polite"></div>
+
 <!-- SCRIPTS -->
 <script src="js/supabase-config.js"></script>
 <script src="js/app.js"></script>
 <script>
+  /* ============================================================
+     FIX XSS : échappement HTML — identique à profil.html
+  ============================================================ */
+  function escapeHTML(str) {
+    return String(str == null ? '' : str)
+      .replace(/&/g,  '&amp;')
+      .replace(/</g,  '&lt;')
+      .replace(/>/g,  '&gt;')
+      .replace(/"/g,  '&quot;')
+      .replace(/'/g,  '&#39;');
+  }
+
+  /* FIX XSS : n'autoriser que des URLs http(s) pour les images */
+  function safeImageUrl(url) {
+    if (typeof url === 'string' && /^https?:\/\//i.test(url)) return url;
+    return 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1 1"%3E%3C/svg%3E';
+  }
+
+  /* FIX UX : toast au lieu de alert() */
+  let _toastTimer = null;
+  function showToast(msg) {
+    const el = document.getElementById('toast');
+    if (!el) return;
+    el.textContent = msg;
+    el.classList.add('show');
+    clearTimeout(_toastTimer);
+    _toastTimer = setTimeout(() => el.classList.remove('show'), 2800);
+  }
+
   const params = new URLSearchParams(window.location.search);
   let id = Number(params.get('id'));
   if (!id) {
@@ -159,26 +221,6 @@
 
   let listing = null;
   let fav = false;
-  let lightboxTrack = null;
-  let lightboxDots = null;
-  let scrollHandler = null;
-
-  function escapeHTML(str) {
-    if (!str) return '';
-    const div = document.createElement('div');
-    div.textContent = str;
-    return div.innerHTML;
-  }
-
-  function validateImageURL(url) {
-    if (!url || typeof url !== 'string') return false;
-    try {
-      const u = new URL(url);
-      return u.protocol === 'http:' || u.protocol === 'https:';
-    } catch {
-      return false;
-    }
-  }
 
   function renderFavBtn() {
     const btn = document.getElementById('detailFavBtn');
@@ -200,45 +242,40 @@
     shareListing(listing.id, listing.title, listing.price);
   };
 
-  // ====================== RENDER ACTIONS ======================
+  /* ============================================================
+     FIX XSS : actions de contact via data-* + addEventListener
+     (plus de onclick inline avec données utilisateur interpolées)
+  ============================================================ */
   function renderActions() {
     const actionsBox = document.getElementById('detailActions');
-    if (!actionsBox || !listing) { actionsBox.innerHTML = ''; return; }
+    if (!actionsBox) return;
+    if (!listing) { actionsBox.innerHTML = ''; return; }
 
-    const btn = document.createElement('button');
-    btn.className = 'btn btn-whatsapp';
-    btn.style.width = '100%';
-    btn.style.maxWidth = '300px';
-    btn.innerHTML = `
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-        <path d="M17.6 6.3A8.9 8.9 0 0012 4a8.9 8.9 0 00-7.7 13.4L3 21l3.7-1.3A8.9 8.9 0 0012 21a8.9 8.9 0 006.3-15.3l-.7.6zM12 19.3a7.3 7.3 0 01-3.7-1l-.3-.2-2.7 1 .9-2.6-.2-.3a7.3 7.3 0 1110.6 1.4 7.3 7.3 0 01-4.6 1.7zm4-5.5c-.2-.1-1.3-.6-1.5-.7s-.4-.1-.5.1-.5.7-.6.8-.2.2-.4.1a6 6 0 01-1.7-1 6.6 6.6 0 01-1.2-1.5c-.1-.2 0-.3.1-.4l.3-.4.2-.3v-.3c-.1-.1-.5-1.2-.7-1.7s-.4-.4-.5-.4h-.5c-.1 0-.4.1-.6.3-.2.2-.8.8-.8 2s.9 2.3 1 2.4c.1.2 1.7 2.6 4.2 3.6.6.2 1 .4 1.4.5.6.2 1.1.1 1.5.1.5-.1 1.3-.5 1.5-1s.2-.9.1-1l-.3-.2z"/>
-      </svg>
-      Contacter sur WhatsApp
+    actionsBox.innerHTML = `
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 10px; margin-top: 20px;">
+        <button class="btn btn-whatsapp" id="btnContactWhatsapp" style="width: 100%; max-width: 300px;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.6 6.3A8.9 8.9 0 0012 4a8.9 8.9 0 00-7.7 13.4L3 21l3.7-1.3A8.9 8.9 0 0012 21a8.9 8.9 0 006.3-15.3l-.7.6zM12 19.3a7.3 7.3 0 01-3.7-1l-.3-.2-2.7 1 .9-2.6-.2-.3a7.3 7.3 0 1110.6 1.4 7.3 7.3 0 01-4.6 1.7zm4-5.5c-.2-.1-1.3-.6-1.5-.7s-.4-.1-.5.1-.5.7-.6.8-.2.2-.4.1a6 6 0 01-1.7-1 6.6 6.6 0 01-1.2-1.5c-.1-.2 0-.3.1-.4l.3-.4.2-.3v-.3c-.1-.1-.5-1.2-.7-1.7s-.4-.4-.5-.4h-.5c-.1 0-.4.1-.6.3-.2.2-.8.8-.8 2s.9 2.3 1 2.4c.1.2 1.7 2.6 4.2 3.6.6.2 1 .4 1.4.5.6.2 1.1.1 1.5.1.5-.1 1.3-.5 1.5-1s.2-.9.1-1l-.3-.2z"/></svg>
+          Contacter sur WhatsApp
+        </button>
+      </div>
     `;
-    btn.dataset.whatsapp = listing.whatsapp || '';
-    btn.dataset.title = listing.title || '';
-    btn.dataset.price = listing.price || 0;
-    btn.dataset.id = listing.id || 0;
 
-    actionsBox.innerHTML = '';
-    actionsBox.appendChild(btn);
-
-    btn.addEventListener('click', (e) => {
-      e.preventDefault();
-      const whatsapp = btn.dataset.whatsapp.trim();
-      if (!whatsapp) return alert('Numéro WhatsApp non défini');
-      const title = btn.dataset.title.replace(/'/g, '\\\'');
-      const price = Number(btn.dataset.price);
-      const productId = Number(btn.dataset.id);
-      contactWhatsApp(whatsapp, title, price, productId);
-    });
+    /* FIX XSS : pas d'interpolation dans onclick — lecture via closure */
+    const btn = document.getElementById('btnContactWhatsapp');
+    if (btn) {
+      btn.addEventListener('click', () => {
+        if (typeof contactWhatsApp === 'function') {
+          contactWhatsApp(listing.whatsapp, listing.title, listing.price, listing.id);
+        }
+      });
+    }
   }
 
-  // ====================== INIT ======================
   async function init() {
     const container = document.getElementById('productContainer');
     if (!container) return;
 
+    /* FIX : guard sur id invalide avant tout appel réseau */
     if (!id || isNaN(id)) {
       container.innerHTML = `
         <div class="empty-state">
@@ -249,45 +286,38 @@
           </div>
         </div>
       `;
+      if (typeof renderBottomNav === 'function') renderBottomNav('categories');
       return;
     }
 
     try {
+      if (typeof getListingById !== 'function') return;
       listing = await getListingById(id);
 
       if (listing) {
         fav = typeof isFavorite === 'function' ? await isFavorite(listing.id) : false;
-
         const sellerProfile = typeof getSellerProfile === 'function' ? await getSellerProfile(listing.user_id) : null;
-        const currentUser = typeof getCurrentUser === 'function' ? await getCurrentUser() : null;
-        const isOwner = currentUser && currentUser.id === listing.user_id;
 
         const published = params.get('published') === '1';
         const updated = params.get('updated') === '1';
+        const ratingLine = listing.reviews > 0
+          ? `★ ${escapeHTML(listing.rating)} (${escapeHTML(listing.reviews)} avis)`
+          : 'Nouvelle annonce';
 
-        const ratingLine = listing.reviews > 0 ? `★ ${listing.rating} (${listing.reviews} avis)` : 'Nouvelle annonce';
+        /* FIX XSS : validation des URLs d'image (http/https uniquement) */
+        const rawImages = listing.images && listing.images.length
+          ? listing.images
+          : [listing.image_url || 'https://picsum.photos/seed/' + encodeURIComponent(listing.id) + '/600/600'];
+        const images = rawImages.map(safeImageUrl);
 
-        // Validation images
-        let images = [];
-        if (listing.images && Array.isArray(listing.images)) {
-          images = listing.images.filter(validateImageURL);
-        }
-        if (images.length === 0 && listing.image_url && validateImageURL(listing.image_url)) {
-          images = [listing.image_url];
-        }
-        if (images.length === 0) {
-          images = [`https://picsum.photos/seed/${listing.id}/600/600`];
-        }
+        const safeTitle = escapeHTML(listing.title);
 
+        /* FIX A11y : slides focusables (role=button, tabindex, keydown) */
         const galleryHTML = `
           <div class="detail-gallery-track" id="galleryTrack">
             ${images.map((url, i) => `
-              <div class="detail-gallery-slide" 
-                   role="button" 
-                   tabindex="0" 
-                   onclick="openLightbox(${i})"
-                   onkeydown="if(event.key==='Enter'||event.key===' '){openLightbox(${i});}">
-                <img src="${escapeHTML(url)}" alt="${escapeHTML(listing.title)} — photo ${i + 1}">
+              <div class="detail-gallery-slide" data-i="${i}" role="button" tabindex="0" aria-label="Voir la photo ${i + 1} en plein écran">
+                <img src="${url}" alt="${safeTitle} — photo ${i + 1}" ${i === 0 ? '' : 'loading="lazy"'}>
               </div>
             `).join('')}
           </div>
@@ -298,9 +328,12 @@
           ` : ''}
         `;
 
+        const currentUser = typeof getCurrentUser === 'function' ? await getCurrentUser() : null;
+        const isOwner = currentUser && currentUser.id === listing.user_id;
+
         const ownerActionsHTML = isOwner ? `
           <div class="detail-section owner-actions">
-            <button class="btn btn-primary btn-block" onclick="window.location.href='publish.html?id=${listing.id}'">✏️ Modifier l'annonce</button>
+            <button class="btn btn-primary btn-block" onclick="window.location.href='publish.html?id=${encodeURIComponent(listing.id)}'">✏️ Modifier l'annonce</button>
           </div>
         ` : `
           <div class="detail-section owner-actions" style="text-align: center;">
@@ -308,14 +341,25 @@
           </div>
         `;
 
-        const formattedPrice = typeof formatPrice === 'function' ? formatPrice(listing.price) : listing.price;
+        const formattedPrice = escapeHTML(
+          typeof formatPrice === 'function' ? formatPrice(listing.price) : listing.price
+        );
+
+        /* FIX XSS : toutes les valeurs échappées via escapeHTML()        */
+        /* FIX XSS : description échappée puis sauts de ligne convertis   */
+        const safeDescription = escapeHTML(listing.description || '').replace(/\n/g, '<br>');
+        const safeModel     = escapeHTML(listing.model || '');
+        const safeCondition = escapeHTML(listing.condition || '');
+        const safeCity      = escapeHTML(listing.city || '');
+        const safeSeller    = escapeHTML(listing.seller_name || 'Vendeur DEKONme');
+        const safeUserId    = encodeURIComponent(listing.user_id);
 
         container.innerHTML = `
           ${published ? `<div class="success-banner">✅ Votre annonce a été publiée avec succès.</div>` : ''}
           ${updated ? `<div class="success-banner">✅ Votre annonce a été mise à jour.</div>` : ''}
           ${galleryHTML}
 
-          <h1 class="detail-title" style="font-size:22px; margin-top:12px; margin-bottom:4px;">${escapeHTML(listing.title)}</h1>
+          <h1 class="detail-title" style="font-size:22px; margin-top:12px; margin-bottom:4px;">${safeTitle}</h1>
           <div class="detail-price-row" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
             <span class="detail-price" style="font-size:20px; font-weight:800; color:var(--orange); flex:1;">${formattedPrice} FCFA</span>
             <span class="detail-rating" style="font-size:13px; color:var(--ink-soft);">${ratingLine}</span>
@@ -324,30 +368,30 @@
           <div class="detail-section">
             <h3 style="margin-bottom:8px;">Détails</h3>
             <div class="pill-row">
-              <span class="pill">${escapeHTML(listing.model || '')}</span>
-              <span class="pill">${escapeHTML(listing.condition || '')}</span>
-              <span class="pill tag">📍 ${escapeHTML(listing.city || '')}</span>
+              <span class="pill">${safeModel}</span>
+              <span class="pill">${safeCondition}</span>
+              <span class="pill tag">📍 ${safeCity}</span>
             </div>
           </div>
 
           <div class="detail-section">
             <h3 style="margin-bottom:8px;">Description</h3>
-            <p class="detail-desc" style="line-height:1.6; color:var(--ink);">${escapeHTML(listing.description || '').replace(/\n/g, '<br>')}</p>
+            <p class="detail-desc" style="line-height:1.6; color:var(--ink);">${safeDescription}</p>
           </div>
 
           <div class="detail-section">
             <h3 style="margin-bottom:12px;">Vendeur</h3>
-            <div class="seller-card" ${!isOwner ? `onclick="window.location.href='seller.html?id=${listing.user_id}'" style="cursor:pointer; display:flex; align-items:center; gap:12px;"` : 'style="display:flex; align-items:center; gap:12px;"'}>
+            <div class="seller-card" id="sellerCard" ${!isOwner ? 'style="cursor:pointer; display:flex; align-items:center; gap:12px;"' : 'style="display:flex; align-items:center; gap:12px;"'}>
               <div class="avatar" style="width:44px; height:44px; background:var(--bg); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:20px;">👤</div>
               <div class="info" style="flex:1;">
-                <h5 style="margin:0; font-size:15px;">${escapeHTML(listing.seller_name || 'Vendeur DEKONme')}</h5>
+                <h5 style="margin:0; font-size:15px;">${safeSeller}</h5>
                 <p class="seller-status" style="margin:0; font-size:12px; color:var(--ink-soft);">
                   ${(() => {
                     if (typeof getOnlineStatus === 'function') {
-                      const s = getOnlineStatus(sellerProfile?.last_seen);
-                      return s.dot ? `${s.dot} ${s.label}` : escapeHTML(listing.city || '');
+                      const s = getOnlineStatus(sellerProfile && sellerProfile.last_seen);
+                      return s.dot ? `${escapeHTML(s.dot)} ${escapeHTML(s.label)}` : safeCity;
                     }
-                    return escapeHTML(listing.city || '');
+                    return safeCity;
                   })()}
                 </p>
               </div>
@@ -358,29 +402,46 @@
           ${ownerActionsHTML}
         `;
 
-        // Dots galerie
-        if (images.length > 1) {
-          const track = document.getElementById('galleryTrack');
-          const dots = document.getElementById('galleryDots');
-          if (track && dots) {
-            track.addEventListener('scroll', () => {
-              const i = Math.round(track.scrollLeft / track.clientWidth);
-              document.querySelectorAll('#galleryDots .dot').forEach((d, idx) => d.classList.toggle('active', idx === i));
-            }, { passive: true });
-
-            dots.querySelectorAll('.dot').forEach(dot => {
-              dot.addEventListener('click', () => {
-                const i = Number(dot.dataset.i);
-                track.scrollTo({ left: i * track.clientWidth, behavior: 'smooth' });
-              });
+        /* FIX XSS : navigation vendeur via addEventListener (user_id encodé) */
+        if (!isOwner) {
+          const sellerCard = document.getElementById('sellerCard');
+          if (sellerCard) {
+            sellerCard.addEventListener('click', () => {
+              window.location.href = 'seller.html?id=' + safeUserId;
             });
           }
         }
 
+        if (images.length > 1) {
+          const track = document.getElementById('galleryTrack');
+          track.addEventListener('scroll', () => {
+            const i = Math.round(track.scrollLeft / track.clientWidth);
+            document.querySelectorAll('#galleryDots .dot').forEach((d, idx) => d.classList.toggle('active', idx === i));
+          }, { passive: true });
+
+          document.querySelectorAll('#galleryDots .dot').forEach(dot => {
+            dot.addEventListener('click', () => {
+              const i = Number(dot.dataset.i);
+              track.scrollTo({ left: i * track.clientWidth, behavior: 'smooth' });
+            });
+          });
+        }
+
+        /* FIX XSS + A11y : clic et clavier (Entrée/Espace) sur les slides */
+        document.querySelectorAll('.detail-gallery-slide').forEach(slide => {
+          const open = () => openLightbox(Number(slide.dataset.i));
+          slide.addEventListener('click', open);
+          slide.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              open();
+            }
+          });
+        });
+
         renderFavBtn();
         renderActions();
       } else {
-        // Listing non trouvé
         container.innerHTML = `
           <div class="empty-state">
             <div class="emoji">🔍</div>
@@ -399,25 +460,36 @@
     if (typeof renderBottomNav === 'function') renderBottomNav('categories');
   }
 
-  // ====================== LIGHTBOX ======================
+  // ==================== VISIONNEUSE PLEIN ÉCRAN (lightbox) ====================
+
+  /* FIX mémoire : référence du handler de scroll pour pouvoir le retirer */
+  let _lightboxScrollHandler = null;
+  /* FIX UX : navigation clavier (Échap, flèches) */
+  let _lightboxKeyHandler = null;
+  let _lightboxImagesCount = 0;
+  let _lightboxCurrentIndex = 0;
+
   window.openLightbox = function (startIndex) {
     if (!listing) return;
-    const images = listing.images && listing.images.length
-      ? listing.images.filter(validateImageURL)
-      : (listing.image_url && validateImageURL(listing.image_url)
-         ? [listing.image_url]
-         : [`https://picsum.photos/seed/${listing.id}/600/600`]);
+    const rawImages = listing.images && listing.images.length
+      ? listing.images
+      : [listing.image_url || 'https://picsum.photos/seed/' + encodeURIComponent(listing.id) + '/600/600'];
+    const images = rawImages.map(safeImageUrl);
+    _lightboxImagesCount = images.length;
+    _lightboxCurrentIndex = startIndex;
 
-    if (!lightboxTrack) lightboxTrack = document.getElementById('lightboxTrack');
-    if (!lightboxDots) lightboxDots = document.getElementById('lightboxDots');
+    const track = document.getElementById('lightboxTrack');
+    const dots = document.getElementById('lightboxDots');
+    if (!track || !dots) return;
 
-    lightboxTrack.innerHTML = images.map((url, i) => `
-      <div class="lightbox-slide" style="flex:0 0 100%; scroll-snap-align:start; display:flex; align-items:center; justify-content:center;">
-        <img src="${escapeHTML(url)}" alt="Photo ${i + 1}" style="max-width:100%; max-height:80vh; object-fit:contain;">
-      </div>
+    const safeTitle = escapeHTML(listing.title);
+
+    /* FIX XSS : alt échappé, URL validée en amont */
+    track.innerHTML = images.map((url, i) => `
+      <div class="lightbox-slide" style="flex:0 0 100%; scroll-snap-align:start; display:flex; align-items:center; justify-content:center;"><img src="${url}" alt="${safeTitle} — photo ${i + 1}" style="max-width:100%; max-height:80vh; object-fit:contain;"></div>
     `).join('');
 
-    lightboxDots.innerHTML = images.length > 1
+    dots.innerHTML = images.length > 1
       ? images.map((_, i) => `<span class="dot ${i === startIndex ? 'active' : ''}"></span>`).join('')
       : '';
 
@@ -425,29 +497,53 @@
     document.body.style.overflow = 'hidden';
 
     requestAnimationFrame(() => {
-      lightboxTrack.scrollTo({ left: startIndex * lightboxTrack.clientWidth });
+      track.scrollTo({ left: startIndex * track.clientWidth });
     });
 
-    // Gestionnaire scroll (on le stocke pour le supprimer proprement)
-    scrollHandler = () => {
-      const i = Math.round(lightboxTrack.scrollLeft / lightboxTrack.clientWidth);
-      lightboxDots.querySelectorAll('.dot').forEach((d, idx) => d.classList.toggle('active', idx === i));
+    /* FIX mémoire : retirer un éventuel ancien listener avant d'en ajouter un nouveau */
+    if (_lightboxScrollHandler) {
+      track.removeEventListener('scroll', _lightboxScrollHandler);
+    }
+    _lightboxScrollHandler = () => {
+      const i = Math.round(track.scrollLeft / track.clientWidth);
+      _lightboxCurrentIndex = i;
+      dots.querySelectorAll('.dot').forEach((d, idx) => d.classList.toggle('active', idx === i));
     };
-    lightboxTrack.addEventListener('scroll', scrollHandler, { passive: true });
+    track.addEventListener('scroll', _lightboxScrollHandler, { passive: true });
+
+    /* FIX UX : navigation clavier — Échap ferme, flèches changent de slide */
+    if (_lightboxKeyHandler) {
+      document.removeEventListener('keydown', _lightboxKeyHandler);
+    }
+    _lightboxKeyHandler = (e) => {
+      if (e.key === 'Escape') {
+        closeLightbox();
+      } else if (e.key === 'ArrowRight' && _lightboxCurrentIndex < _lightboxImagesCount - 1) {
+        track.scrollTo({ left: (_lightboxCurrentIndex + 1) * track.clientWidth, behavior: 'smooth' });
+      } else if (e.key === 'ArrowLeft' && _lightboxCurrentIndex > 0) {
+        track.scrollTo({ left: (_lightboxCurrentIndex - 1) * track.clientWidth, behavior: 'smooth' });
+      }
+    };
+    document.addEventListener('keydown', _lightboxKeyHandler);
   };
 
   window.closeLightbox = function () {
-    const lightbox = document.getElementById('lightbox');
-    lightbox.classList.remove('open');
+    document.getElementById('lightbox').classList.remove('open');
     document.body.style.overflow = '';
 
-    if (lightboxTrack && scrollHandler) {
-      lightboxTrack.removeEventListener('scroll', scrollHandler);
-      scrollHandler = null;
+    /* FIX mémoire : nettoyage des listeners à la fermeture */
+    const track = document.getElementById('lightboxTrack');
+    if (track && _lightboxScrollHandler) {
+      track.removeEventListener('scroll', _lightboxScrollHandler);
+      _lightboxScrollHandler = null;
+    }
+    if (_lightboxKeyHandler) {
+      document.removeEventListener('keydown', _lightboxKeyHandler);
+      _lightboxKeyHandler = null;
     }
   };
 
-  // ====================== SIGNALEMENT ======================
+  // ==================== SIGNALEMENT D'ANNONCE ====================
   window.openReportModal = function () {
     document.getElementById('reportForm').classList.remove('hidden');
     document.getElementById('reportSuccess').classList.add('hidden');
@@ -475,7 +571,8 @@
       submitBtn.textContent = 'Envoyer le signalement';
 
       if (error) {
-        alert('Erreur : ' + error);
+        /* FIX sécurité/UX : toast générique au lieu d'exposer le message Supabase brut */
+        showToast("Une erreur est survenue, merci de réessayer.");
         return false;
       }
 
@@ -486,6 +583,7 @@
       console.error("Erreur lors du signalement :", err);
       submitBtn.disabled = false;
       submitBtn.textContent = 'Envoyer le signalement';
+      showToast("Une erreur est survenue, merci de réessayer.");
     }
     return false;
   };
