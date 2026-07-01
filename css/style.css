@@ -1,13 +1,14 @@
 /* ============================================= */
-/* DEKONme — style.css v4.2 (Production)        */
+/* DEKONme — style.css v4.3 (Production)        */
 /* Design system factorisé + Sécurité Mobile    */
 /* Marketplace du Togo — 100% mobile-first      */
-/* CORRECTIFS v4.2 :                            */
+/* CORRECTIFS v4.3 :                            */
 /*   - PWA install btn consolidé dans topbar    */
 /*   - Toast system unifié                      */
 /*   - line-clamp corrigé                       */
 /*   - .product-grid min-height supprimé        */
 /*   - Bouton 👤 Annuler bien placé             */
+/*   - Bloqueur de zoom (maximum-scale=1.0)     */
 /* ============================================= */
 
 :root {
@@ -71,30 +72,6 @@ html.light {
   --shadow:      0 2px 12px rgba(26,26,26,0.06);
   --shadow-lift: 0 8px 24px rgba(26,26,26,0.10);
   --shadow-deep: 0 12px 40px rgba(26,26,26,0.15);
-}
-
-/* ==================== PATCH DARK MODE MOBILE ==================== */
-html.dark .menu-row,
-html.dark .product-card,
-html.dark .seller-card,
-html.dark .topbar .back-btn,
-html.dark .modal-content {
-  background-color: var(--white);
-  border-color: var(--border);
-}
-html.dark .menu-row-label,
-html.dark .product-info h4,
-html.dark .profile-header h2,
-html.dark .section-head h3,
-html.dark .topbar .page-title,
-html.dark .detail-title {
-  color: var(--ink);
-}
-html.dark .menu-row-icon,
-html.dark .profile-header p,
-html.dark .product-info .meta,
-html.dark .topbar .icon-btn svg {
-  color: var(--ink-soft);
 }
 
 /* ==================== RESET & BASE ==================== */
@@ -670,4 +647,72 @@ input:focus, select:focus, textarea:focus {
 
 .security-buttons button:hover {
   transform: scale(1.05);
+}
+
+/* ====================== TIKTOK BUTTON ANIMATION ====================== */
+.social-link-btn.tiktok {
+  background: linear-gradient(135deg, #000 0%, #111 100%);
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.social-link-btn.tiktok:hover {
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+}
+
+.social-link-btn.tiktok::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 40%;
+  height: 300%;
+  background: linear-gradient(
+    120deg,
+    transparent,
+    rgba(255, 255, 255, 0.4),
+    transparent
+  );
+  transform: skewX(-25deg);
+  animation: shine 4s infinite;
+}
+
+@keyframes shine {
+  0% {
+    transform: translateX(-150%) skewX(-25deg);
+  }
+  20% {
+    transform: translateX(300%) skewX(-25deg);
+  }
+  100% {
+    transform: translateX(300%) skewX(-25deg);
+  }
+}
+
+/* Pulse quand en ligne */
+.presence-badge.online .social-link-btn.tiktok {
+  animation: tiktokPulse 2s infinite;
+}
+
+@keyframes tiktokPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+}
+
+/* ====================== BLOQUER LE ZOOM SUR TOUT LE SITE ====================== */
+html {
+  touch-action: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+input, select, textarea, button, a {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  user-select: none;
 }

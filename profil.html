@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#E8732C">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
@@ -97,7 +97,7 @@
       color: var(--ink);
     }
 
-    /* --- RÉSEAUX SOCIAUX — ICÔNES --- */
+    /* --- RÉSEAUX SOCIAUX — SEUL TIKTOK ====================== */
     .social-links-row {
       display: flex;
       gap: 12px;
@@ -119,8 +119,6 @@
       color: #fff;
     }
     .social-link-btn:hover { opacity: 0.85; transform: translateY(-1px); }
-    .social-link-btn.facebook  { background: #1877F2; }
-    .social-link-btn.instagram { background: linear-gradient(135deg, #F58529, #DD2A7B, #8134AF); }
     .social-link-btn.tiktok    { background: #000; }
 
     /* Input avec icône préfixe */
@@ -256,24 +254,18 @@
     const safeId       = escapeHTML(profile.id);
 
     const social = profile.social_links || {};
-    const safeFb = escapeHTML(social.facebook  || '');
-    const safeIg = escapeHTML(social.instagram || '');
-    const safeTt = escapeHTML(social.tiktok    || '');
+    const safeTt = escapeHTML(social.tiktok || '');
 
-    const socialLinksHTML = (safeFb || safeIg || safeTt) ? `
+    const socialLinksHTML = safeTt ? `
       <div class="social-links-row">
-        ${safeFb ? `<a href="${safeFb}" target="_blank" rel="noopener" class="social-link-btn facebook">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg>
-          Facebook
-        </a>` : ''}
-        ${safeIg ? `<a href="https://instagram.com/${safeIg.replace('@','')}" target="_blank" rel="noopener" class="social-link-btn instagram">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
-          Instagram
-        </a>` : ''}
-        ${safeTt ? `<a href="https://tiktok.com/${safeTt.startsWith('@') ? safeTt : '@'+safeTt}" target="_blank" rel="noopener" class="social-link-btn tiktok">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04 .79 .1V9.01a6.33 6.33 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.69a8.18 8.18 0 004.78 1.52V6.75a4.85 4.85 0 01-1.01-.06z"/></svg>
+        <a href="https://tiktok.com/${safeTt.startsWith('@') ? safeTt.replace('@', '') : safeTt}" 
+           target="_blank" rel="noopener" 
+           class="social-link-btn tiktok">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04 .79 .1V9.01a6.33 6.33 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.69a8.18 8.18 0 004.78 1.52V6.75a4.85 4.85 0 01-1.01-.06z"/>
+          </svg>
           TikTok
-        </a>` : ''}
+        </a>
       </div>
     ` : '';
 
@@ -326,29 +318,11 @@
         <p style="font-size: 13px; font-weight: 700; margin-bottom: 14px;">Mes réseaux sociaux</p>
         <form id="socialForm">
           <div class="edit-form-group">
-            <label for="editFacebook">Facebook</label>
-            <div class="social-input-group">
-              <span class="social-input-prefix">👤</span>
-              <input type="url" id="editFacebook" value="${safeFb}"
-                     placeholder="https://facebook.com/maboutique"
-                     autocomplete="off" inputmode="url">
-            </div>
-          </div>
-          <div class="edit-form-group">
-            <label for="editInstagram">Instagram</label>
-            <div class="social-input-group">
-              <span class="social-input-prefix">📸</span>
-              <input type="text" id="editInstagram" value="${safeIg}"
-                     placeholder="@maboutique_tg"
-                     autocomplete="off">
-            </div>
-          </div>
-          <div class="edit-form-group">
             <label for="editTiktok">TikTok</label>
             <div class="social-input-group">
-              <span class="social-input-prefix">🎵</span>
+              <span class="social-input-prefix">📱</span>
               <input type="text" id="editTiktok" value="${safeTt}"
-                     placeholder="@maboutique"
+                     placeholder="@tonusername"
                      autocomplete="off">
             </div>
           </div>
@@ -492,18 +466,13 @@
     if (!window.db) return;
     if (btn) { btn.disabled = true; btn.textContent = 'Enregistrement…'; }
 
-    const facebook  = document.getElementById('editFacebook').value.trim();
-    const instagram = document.getElementById('editInstagram').value.trim();
-    const tiktok    = document.getElementById('editTiktok').value.trim();
+    const tiktok = document.getElementById('editTiktok').value.trim();
 
     try {
       const { data: { user } } = await window.db.auth.getUser();
       if (!user) { window.location.href = 'auth.html'; return; }
 
-      const social_links = {};
-      if (facebook)  social_links.facebook  = facebook;
-      if (instagram) social_links.instagram = instagram;
-      if (tiktok)    social_links.tiktok    = tiktok;
+      const social_links = { tiktok };
 
       const { error } = await window.db
         .from('profiles')
