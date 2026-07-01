@@ -229,7 +229,7 @@ async function uploadListingPhotos(files) {
   return { urls };
 }
 
-/* ==================== AUTHENTIFICATION & PROFILES (100% INTÉGRÉ) ==================== */
+/* ==================== AUTHENTIFICATION & PROFILES ==================== */
 async function getCurrentUser() {
   if (!window.db) return null;
   const { data: { user } } = await window.db.auth.getUser();
@@ -384,6 +384,26 @@ window.toggleFavorite = async function (id, btnEl) {
     console.error("Erreur toggleFavorite :", err);
   }
 };
+
+/* ==================== RÉSEAUX SOCIAUX (Utilitaire) ==================== */
+function extractSocialHandle(input, platform) {
+  if (!input) return "";
+  let handle = input.trim();
+  handle = handle
+    .replace(/(https?:\/\/)?(www\.)?facebook\.com\//i, "")
+    .replace(/(https?:\/\/)?(www\.)?instagram\.com\//i, "")
+    .replace(/(https?:\/\/)?(www\.)?tiktok\.com\/@?/i, "");
+  return handle.replace(/[@/]/g, "").trim();
+}
+
+function getSocialUrl(platform, handle) {
+  if (!handle) return "";
+  const clean = extractSocialHandle(handle, platform);
+  if (platform === 'facebook')  return `https://facebook.com/${clean}`;
+  if (platform === 'instagram') return `https://instagram.com/${clean}`;
+  if (platform === 'tiktok')    return `https://tiktok.com/@${clean}`;
+  return "#";
+}
 
 /* ==================== PRÉSENCE ==================== */
 async function updatePresence() {
