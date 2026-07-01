@@ -1,7 +1,6 @@
 /* ============================================= */
-/* DEKONme — app.js v3.4                         */
-/* Logique Globale & Rendu UI Marketplace        */
-/* FIX v3.4 : ajout de getCategories()           */
+/* DEKONme — app.js v3.5 (Auth complet)           */
+/* Logique Globale & Rendu UI Marketplace         */
 /* ============================================= */
 
 const CATEGORIES = [
@@ -17,18 +16,12 @@ const PHONE_BRANDS = ["Apple","Samsung","Tecno","Infinix","Itel","Huawei","Xiaom
 
 let _heartbeatTimer = null;
 
-/* ==================== FIX : getCategories() ==================== */
-/*
-  Fonction manquante dans v3.3 — le select #pCategory de publish.html
-  appelait cette fonction qui n'existait pas, d'où "Aucune disponible".
-  Les catégories sont locales (pas de requête Supabase nécessaire).
-*/
+/* ==================== getCategories ==================== */
 function getCategories() {
   return Promise.resolve(CATEGORIES);
 }
 
 /* ==================== SÉCURITÉ & FORMATAGE ==================== */
-
 function escapeHtml(text) {
   if (text == null) return "";
   const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
@@ -62,7 +55,6 @@ function toE164(phone) {
 }
 
 /* ==================== REQUÊTES SUPABASE (CRUD) ==================== */
-
 async function getAllListings(limit = 6, offset = 0) {
   if (!window.db) return [];
   const { data, error } = await window.db
@@ -237,8 +229,7 @@ async function uploadListingPhotos(files) {
   return { urls };
 }
 
-/* ==================== AUTHENTIFICATION & PROFILES ==================== */
-
+/* ==================== AUTHENTIFICATION & PROFILES (100% INTÉGRÉ) ==================== */
 async function getCurrentUser() {
   if (!window.db) return null;
   const { data: { user } } = await window.db.auth.getUser();
@@ -293,17 +284,30 @@ async function requireAuth(redirectBackTo) {
 
 async function signUpUser({ name, email, phone, city, password }) {
   if (!window.db) return { error: "Base de données non définie" };
-  const { data, error } = await window.db.auth.signUp({ email, password });
-  if (error) return { error: error.message };
 
-  const { error: profileError } = await window.db.from("profiles").insert({
-    id:    data.user.id,
-    name:  name,
-    phone: toE164(phone),
-    city:  city
+  const { data: { user }, error: authError } = await window.db.auth.signUp({
+    email,
+    password,
+    options: { data: { name, phone, city } }
   });
-  if (profileError) return { error: profileError.message };
-  return { data };
+
+  if (authError) return { error: authError.message };
+
+  const { error: profileError } = await window.db
+    .from("profiles")
+    .insert({
+      id: user.id,
+      name,
+      phone: toE164(phone),
+      city
+    });
+
+  if (profileError) {
+    await window.db.auth.admin.deleteUser(user.id);
+    return { error: "Erreur lors de la création du profil" };
+  }
+
+  return { data: user, redirect: "/profil.html" };
 }
 
 async function signInUser({ email, password }) {
@@ -320,7 +324,6 @@ window.logoutUser = async function () {
 };
 
 /* ==================== FAVORIS ==================== */
-
 async function getFavoriteIds() {
   if (!window.db) return [];
   const user = await getCurrentUser();
@@ -383,7 +386,6 @@ window.toggleFavorite = async function (id, btnEl) {
 };
 
 /* ==================== PRÉSENCE ==================== */
-
 async function updatePresence() {
   if (!window.db) return;
   const user = await getCurrentUser();
@@ -426,23 +428,77 @@ function presenceBadgeHTML(lastSeen) {
 }
 
 /* ==================== WHATSAPP, SIGNALEMENT & PARTAGE ==================== */
-
 window.contactWhatsApp = function (phone, productLabel, price, listingId) {
   if (!phone) return;
-  const acceptSecurity = confirm(
-    "⚠️ RAPPEL DE SÉCURITÉ DEKONme :\n\n" +
-    "Ne payez JAMAIS d'acompte (via Flooz ou T-Money) avant d'avoir vu, testé et rigoureusement vérifié le produit en personne.\n\n" +
-    "Souhaitez-vous toujours contacter ce vendeur ?"
-  );
-  if (!acceptSecurity) return;
-  const cleanPhone = toE164(String(phone)).replace(/\D/g, "");
-  let text = "Bonjour, je suis intéressé(e) par votre annonce sur DEKONme.";
-  if (productLabel) {
-    text = `Bonjour, je suis intéressé(e) par l'article : ${productLabel}`;
-    if (price) text += ` (${formatPrice(price)} FCFA)`;
+
+  const modalHTML = `
+    <div class="security-modal">
+      <div class="security-modal-content">
+        <div class="security-lottie">
+          <div class="cadenas-container">
+            <div class="cadenas"></div>
+          </div>
+        </div>
+
+        <h2>⚠️ Sécurité DEKONme</h2>
+        
+        <div class="security-checklist">
+          <div class="check-item">✅ Je ne paie jamais d’acompte avant de voir et tester le produit</div>
+          <div class="check-item">✅ Je vérifie toujours l’article en personne</div>
+          <div class="check-item">✅ Je ne donne jamais mon OTP à un inconnu</div>
+        </div>
+
+        <label class="security-checkbox">
+          <input type="checkbox" id="securityConfirm">
+          <span>J’ai bien lu et accepté les règles de sécurité DEKONme</span>
+        </label>
+
+        <div class="security-buttons">
+          <button id="cancelBtn" class="btn btn-outline">Annuler</button>
+          <button id="continueBtn" class="btn btn-primary">Continuer vers WhatsApp</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  const container = document.createElement('div');
+  container.innerHTML = modalHTML;
+  document.body.appendChild(container);
+
+  const modal = container.firstElementChild;
+  const checkbox = document.getElementById('securityConfirm');
+  const continueBtn = document.getElementById('continueBtn');
+  const cancelBtn = document.getElementById('cancelBtn');
+
+  setTimeout(() => { modal.classList.add('open'); }, 10);
+
+  function closeModal() {
+    modal.classList.remove('open');
+    setTimeout(() => modal.remove(), 400);
   }
-  if (listingId && productLabel) text += `\nLien de l'article : ${buildShareUrl(listingId, productLabel)}`;
-  window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(text)}`, "_blank", "noopener");
+
+  cancelBtn.addEventListener('click', closeModal);
+
+  continueBtn.addEventListener('click', () => {
+    if (!checkbox.checked) {
+      showToast('Veuillez cocher la case pour continuer', 'error');
+      return;
+    }
+    closeModal();
+
+    const cleanPhone = toE164(String(phone)).replace(/\D/g, "");
+    let text = "Bonjour, je suis intéressé(e) par votre annonce sur DEKONme.";
+    if (productLabel) text = `Bonjour, je suis intéressé(e) par l'article : ${productLabel}`;
+    if (price) text += ` (${formatPrice(price)} FCFA)`;
+    if (listingId) text += `\nLien de l'article : ${buildShareUrl(listingId, productLabel)}`;
+
+    window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(text)}`, "_blank", "noopener");
+  });
+
+  [continueBtn, cancelBtn].forEach(btn => {
+    btn.addEventListener('mouseenter', () => btn.style.transform = 'scale(1.05)');
+    btn.addEventListener('mouseleave', () => btn.style.transform = 'scale(1)');
+  });
 };
 
 window.shareListing = async function (id, title, price) {
@@ -470,7 +526,6 @@ async function reportListing(listingId, reason, comment) {
 }
 
 /* ==================== RENDU GRILLES ==================== */
-
 function productCardHTML(l, fav) {
   const favClass = fav ? "active" : "";
   const image = l.image_url || (l.images && l.images[0]) || `https://picsum.photos/seed/${l.id}/600/600`;
@@ -510,11 +565,6 @@ window.performSearch = function () {
 };
 
 /* ==================== BOTTOM NAV & THEME ==================== */
-
-window.toggleDropdown = function () {
-  document.getElementById("dropdownMenu")?.classList.toggle("open");
-};
-
 function renderBottomNav(active) {
   const mount = document.getElementById("bottomNav");
   if (!mount) return;
@@ -563,7 +613,7 @@ function updateThemeIcon() {
   const btn = document.getElementById("themeToggleBtn");
   if (!btn) return;
   const isDark = document.documentElement.classList.contains("dark") ||
-    (!document.documentElement.classList.contains("light") && window.matchMedia("(prefers-color-scheme: dark)").matches);
+    (!document.documentElement.classList.contains("light") && window.matchMedia("(prefers-color-scheme: dark)").matches());
   btn.textContent = isDark ? "☀️" : "🌙";
   btn.title = isDark ? "Passer en mode clair" : "Passer en mode sombre";
 }
@@ -571,7 +621,7 @@ function updateThemeIcon() {
 window.toggleTheme = function () {
   const htmlEl = document.documentElement;
   const isDark = htmlEl.classList.contains("dark") ||
-    (!htmlEl.classList.contains("light") && window.matchMedia("(prefers-color-scheme: dark)").matches);
+    (!htmlEl.classList.contains("light") && window.matchMedia("(prefers-color-scheme: dark)").matches());
   const nextTheme = isDark ? "light" : "dark";
   htmlEl.classList.remove("dark", "light");
   htmlEl.classList.add(nextTheme);
@@ -584,17 +634,8 @@ window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () 
   if (!localStorage.getItem("dekonme-theme")) updateThemeIcon();
 });
 
-/* ==================== SERVICE WORKER ==================== */
-
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker.register("/service-worker.js")
-      .then(reg => { setInterval(() => { reg.update(); }, 3600000); })
-      .catch(err => { console.warn("[PWA] Service worker non enregistré :", err.message); });
-  });
-}
-
-async function updateMyProfile({ name, phone, city, avatar_emoji }) {
+/* ==================== INIT ==================== */
+window.updateMyProfile = async function ({ name, phone, city, avatar_emoji }) {
   if (!window.db) return { error: "Base de données non initialisée" };
   const user = await getCurrentUser();
   if (!user) return { error: "Non connecté" };
@@ -606,4 +647,4 @@ async function updateMyProfile({ name, phone, city, avatar_emoji }) {
     .single();
   if (error) { console.error("Erreur modification profil :", error); return { error: error.message }; }
   return { data, success: true };
-}
+};

@@ -56,7 +56,6 @@
       background-color: rgba(232, 115, 44, 0.05);
     }
 
-    /* Wrapper pour l'espace inférieur avec la navigation fixe */
     .view-wrapper {
       padding-bottom: 40px;
     }
@@ -80,7 +79,6 @@
 
 <!-- CONTAINER PRINCIPAL -->
 <div class="container view-wrapper">
-  
   <!-- VUE LISTE DES CATÉGORIES -->
   <div id="brandListView" class="hidden">
     <div class="brand-list" id="brandList"></div>
@@ -111,12 +109,6 @@
 <!-- BOTTOM NAV -->
 <div class="bottom-nav" id="bottomNav"></div>
 
-<!-- DROPDOWN MENU GLOBAL SI NÉCESSAIRE -->
-<div class="dropdown-menu" id="dropdownMenu" onclick="if(event.target===this) toggleDropdown()">
-  <div class="dropdown-panel"></div>
-</div>
-
-<!-- SCRIPTS -->
 <script src="js/supabase-config.js"></script>
 <script src="js/app.js"></script>
 <script src="js/lazy-load.js"></script>
@@ -176,7 +168,7 @@
     dropdown.innerHTML = items.map(item => {
       const isSelected = currentFilter === item.value;
       return `
-        <div class="category-item ${isSelected ? 'active' : ''}" onclick="filterByCategory('${item.value !== 'null' && item.value ? item.value.replace(/'/g, "\\'") : ''}')">
+        <div class="category-item ${isSelected ? 'active' : ''}" onclick="filterByCategory('${item.value !== null && item.value !== 'null' ? item.value : ''}')">
           <span>${item.emoji || ''}</span> ${item.name}
         </div>
       `;
@@ -189,7 +181,6 @@
   };
 
   window.filterByCategory = async function (categoryName) {
-    // Normalisation de la valeur nulle transmise par la chaîne
     currentFilter = (categoryName === '' || categoryName === 'null') ? null : categoryName;
     buildCategoryDropdown();
     
@@ -273,7 +264,6 @@
     window.location.href = 'favoris.html';
   };
 
-  // Fermeture du dropdown au clic à l'extérieur
   document.addEventListener('click', (e) => {
     const dropdown = document.getElementById('categoryDropdown');
     const filterBtn = document.getElementById('filterBtn');
@@ -282,7 +272,6 @@
     }
   });
 
-  // Routage de la vue initiale
   function route() {
     if (view === 'categories') {
       renderCategoryListView();

@@ -12,11 +12,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   
   <style>
-    /* Wrapper pour structurer proprement l'espace de la grille */
-    .fav-page-wrapper {
-      padding-top: 12px;
-      padding-bottom: 40px;
-    }
+    .fav-page-wrapper { padding-top: 12px; padding-bottom: 40px; }
   </style>
 </head>
 <body>
@@ -27,7 +23,11 @@
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
   </button>
   <div class="page-title">Mes favoris</div>
-  <button id="themeToggleBtn" class="icon-btn" onclick="toggleTheme()" aria-label="Changer de thème">🌙</button>
+  <div style="display: flex; gap: 8px; align-items: center;">
+    <button id="themeToggleBtn" class="icon-btn" onclick="toggleTheme()" aria-label="Changer de thème">🌙</button>
+    <!-- Bouton Annuler → Profil -->
+    <button class="icon-btn" onclick="window.location.href='profil.html'" aria-label="Retour à mon profil">👤</button>
+  </div>
 </div>
 
 <!-- CONTAINER PRINCIPAL -->
@@ -40,7 +40,6 @@
 <!-- BOTTOM NAV -->
 <div class="bottom-nav" id="bottomNav"></div>
 
-<!-- SCRIPTS -->
 <script src="js/supabase-config.js"></script>
 <script src="js/app.js"></script>
 <script src="js/lazy-load.js"></script>
@@ -49,7 +48,6 @@
     const grid = document.getElementById('favGrid');
     if (!grid) return;
 
-    // Vérification de l'authentification avant d'aller plus loin
     if (typeof requireAuth === 'function') {
       const isAuth = await requireAuth('favoris.html');
       if (!isAuth) return;
@@ -61,7 +59,6 @@
 
       if (favListings.length > 0) {
         grid.innerHTML = favListings.map(l => {
-          // Utilisation d'un fallback d'image et formatage du prix
           const image = (l.images && l.images[0]) || l.image_url || 'https://picsum.photos/seed/' + l.id + '/600/600';
           const formattedPrice = typeof formatPrice === 'function' ? formatPrice(l.price) : l.price;
           
@@ -81,7 +78,6 @@
           `;
         }).join('');
 
-        // Initialisation du lazy loading sur les cartes injectées
         if (typeof initLazyLoad === 'function') initLazyLoad();
       } else {
         grid.innerHTML = `

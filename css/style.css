@@ -4,13 +4,10 @@
 /* Marketplace du Togo — 100% mobile-first      */
 /* CORRECTIFS v4.2 :                            */
 /*   - PWA install btn consolidé dans topbar    */
-/*   - Toast system unifié (plus de doublons)   */
-/*   - line-clamp : suppression propriété       */
-/*     non-standard sans préfixe               */
-/*   - [data-theme] remplacé par html.dark      */
+/*   - Toast system unifié                      */
+/*   - line-clamp corrigé                       */
 /*   - .product-grid min-height supprimé        */
-/*     (géré par le contenu)                   */
-/*   - Règles dupliquées supprimées             */
+/*   - Bouton 👤 Annuler bien placé             */
 /* ============================================= */
 
 :root {
@@ -132,8 +129,7 @@ img     { display: block; max-width: 100%; height: auto; }
 @keyframes modalSlideUp{ from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
 
 /* ==================== FORMULAIRES ==================== */
-input,
-textarea {
+input, textarea {
   width: 100%;
   padding: 14px 16px;
   margin-bottom: 14px;
@@ -147,7 +143,6 @@ textarea {
   font-family: inherit;
 }
 
-/* Select séparé — padding-right élargi pour la flèche native iOS */
 select {
   width: 100%;
   padding: 14px 40px 14px 16px;
@@ -171,11 +166,6 @@ input:focus, select:focus, textarea:focus {
   border-color: var(--orange) !important;
   box-shadow: 0 0 0 4px rgba(232, 115, 44, 0.15);
 }
-input::placeholder, textarea::placeholder {
-  color: var(--ink-soft) !important;
-  opacity: 0.7;
-}
-textarea { resize: vertical; min-height: 120px; }
 
 /* ==================== CONTAINER & TOPBAR ==================== */
 .container {
@@ -194,6 +184,7 @@ textarea { resize: vertical; min-height: 120px; }
   gap: 12px;
   animation: slideDown 0.4s ease-out;
 }
+
 .topbar .icon-btn {
   background: none;
   border: none;
@@ -204,12 +195,14 @@ textarea { resize: vertical; min-height: 120px; }
   align-items: center;
   justify-content: center;
   transition: var(--transition);
-  position: relative;
 }
+
 .topbar .icon-btn svg { width: 24px; height: 24px; transition: var(--transition); }
 .topbar .icon-btn:hover svg { transform: scale(1.1); color: var(--orange); }
+
 .topbar .back-btn { border-radius: var(--radius-pill); background: var(--white); box-shadow: var(--shadow); }
 .topbar .back-btn:hover { box-shadow: var(--shadow-lift); transform: translateY(-2px); }
+
 .topbar .logo {
   font-size: 20px;
   font-weight: 800;
@@ -218,6 +211,7 @@ textarea { resize: vertical; min-height: 120px; }
   align-items: center;
   gap: 6px;
 }
+
 .topbar .logo .mark {
   width: 30px; height: 30px;
   background: var(--ink); color: var(--bg);
@@ -226,10 +220,11 @@ textarea { resize: vertical; min-height: 120px; }
   font-size: 15px;
   animation: stickerPop 0.5s ease-out;
 }
+
 .topbar .page-title { font-size: 18px; font-weight: 700; flex: 1; text-align: center; color: var(--ink); }
 .badge-dot { position: absolute; width: 8px; height: 8px; background: var(--orange); border-radius: 50%; top: 10px; right: 10px; }
 
-/* Logo wrapper (pages avec bouton PWA) */
+/* Logo wrapper */
 .logo-wrapper {
   display: flex;
   align-items: center;
@@ -240,7 +235,7 @@ textarea { resize: vertical; min-height: 120px; }
 }
 .logo-wrapper .logo { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-/* ==================== BOUTON INSTALLATION PWA ==================== */
+/* ==================== BOUTON PWA ==================== */
 .pwa-install-btn {
   width: 44px;
   height: 44px;
@@ -254,11 +249,13 @@ textarea { resize: vertical; min-height: 120px; }
   transition: var(--transition);
   flex-shrink: 0;
 }
+
 .pwa-install-btn:hover {
   background: rgba(232, 115, 44, 0.1);
   color: var(--orange);
   transform: scale(1.08);
 }
+
 .pwa-install-btn:active { transform: scale(0.95); }
 .pwa-install-btn:focus-visible {
   outline: 2px solid var(--orange);
@@ -266,13 +263,7 @@ textarea { resize: vertical; min-height: 120px; }
 }
 .pwa-install-btn svg { width: 22px; height: 22px; }
 
-/* ==================== TOAST SYSTÈME (unifié) ==================== */
-/*
-  Un seul système de toast pour toute l'app.
-  Les classes .toast-success / .toast-error / .toast-info permettent
-  de colorer le fond selon le type de message.
-  Usage JS : showToast('message', 'success' | 'error' | 'info')
-*/
+/* ==================== TOAST SYSTÈME ==================== */
 .app-toast {
   position: fixed;
   bottom: calc(var(--nav-height) + 16px);
@@ -293,21 +284,19 @@ textarea { resize: vertical; min-height: 120px; }
   text-align: center;
   box-shadow: var(--shadow-lift);
 }
+
 .app-toast.show {
   opacity: 1;
   transform: translateX(-50%) translateY(0);
 }
+
 .app-toast.toast-success { background: var(--success); color: #fff; }
 .app-toast.toast-error   { background: var(--error);   color: #fff; }
 .app-toast.toast-info    { background: #2196F3;         color: #fff; }
 
-/* ==================== HERO & SEARCH ==================== */
-.hero {
-  padding: 8px 20px 28px;
-  max-width: var(--container-width);
-  margin: 0 auto;
-  animation: fadeUp 0.5s ease-out;
-}
+/* ==================== HERO, SEARCH, BRAND GRID, SECTION HEAD, PRODUCT GRID ==================== */
+
+.hero { padding: 8px 20px 28px; max-width: var(--container-width); margin: 0 auto; animation: fadeUp 0.5s ease-out; }
 .hero h1 { font-size: 30px; font-weight: 800; line-height: 1.15; letter-spacing: -0.5px; margin-bottom: 10px; color: var(--ink); }
 .hero h1 .accent { color: var(--orange); display: inline-block; animation: float 3s ease-in-out infinite; }
 .hero p { color: var(--ink-soft); font-size: 15px; max-width: 320px; margin-bottom: 18px; }
@@ -334,7 +323,6 @@ textarea { resize: vertical; min-height: 120px; }
 }
 .search button:hover { background: var(--orange); transform: scale(1.05); }
 
-/* ==================== BRAND GRID & TILES ==================== */
 .brand-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 24px; }
 @media (min-width: 480px) { .brand-grid { grid-template-columns: repeat(3, 1fr); } }
 
@@ -352,19 +340,16 @@ textarea { resize: vertical; min-height: 120px; }
 .brand-tile:hover .icon { transform: scale(1.1) rotate(5deg); }
 .brand-tile span { font-size: 12px; font-weight: 600; color: var(--ink); }
 
-/* ==================== SECTION HEAD ==================== */
 .section-head { display: flex; align-items: center; justify-content: space-between; margin: 28px 0 16px; padding: 0 4px; }
 .section-head h3 { font-size: 16px; font-weight: 800; letter-spacing: -0.3px; color: var(--ink); }
 .see-all { font-size: 13px; font-weight: 700; color: var(--orange); cursor: pointer; padding: 4px 8px; border-radius: 6px; transition: var(--transition); }
 .see-all:hover { background: rgba(232, 115, 44, 0.1); color: var(--orange-deep); }
 
-/* ==================== PRODUCT GRID & CARD ==================== */
 .product-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 16px;
   padding-bottom: 20px;
-  /* FIX : min-height supprimé — géré par le contenu réel */
 }
 @media (min-width: 480px) { .product-grid { grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); } }
 
@@ -376,6 +361,7 @@ textarea { resize: vertical; min-height: 120px; }
   animation: fadeUp 0.4s ease-out;
 }
 .product-card:hover { transform: translateY(-6px); box-shadow: var(--shadow-lift); }
+
 .product-card .img-wrap { position: relative; background: var(--bg-soft); overflow: hidden; }
 .product-card img { width: 100%; height: 150px; object-fit: cover; transition: var(--transition); }
 .product-card:hover img { transform: scale(1.05); }
@@ -409,7 +395,6 @@ textarea { resize: vertical; min-height: 120px; }
   line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  /* FIX : line-clamp sans préfixe supprimé (non supporté universellement) */
 }
 .product-info .price-row { display: flex; align-items: center; justify-content: space-between; margin-top: auto; }
 .product-info .price { color: var(--orange); font-weight: 800; font-size: 15px; }
@@ -465,17 +450,11 @@ textarea { resize: vertical; min-height: 120px; }
 .btn-whatsapp:hover { background: var(--whatsapp-deep); }
 .btn-block    { width: 100%; }
 
-/* ==================== MODAL ==================== */
-.modal {
-  position: fixed; inset: 0;
-  -webkit-backdrop-filter: blur(3px);
-  backdrop-filter: blur(3px);
-  background: rgba(26, 26, 26, 0.5);
-  display: none; align-items: flex-end; justify-content: center;
-  z-index: 2000;
-}
+/* ==================== MODAL & BOTTOM NAV ==================== */
+.modal { position: fixed; inset: 0; -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); background: rgba(26, 26, 26, 0.5); display: none; align-items: flex-end; justify-content: center; z-index: 2000; }
 @media (min-width: 600px) { .modal { align-items: center; } }
 .modal.open { display: flex; animation: fadeIn 0.3s ease-out; }
+
 .modal-content {
   background: var(--white); width: 100%; max-width: 480px;
   padding: 28px 24px 32px; border-radius: 24px 24px 0 0;
@@ -483,6 +462,7 @@ textarea { resize: vertical; min-height: 120px; }
   animation: modalSlideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 @media (min-width: 600px) { .modal-content { border-radius: 24px; } }
+
 .modal-close {
   position: absolute; top: 18px; right: 18px;
   background: var(--bg-soft); border: none;
@@ -491,13 +471,13 @@ textarea { resize: vertical; min-height: 120px; }
 }
 .modal-close:hover { background: var(--orange); color: var(--white); transform: rotate(90deg); }
 
-/* ==================== BOTTOM NAV ==================== */
 .bottom-nav {
   position: fixed; bottom: 0; left: 0; right: 0;
   height: var(--nav-height); background: var(--white);
   border-top: 1px solid var(--border); display: flex;
   z-index: 1000; box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.05);
 }
+
 .bottom-nav a {
   flex: 1; display: flex; flex-direction: column;
   align-items: center; justify-content: center;
@@ -507,6 +487,7 @@ textarea { resize: vertical; min-height: 120px; }
 .bottom-nav a:hover, .bottom-nav a.active { color: var(--orange); }
 .bottom-nav a svg { width: 22px; height: 22px; transition: var(--transition); }
 .bottom-nav a.active svg { animation: bounce 0.6s ease; }
+
 .nav-publish-circle {
   width: 42px; height: 42px; border-radius: 50%;
   background: var(--orange); color: var(--white);
@@ -552,7 +533,7 @@ textarea { resize: vertical; min-height: 120px; }
 
 .lightbox-dots { display: flex; justify-content: center; gap: 8px; padding: 20px 0; }
 
-/* ==================== RESPONSIVE < 360px ==================== */
+/* ==================== RESPONSIVE & ACCESSIBILITÉ ==================== */
 @media (max-width: 360px) {
   :root { --radius-card: 14px; }
   .container, .hero { padding-left: 14px; padding-right: 14px; }
@@ -565,7 +546,6 @@ textarea { resize: vertical; min-height: 120px; }
   .pwa-install-btn svg { width: 18px; height: 18px; }
 }
 
-/* ==================== ACCESSIBILITÉ — MOUVEMENTS RÉDUITS ==================== */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
@@ -579,4 +559,115 @@ textarea { resize: vertical; min-height: 120px; }
 
 @media (prefers-reduced-motion: no-preference) {
   html { scroll-behavior: smooth; }
+}
+
+/* ==================== MESSAGE DE SÉCURITÉ ANIMÉ CSS ==================== */
+.security-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(26, 26, 26, 0.65);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  transition: opacity 0.3s ease;
+}
+
+.security-modal.open {
+  display: flex;
+  opacity: 1;
+}
+
+.security-modal-content {
+  background: var(--white);
+  width: 100%;
+  max-width: 380px;
+  padding: 32px 24px;
+  border-radius: 24px;
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.25);
+  transform: translateY(-80px);
+  transition: transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.security-modal.open .security-modal-content {
+  transform: translateY(0);
+}
+
+.security-lottie {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.cadenas-container {
+  width: 120px;
+  height: 120px;
+}
+
+.cadenas {
+  width: 100%;
+  height: 100%;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 120'%3E%3Cpath d='M30 40 Q20 50 25 70 Q30 90 50 95 Q70 90 75 70 Q80 50 70 40' fill='none' stroke='%23E8732C' stroke-width='9' stroke-linecap='round'/%3E%3Cpath d='M50 60 L65 75 M50 60 L35 75' stroke='%23E8732C' stroke-width='8' stroke-linecap='round'/%3E%3C/svg%3E") center/cover;
+  border-radius: 50%;
+  box-shadow: 0 10px 30px rgba(232, 115, 44, 0.3);
+  animation: cadenasRotate 1.2s linear infinite;
+}
+
+@keyframes cadenasRotate {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+.security-checklist {
+  margin: 24px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.check-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 14px;
+  color: var(--ink);
+  line-height: 1.4;
+}
+
+.check-icon {
+  color: var(--success);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.security-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 20px 0;
+  cursor: pointer;
+}
+
+.security-checkbox input {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--orange);
+  transform: scale(1.2);
+}
+
+.security-buttons {
+  display: flex;
+  gap: 12px;
+}
+
+.security-buttons button {
+  flex: 1;
+  padding: 14px;
+  border-radius: 12px;
+  font-weight: 700;
+  transition: all 0.3s ease;
+}
+
+.security-buttons button:hover {
+  transform: scale(1.05);
 }

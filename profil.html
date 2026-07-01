@@ -12,146 +12,233 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 
   <style>
-    /* CSS allégé et modernisé */
     .profile-page-wrapper { margin-top: 16px; padding-bottom: 40px; }
-    
-    .btn-danger { 
-      background: transparent; 
-      border: 2px solid var(--error, #e74c3c); 
-      color: var(--error, #e74c3c); 
+
+    .btn-danger {
+      background: transparent;
+      border: 2px solid var(--error) !important;
+      color: var(--error) !important;
     }
-    .btn-danger:hover { 
-      background: var(--error, #e74c3c); 
-      color: var(--white, #fff); 
-      box-shadow: 0 4px 16px rgba(192, 57, 43, 0.2); 
+    .btn-danger:hover {
+      background: var(--error) !important;
+      color: var(--white) !important;
+      box-shadow: 0 4px 16px rgba(192, 57, 43, 0.2);
     }
-    
-    .profile-header { animation: fadeIn 0.4s ease-out; display: flex; align-items: center; gap: 16px; }
-    .profile-avatar { font-size: 40px; }
-    
-    .profile-stats-bar { 
-      display: flex; justify-content: space-around; 
-      background: var(--white, #fff); border: 1px solid var(--border, #eee); 
-      border-radius: 14px; padding: 12px; margin-top: 16px; 
-      text-align: center; box-shadow: var(--shadow, 0 2px 8px rgba(0,0,0,0.05)); 
+
+    .profile-header { animation: fadeIn 0.4s ease-out; }
+
+    /* --- STATISTIQUES --- */
+    .profile-stats-bar {
+      display: flex;
+      justify-content: space-around;
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 12px;
+      margin-top: 16px;
+      text-align: center;
+      box-shadow: var(--shadow);
     }
     .stat-item { display: flex; flex-direction: column; flex: 1; }
-    .stat-item:not(:last-child) { border-right: 1px solid var(--border, #eee); }
-    .stat-item strong { font-size: 18px; color: var(--orange, #E8732C); }
-    .stat-item span { font-size: 12px; color: var(--ink-soft, #666); margin-top: 2px; }
-    
-    .profile-actions-grid { 
-      display: grid; grid-template-columns: repeat(2, 1fr); 
-      gap: 10px; margin: 20px 0; 
+    .stat-item:not(:last-child) { border-right: 1px solid var(--border); }
+    .stat-item strong { font-size: 18px; color: var(--orange); }
+    .stat-item span   { font-size: 12px; color: var(--ink-soft); margin-top: 2px; }
+
+    /* --- GRILLE ACTIONS 2×2 --- */
+    .profile-actions-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin: 20px 0;
     }
-    
-    .action-cat-card { 
-      background: var(--white, #fff); border: 1px solid var(--border, #eee); 
-      border-radius: 16px; padding: 12px 6px; text-align: center; 
-      cursor: pointer; display: flex; flex-direction: column; 
-      align-items: center; gap: 6px; box-shadow: var(--shadow, 0 2px 8px rgba(0,0,0,0.05)); 
-      transition: transform 0.2s, box-shadow 0.2s; font-family: inherit; width: 100%; 
+    .action-cat-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 12px 6px;
+      text-align: center;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      box-shadow: var(--shadow);
+      transition: transform 0.2s, box-shadow 0.2s;
+      font-family: inherit;
+      width: 100%;
     }
-    .action-cat-card:active { transform: scale(0.95); }
-    .action-cat-card:focus-visible { outline: 2px solid var(--orange, #E8732C); outline-offset: 2px; }
-    
-    .action-cat-icon { 
-      width: 42px; height: 42px; 
-      background: rgba(232, 115, 44, 0.08); border-radius: 50%; 
-      display: flex; align-items: center; justify-content: center; font-size: 18px; 
+    .action-cat-card:active  { transform: scale(0.95); }
+    .action-cat-card:hover   { box-shadow: var(--shadow-lift); transform: translateY(-2px); }
+    .action-cat-card:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; }
+    .action-cat-icon {
+      width: 42px; height: 42px;
+      background: rgba(232, 115, 44, 0.08);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
     }
-    .action-cat-label { font-size: 11px; font-weight: 600; line-height: 1.2; color: var(--ink, #111); }
-    
-    .edit-profile-wrapper { 
-      background: var(--bg-soft, #fafafa); border: 1px solid var(--border, #eee); 
-      border-radius: 12px; padding: 16px; margin-bottom: 16px; 
-      animation: fadeIn 0.3s ease-out; 
+    .action-cat-label { font-size: 11px; font-weight: 600; line-height: 1.2; color: var(--ink); }
+
+    /* --- VOLETS DÉPLIANTS --- */
+    .edit-profile-wrapper {
+      background: var(--bg-soft);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 16px;
+      animation: fadeIn 0.3s ease-out;
     }
     .edit-form-group { margin-bottom: 14px; }
-    .edit-form-group label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--ink, #111); }
-    .edit-form-group input, .edit-form-group select {
-      width: 100%; padding: 10px; border: 1px solid var(--border, #ccc); border-radius: 8px;
+    .edit-form-group label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: var(--ink);
     }
-    
+
+    /* --- RÉSEAUX SOCIAUX — ICÔNES --- */
+    .social-links-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+    .social-link-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      border-radius: var(--radius-pill);
+      font-size: 13px;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      transition: var(--transition);
+      text-decoration: none;
+      color: #fff;
+    }
+    .social-link-btn:hover { opacity: 0.85; transform: translateY(-1px); }
+    .social-link-btn.facebook  { background: #1877F2; }
+    .social-link-btn.instagram { background: linear-gradient(135deg, #F58529, #DD2A7B, #8134AF); }
+    .social-link-btn.tiktok    { background: #000; }
+
+    /* Input avec icône préfixe */
+    .social-input-group {
+      display: flex;
+      align-items: center;
+      background: var(--white);
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      transition: var(--transition);
+      margin-bottom: 14px;
+    }
+    .social-input-group:focus-within {
+      border-color: var(--orange);
+      box-shadow: 0 0 0 4px rgba(232, 115, 44, 0.15);
+    }
+    .social-input-prefix {
+      padding: 12px 12px;
+      font-size: 18px;
+      border-right: 2px solid var(--border);
+      background: var(--bg-soft);
+      line-height: 1;
+    }
+    .social-input-group input {
+      border: none !important;
+      border-radius: 0 !important;
+      box-shadow: none !important;
+      margin-bottom: 0;
+      flex: 1;
+      font-size: 13px;
+    }
+    .social-input-group input:focus { box-shadow: none !important; }
+
+    /* Boutons Voir Plus */
     .load-more-container { text-align: center; margin-top: 14px; margin-bottom: 8px; }
-    
-    #toast { 
-      position: fixed; bottom: calc(var(--nav-height, 60px) + 16px); 
-      left: 50%; transform: translateX(-50%) translateY(20px); 
-      background: var(--ink, #111); color: var(--bg, #fff); 
-      padding: 10px 20px; border-radius: 30px; font-size: 13px; 
-      font-weight: 600; z-index: 3000; opacity: 0; pointer-events: none; 
-      transition: opacity 0.25s ease, transform 0.25s ease; 
-      white-space: nowrap; max-width: 90vw; text-align: center; 
+    .btn-sm { padding: 8px 24px !important; font-size: 13px !important; width: auto !important; display: inline-flex !important; }
+
+    /* Toast */
+    #toast {
+      position: fixed;
+      bottom: calc(var(--nav-height) + 16px);
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--ink); color: var(--bg);
+      padding: 10px 20px;
+      border-radius: var(--radius-pill);
+      font-size: 13px; font-weight: 600;
+      z-index: 3000; opacity: 0; pointer-events: none;
+      transition: opacity 0.25s ease, transform 0.25s ease;
+      white-space: nowrap; max-width: 90vw; text-align: center;
+      aria-live: polite;
     }
     #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-    
-    /* Utility class for hiding elements */
-    .hidden { display: none !important; }
   </style>
 </head>
 <body>
 
-<!-- Remplacement par une balise HEADER sémantique -->
-<header class="topbar" style="display: flex; align-items: center; padding: 10px 16px;">
-  <button class="icon-btn back-btn" onclick="history.length > 1 ? history.back() : window.location.href='index.html'" aria-label="Retour">
+<div class="topbar">
+  <button class="icon-btn back-btn"
+    onclick="history.length > 1 ? history.back() : window.location.href='index.html'"
+    aria-label="Retour">
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
   </button>
-  <div class="page-title" style="flex:1; text-align:center; font-weight:bold;">Mon profil</div>
+  <div class="page-title">Mon profil</div>
   <button id="themeToggleBtn" class="icon-btn" onclick="toggleTheme()" aria-label="Changer de thème">🌙</button>
-</header>
+</div>
 
-<!-- Remplacement par une balise MAIN sémantique -->
-<main class="container">
+<div class="container">
   <div id="profileContainer" class="profile-page-wrapper">
-    <p class="loading-text" style="text-align:center;">Vérification de la session…</p>
+    <p class="loading-text">Vérification de la session…</p>
   </div>
-</main>
+</div>
 
-<nav class="bottom-nav" id="bottomNav"></nav>
+<div class="bottom-nav" id="bottomNav"></div>
 <div id="toast" role="status" aria-live="polite"></div>
 
 <script src="js/supabase-config.js"></script>
 <script src="js/app.js"></script>
-<script src="js/lazy-load.js"></script>
 <script>
-  /* Variables Globales */
   let allActiveListings = [];
   let allSoldListings   = [];
   let visibleActiveCount = 2;
   let visibleSoldCount   = 2;
 
-  /* Utilitaires */
-  const escapeHTML = (str) => String(str ?? '').replace(/[&<>"']/g, match => ({
-    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-  })[match]);
+  function escapeHTML(str) {
+    return String(str == null ? '' : str)
+      .replace(/&/g,  '&amp;')
+      .replace(/</g,  '&lt;')
+      .replace(/>/g,  '&gt;')
+      .replace(/"/g,  '&quot;')
+      .replace(/'/g,  '&#39;');
+  }
 
   let _toastTimer = null;
-  const showToast = (msg) => {
+  function showToast(msg) {
     const el = document.getElementById('toast');
     if (!el) return;
     el.textContent = msg;
     el.classList.add('show');
     clearTimeout(_toastTimer);
     _toastTimer = setTimeout(() => el.classList.remove('show'), 2800);
-  };
+  }
 
-  /* Affichage Déconnecté */
-  const renderLoggedOut = () => {
+  function renderLoggedOut() {
     document.getElementById('profileContainer').innerHTML = `
-      <div class="empty-state" style="padding-top: 40px; text-align: center;">
-        <div class="emoji" style="font-size: 48px; margin-bottom: 16px;">👤</div>
+      <div class="empty-state" style="padding-top: 40px;">
+        <div class="emoji">👤</div>
         <p>Connectez-vous pour accéder à votre profil, vos annonces et vos favoris.</p>
         <div style="margin-top:24px; display:flex; flex-direction:column; gap:10px; width:100%; max-width:280px; margin-left:auto; margin-right:auto;">
-          <button class="btn btn-primary btn-block" style="padding: 12px; background: var(--orange, #E8732C); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;" onclick="window.location.href='auth.html?next=profil.html'">Se connecter</button>
+          <button class="btn btn-primary btn-block" onclick="window.location.href='auth.html?next=profil.html'">Se connecter</button>
         </div>
       </div>
     `;
     if (typeof renderBottomNav === 'function') renderBottomNav('profil');
-  };
+  }
 
-  /* Affichage Connecté */
-  const renderLoggedIn = async (profile) => {
+  async function renderLoggedIn(profile) {
     const cleanPhone = profile.phone ? profile.phone.replace('+228', '') : '';
 
     try {
@@ -160,27 +247,49 @@
         allActiveListings = myListings.filter(l => l.status !== 'sold');
         allSoldListings   = myListings.filter(l => l.status === 'sold');
       }
-    } catch (e) { 
-      console.error('Erreur stats :', e); 
-    }
+    } catch (e) { console.error('Erreur stats :', e); }
 
-    const safeName       = escapeHTML(profile.name);
-    const safeCity       = escapeHTML(profile.city || '');
-    const safePhone      = escapeHTML(profile.phone || '');
-    const safeAvatar     = escapeHTML(profile.avatar_emoji || '👤');
+    const safeName     = escapeHTML(profile.name);
+    const safeCity     = escapeHTML(profile.city  || '');
+    const safePhone    = escapeHTML(profile.phone || '');
+    const safeAvatar   = escapeHTML(profile.avatar_emoji || '👤');
     const safeCleanPhone = escapeHTML(cleanPhone);
-    const safeId         = escapeHTML(profile.id);
+    const safeId       = escapeHTML(profile.id);
+
+    const social = profile.social_links || {};
+    const safeFb = escapeHTML(social.facebook  || '');
+    const safeIg = escapeHTML(social.instagram || '');
+    const safeTt = escapeHTML(social.tiktok    || '');
+
+    const socialLinksHTML = (safeFb || safeIg || safeTt) ? `
+      <div class="social-links-row">
+        ${safeFb ? `<a href="${safeFb}" target="_blank" rel="noopener" class="social-link-btn facebook">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg>
+          Facebook
+        </a>` : ''}
+        ${safeIg ? `<a href="https://instagram.com/${safeIg.replace('@','')}" target="_blank" rel="noopener" class="social-link-btn instagram">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+          Instagram
+        </a>` : ''}
+        ${safeTt ? `<a href="https://tiktok.com/${safeTt.startsWith('@') ? safeTt : '@'+safeTt}" target="_blank" rel="noopener" class="social-link-btn tiktok">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04 .79 .1V9.01a6.33 6.33 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.69a8.18 8.18 0 004.78 1.52V6.75a4.85 4.85 0 01-1.01-.06z"/></svg>
+          TikTok
+        </a>` : ''}
+      </div>
+    ` : '';
 
     document.getElementById('profileContainer').innerHTML = `
-      <header class="profile-header">
-        <div class="profile-avatar" aria-hidden="true">${safeAvatar}</div>
+      <div class="profile-header">
+        <div class="profile-avatar">${safeAvatar}</div>
         <div class="info">
-          <h2 style="margin: 0;">${safeName}</h2>
-          <p style="margin: 4px 0 0; color: var(--ink-soft, #666);">${safeCity ? safeCity + ' · ' : ''}${safePhone}</p>
+          <h2>${safeName}</h2>
+          <p>${safeCity ? safeCity + ' · ' : ''}${safePhone}</p>
         </div>
-      </header>
+      </div>
 
-      <section class="profile-stats-bar">
+      ${socialLinksHTML}
+
+      <div class="profile-stats-bar">
         <div class="stat-item">
           <strong>${allActiveListings.length}</strong>
           <span>En cours</span>
@@ -189,28 +298,68 @@
           <strong>${allSoldListings.length}</strong>
           <span>Vendues</span>
         </div>
-      </section>
+      </div>
 
-      <nav class="profile-actions-grid">
+      <div class="profile-actions-grid">
         <button type="button" class="action-cat-card" id="btnToggleEdit" aria-label="Modifier mes informations">
           <div class="action-cat-icon">📝</div>
           <span class="action-cat-label">Modifier<br>Infos</span>
         </button>
-        <button type="button" class="action-cat-card" id="btnShareShop" data-id="${safeId}" data-name="${safeName}" aria-label="Partager ma boutique">
+
+        <button type="button" class="action-cat-card" id="btnShareShop"
+                data-id="${safeId}" data-name="${safeName}" aria-label="Partager ma boutique">
           <div class="action-cat-icon">🔗</div>
           <span class="action-cat-label">Partager<br>Boutique</span>
         </button>
-        <button type="button" class="action-cat-card" onclick="window.location.href='favoris.html'" aria-label="Mes favoris">
-          <div class="action-cat-icon">❤️</div>
-          <span class="action-cat-label">Mes<br>Favoris</span>
+
+        <button type="button" class="action-cat-card" id="btnToggleSocial" aria-label="Mes réseaux sociaux">
+          <div class="action-cat-icon">📱</div>
+          <span class="action-cat-label">Mes<br>Réseaux</span>
         </button>
+
         <button type="button" class="action-cat-card" onclick="window.open('https://wa.me/22899129916', '_blank')" aria-label="Contacter le support">
           <div class="action-cat-icon">💬</div>
           <span class="action-cat-label">Besoin<br>d'aide ?</span>
         </button>
-      </nav>
+      </div>
 
-      <section id="editProfileWrapper" class="edit-profile-wrapper hidden" aria-hidden="true">
+      <div id="socialWrapper" class="edit-profile-wrapper" style="display: none;" aria-hidden="true">
+        <p style="font-size: 13px; font-weight: 700; margin-bottom: 14px;">Mes réseaux sociaux</p>
+        <form id="socialForm">
+          <div class="edit-form-group">
+            <label for="editFacebook">Facebook</label>
+            <div class="social-input-group">
+              <span class="social-input-prefix">👤</span>
+              <input type="url" id="editFacebook" value="${safeFb}"
+                     placeholder="https://facebook.com/maboutique"
+                     autocomplete="off" inputmode="url">
+            </div>
+          </div>
+          <div class="edit-form-group">
+            <label for="editInstagram">Instagram</label>
+            <div class="social-input-group">
+              <span class="social-input-prefix">📸</span>
+              <input type="text" id="editInstagram" value="${safeIg}"
+                     placeholder="@maboutique_tg"
+                     autocomplete="off">
+            </div>
+          </div>
+          <div class="edit-form-group">
+            <label for="editTiktok">TikTok</label>
+            <div class="social-input-group">
+              <span class="social-input-prefix">🎵</span>
+              <input type="text" id="editTiktok" value="${safeTt}"
+                     placeholder="@maboutique"
+                     autocomplete="off">
+            </div>
+          </div>
+          <button type="submit" id="btnSaveSocial" class="btn btn-primary btn-block">
+            Enregistrer les réseaux
+          </button>
+        </form>
+      </div>
+
+      <div id="editProfileWrapper" class="edit-profile-wrapper" style="display: none;" aria-hidden="true">
         <form id="editProfileForm">
           <div class="edit-form-group">
             <label for="editName">Nom complet / Nom de boutique</label>
@@ -218,7 +367,9 @@
           </div>
           <div class="edit-form-group">
             <label for="editPhone">Numéro WhatsApp (sans +228)</label>
-            <input type="tel" id="editPhone" value="${safeCleanPhone}" required placeholder="Ex: 90123456" pattern="[0-9]{8}" maxlength="8" inputmode="numeric" autocomplete="tel-national">
+            <input type="tel" id="editPhone" value="${safeCleanPhone}" required
+                   placeholder="Ex: 90123456" pattern="[0-9]{8}" maxlength="8"
+                   inputmode="numeric" autocomplete="tel-national">
           </div>
           <div class="edit-form-group">
             <label for="editCity">Ville</label>
@@ -228,132 +379,198 @@
               ).join('')}
             </select>
           </div>
-          <button type="submit" id="btnSaveProfile" class="btn btn-primary btn-block" style="width: 100%; padding: 12px; background: var(--orange, #E8732C); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 8px;">Enregistrer les modifications</button>
+          <button type="submit" id="btnSaveProfile" class="btn btn-primary btn-block">
+            Enregistrer les modifications
+          </button>
         </form>
-      </section>
+      </div>
 
-      <section class="section-head" style="margin-top: 24px;">
+      <div class="section-head" style="margin-top: 24px;">
         <h3>Mes annonces actives</h3>
-      </section>
+      </div>
       <div class="product-grid" id="myListingsGrid"></div>
       <div id="activeMoreContainer" class="load-more-container"></div>
-      
-      <section class="section-head" style="margin-top: 32px;" id="soldSectionHead"></section>
+
+      <div class="section-head" style="margin-top: 32px;" id="soldSectionHead"></div>
       <div class="product-grid" id="mySoldGrid"></div>
       <div id="soldMoreContainer" class="load-more-container"></div>
-      
-      <button class="btn btn-block btn-danger" id="btnLogout" style="width: 100%; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 40px;">Déconnexion</button>
+
+      <button class="btn btn-outline btn-block btn-danger" id="btnLogout" style="margin-top: 40px;">
+        Déconnexion
+      </button>
     `;
 
-    // Événements
-    document.getElementById('btnToggleEdit')?.addEventListener('click', toggleEditForm);
+    /* ==================== ÉCOUTEURS UNIQUES ==================== */
+    const btnToggleEdit   = document.getElementById('btnToggleEdit');
+    const btnToggleSocial = document.getElementById('btnToggleSocial');
+    const btnShare        = document.getElementById('btnShareShop');
+    const editForm        = document.getElementById('editProfileForm');
+    const socialForm      = document.getElementById('socialForm');
+    const btnLogout       = document.getElementById('btnLogout');
 
-    const btnShare = document.getElementById('btnShareShop');
-    if (btnShare) {
-      btnShare.addEventListener('click', () => shareMyShop(btnShare.dataset.id, btnShare.dataset.name));
-    }
-
-    document.getElementById('editProfileForm')?.addEventListener('submit', handleProfileUpdate);
-    document.getElementById('btnLogout')?.addEventListener('click', handleLogout);
+    if (btnToggleEdit)   btnToggleEdit.addEventListener('click', toggleEditForm);
+    if (btnToggleSocial) btnToggleSocial.addEventListener('click', toggleSocialForm);
+    if (btnShare)        btnShare.addEventListener('click', () => shareMyShop(btnShare.dataset.id, btnShare.dataset.name));
+    if (editForm)        editForm.addEventListener('submit', handleProfileUpdate);
+    if (socialForm)      socialForm.addEventListener('submit', handleSocialUpdate);
+    if (btnLogout)       btnLogout.addEventListener('click', handleLogout);
 
     renderActiveGrid();
     renderSoldGrid();
-    
     if (typeof renderBottomNav === 'function') renderBottomNav('profil');
-  };
+  }
 
-  /* Génération de carte annonce */
-  const myListingCardHTML = (l, editable) => {
-    // CORRECTION : Protection robuste contre les images manquantes ou les types inattendus
-    const imageUrl = Array.isArray(l.images) && l.images.length > 0 ? l.images[0] : (l.image_url ?? `https://picsum.photos/seed/${encodeURIComponent(l.id)}/600/600`);
+  function myListingCardHTML(l, editable) {
+    const image  = escapeHTML((l.images && l.images[0]) || l.image_url || 'https://picsum.photos/seed/' + encodeURIComponent(l.id) + '/600/600');
     const target = editable ? `publish.html?id=${encodeURIComponent(l.id)}` : `product.html?id=${encodeURIComponent(l.id)}`;
     const formattedPrice = typeof formatPrice === 'function' ? formatPrice(l.price) : l.price;
-    
     return `
-  <div class="product-card" style="position: relative;">
-    <div onclick="window.location.href='${escapeHTML(target)}'" style="cursor: pointer;">
-      <div class="img-wrap" style="position: relative;">
-        <img data-src="${escapeHTML(imageUrl)}" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'%3E%3C/svg%3E" alt="${escapeHTML(l.title)}" class="lazy" style="width: 100%; border-radius: 8px;">
-        ${l.status === 'sold' ? '<span class="sold-badge" style="position: absolute; top: 8px; right: 8px; background: red; color: white; padding: 4px 8px; font-size: 10px; font-weight: bold; border-radius: 4px;">VENDU</span>' : ''}
+      <div class="product-card" onclick="window.location.href='${escapeHTML(target)}'">
+        <div class="img-wrap">
+          <img data-src="${image}"
+               src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'%3E%3C/svg%3E"
+               alt="${escapeHTML(l.title)}" class="lazy">
+          ${!editable ? '<span class="sold-badge">VENDU</span>' : ''}
+        </div>
+        <div class="product-info">
+          <h4>${escapeHTML(l.title)}</h4>
+          <div class="price-row"><span class="price">${escapeHTML(String(formattedPrice))} F</span></div>
+          <p class="meta">${escapeHTML(l.city || '')}${l.city && l.condition ? ' · ' : ''}${escapeHTML(l.condition || '')}</p>
+        </div>
       </div>
-      <div class="product-info" style="margin-top: 8px;">
-        <h4 style="margin: 0; font-size: 14px;">${escapeHTML(l.title)}</h4>
-        <div class="price-row" style="margin-top: 4px;"><span class="price" style="color: var(--orange, #E8732C); font-weight: bold;">${escapeHTML(String(formattedPrice))} F</span></div>
-        <p class="meta" style="font-size: 12px; color: var(--ink-soft, #666); margin: 4px 0 0;">${escapeHTML(l.city || '')} ${l.city && l.condition ? ' · ' : ''} ${escapeHTML(l.condition || '')}</p>
-      </div>
-    </div>
+    `;
+  }
 
-    <button type="button" onclick="confirmDelete('${l.id}')" 
-            style="width: 100%; margin-top: 8px; padding: 6px; background: #fff0f0; color: #e74c3c; 
-            border: 1px solid #e74c3c; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold;">
-      🗑️ Supprimer
-    </button>
-  </div>
-`;
-  };
-
-  /* Grilles d'annonces */
-  const renderActiveGrid = () => {
+  function renderActiveGrid() {
     const grid = document.getElementById('myListingsGrid');
-    const btnContainer = document.getElementById('activeMoreContainer');
-    if (!grid || !btnContainer) return;
-    
-    const visibleListings = allActiveListings.slice(0, visibleActiveCount);
-    
-    grid.innerHTML = allActiveListings.length 
-      ? visibleListings.map(l => myListingCardHTML(l, false)).join('') 
-      : `<div class="empty-state" style="grid-column:1/-1; padding: 30px 20px; text-align: center;"><div class="emoji" style="font-size: 32px; margin-bottom: 8px;">📭</div><p>Vous n'avez aucune annonce active.</p></div>`;
-    
-    btnContainer.innerHTML = allActiveListings.length > visibleActiveCount ? `<button class="btn btn-outline btn-sm" id="btnMoreActive" style="padding: 8px 16px; border: 1px solid var(--orange, #E8732C); color: var(--orange, #E8732C); background: transparent; border-radius: 20px; cursor: pointer;">Voir plus</button>` : '';
-    
-    if (allActiveListings.length > visibleActiveCount) {
-      document.getElementById('btnMoreActive')?.addEventListener('click', loadMoreActive);
-    }
-    
+    const btn  = document.getElementById('activeMoreContainer');
+    if (!grid) return;
+    grid.innerHTML = allActiveListings.length
+      ? allActiveListings.slice(0, visibleActiveCount).map(l => myListingCardHTML(l, true)).join('')
+      : `<div class="empty-state" style="grid-column:1/-1;padding:30px 20px"><div class="emoji">📭</div><p>Vous n'avez aucune annonce active.</p></div>`;
+    btn.innerHTML = allActiveListings.length > visibleActiveCount
+      ? `<button class="btn btn-outline btn-sm" id="btnMoreActive">Voir plus</button>` : '';
+    if (allActiveListings.length > visibleActiveCount)
+      document.getElementById('btnMoreActive').addEventListener('click', () => { visibleActiveCount += 2; renderActiveGrid(); });
     if (typeof initLazyLoad === 'function') initLazyLoad();
-  };
+  }
 
-  const loadMoreActive = () => { visibleActiveCount += 2; renderActiveGrid(); };
-
-  const renderSoldGrid = () => {
-    const soldHead = document.getElementById('soldSectionHead');
+  function renderSoldGrid() {
+    const head = document.getElementById('soldSectionHead');
     const grid = document.getElementById('mySoldGrid');
-    const btnContainer = document.getElementById('soldMoreContainer');
-    
-    if (!grid || !btnContainer) return;
-    
+    const btn  = document.getElementById('soldMoreContainer');
+    if (!grid) return;
     if (allSoldListings.length) {
-      if (soldHead) soldHead.innerHTML = '<h3>Annonces vendues</h3>';
+      if (head) head.innerHTML = '<h3>Annonces vendues</h3>';
       grid.innerHTML = allSoldListings.slice(0, visibleSoldCount).map(l => myListingCardHTML(l, false)).join('');
-      btnContainer.innerHTML = allSoldListings.length > visibleSoldCount ? `<button class="btn btn-outline btn-sm" id="btnMoreSold" style="padding: 8px 16px; border: 1px solid var(--orange, #E8732C); color: var(--orange, #E8732C); background: transparent; border-radius: 20px; cursor: pointer;">Voir plus</button>` : '';
-      
-      if (allSoldListings.length > visibleSoldCount) {
-        document.getElementById('btnMoreSold')?.addEventListener('click', loadMoreSold);
-      }
+      btn.innerHTML = allSoldListings.length > visibleSoldCount
+        ? `<button class="btn btn-outline btn-sm" id="btnMoreSold">Voir plus</button>` : '';
+      if (allSoldListings.length > visibleSoldCount)
+        document.getElementById('btnMoreSold').addEventListener('click', () => { visibleSoldCount += 2; renderSoldGrid(); });
     } else {
-      if (soldHead) soldHead.innerHTML = '';
+      if (head) head.innerHTML = '';
       grid.innerHTML = '';
-      btnContainer.innerHTML = '';
+      btn.innerHTML = '';
     }
-    
     if (typeof initLazyLoad === 'function') initLazyLoad();
-  };
+  }
 
-  const loadMoreSold = () => { visibleSoldCount += 2; renderSoldGrid(); };
+  function togglePanel(showId, hideId) {
+    const show = document.getElementById(showId);
+    const hide = document.getElementById(hideId);
+    if (hide) { hide.style.display = 'none'; hide.setAttribute('aria-hidden', 'true'); }
+    if (!show) return;
+    const open = show.style.display === 'none';
+    show.style.display = open ? 'block' : 'none';
+    show.setAttribute('aria-hidden', String(!open));
+  }
+  function toggleEditForm()   { togglePanel('editProfileWrapper', 'socialWrapper'); }
+  function toggleSocialForm() { togglePanel('socialWrapper', 'editProfileWrapper'); }
 
-  /* Formulaire d'édition */
-  const toggleEditForm = () => {
-    const wrapper = document.getElementById('editProfileWrapper');
-    if (!wrapper) return;
-    wrapper.classList.toggle('hidden');
-    wrapper.setAttribute('aria-hidden', wrapper.classList.contains('hidden').toString());
-  };
+  async function handleSocialUpdate(e) {
+    e.preventDefault();
+    const btn = document.getElementById('btnSaveSocial');
+    if (!window.db) return;
+    if (btn) { btn.disabled = true; btn.textContent = 'Enregistrement…'; }
 
-  /* Partage - CORRECTION : lien vers seller.html */
-  const shareMyShop = async (id, name) => {
-    const shopUrl = `${window.location.origin}/seller.html?id=${encodeURIComponent(id)}`;
-    const shareText = `Découvrez ma vitrine "${name}" sur DEKONme ! Retrouvez tous mes articles disponibles ici :`;
-    
+    const facebook  = document.getElementById('editFacebook').value.trim();
+    const instagram = document.getElementById('editInstagram').value.trim();
+    const tiktok    = document.getElementById('editTiktok').value.trim();
+
+    try {
+      const { data: { user } } = await window.db.auth.getUser();
+      if (!user) { window.location.href = 'auth.html'; return; }
+
+      const social_links = {};
+      if (facebook)  social_links.facebook  = facebook;
+      if (instagram) social_links.instagram = instagram;
+      if (tiktok)    social_links.tiktok    = tiktok;
+
+      const { error } = await window.db
+        .from('profiles')
+        .update({ social_links })
+        .eq('id', user.id);
+
+      if (error) throw error;
+
+      const wrapper = document.getElementById('socialWrapper');
+      if (wrapper) { wrapper.style.display = 'none'; wrapper.setAttribute('aria-hidden', 'true'); }
+
+      showToast('Réseaux sociaux mis à jour 📱');
+
+      init();
+    } catch (err) {
+      console.error(err);
+      showToast('Erreur lors de la mise à jour.');
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = 'Enregistrer les réseaux'; }
+    }
+  }
+
+  async function handleProfileUpdate(e) {
+    e.preventDefault();
+    const btn = document.getElementById('btnSaveProfile');
+    if (!window.db) return;
+    if (btn) { btn.disabled = true; btn.textContent = 'Mise à jour…'; }
+
+    const name  = document.getElementById('editName').value.trim();
+    const phone = document.getElementById('editPhone').value.trim();
+    const city  = document.getElementById('editCity').value;
+
+    try {
+      const { data: { user } } = await window.db.auth.getUser();
+      if (!user) { window.location.href = 'auth.html'; return; }
+
+      const formattedPhone = typeof toE164 === 'function'
+        ? toE164(phone) : ('+228' + phone.replace(/\D/g, ''));
+
+      const { error } = await window.db
+        .from('profiles')
+        .update({ name, phone: formattedPhone, city })
+        .eq('id', user.id);
+
+      if (error) throw error;
+
+      const h2       = document.querySelector('.profile-header h2');
+      const subtitle = document.querySelector('.profile-header p');
+      if (h2)       h2.textContent = name;
+      if (subtitle) subtitle.textContent = `${city ? city + ' · ' : ''}${formattedPhone}`;
+
+      const wrapper = document.getElementById('editProfileWrapper');
+      if (wrapper) { wrapper.style.display = 'none'; wrapper.setAttribute('aria-hidden', 'true'); }
+
+      showToast('Profil mis à jour ✨');
+    } catch (err) {
+      console.error(err);
+      showToast('Erreur lors de la modification.');
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = 'Enregistrer les modifications'; }
+    }
+  }
+
+  async function shareMyShop(id, name) {
+    const shopUrl   = `${window.location.origin}/vendeur.html?id=${encodeURIComponent(id)}`;
+    const shareText = `Découvrez ma vitrine "${name}" sur DEKONme !`;
     if (navigator.share) {
       try { 
         await navigator.share({ title: name, text: shareText, url: shopUrl }); 
@@ -361,111 +578,35 @@
         if (err.name !== 'AbortError') console.error(err); 
       }
     } else {
-      try { 
-        await navigator.clipboard.writeText(`${shareText} ${shopUrl}`); 
-        showToast('Lien copié ! Collez-le dans votre statut WhatsApp 📋'); 
-      } catch (err) { 
-        showToast('Votre lien : ' + shopUrl); 
-      }
+      try {
+        await navigator.clipboard.writeText(`${shareText} ${shopUrl}`);
+        showToast('Lien copié ! Collez-le dans votre statut WhatsApp 📋');
+      } catch { showToast('Votre lien : ' + shopUrl); }
     }
-  };
+  }
 
-  /* Mise à jour du profil - CORRECTION : Destructuration sécurisée */
-  const handleProfileUpdate = async (e) => {
-    e.preventDefault();
-    const btn = document.getElementById('btnSaveProfile');
-    if (!window.db) return;
-    if (btn) { btn.disabled = true; btn.textContent = 'Mise à jour…'; }
-    
-    const name = document.getElementById('editName').value.trim();
-    const phone = document.getElementById('editPhone').value.trim();
-    const city = document.getElementById('editCity').value;
-    
-    try {
-      const { data, error: authError } = await window.db.auth.getUser();
-      if (authError || !data?.user) { 
-        window.location.href = 'auth.html'; 
-        return; 
-      }
-      
-      const formattedPhone = typeof toE164 === 'function' ? toE164(phone) : (`+228${phone.replace(/\D/g, '')}`);
-      
-      const { error: dbError } = await window.db.from('profiles').update({ name, phone: formattedPhone, city }).eq('id', data.user.id);
-      if (dbError) throw dbError;
-      
-      const h2 = document.querySelector('.profile-header h2');
-      const subtitle = document.querySelector('.profile-header p');
-      
-      if (h2) h2.textContent = name;
-      if (subtitle) subtitle.textContent = `${city ? city + ' · ' : ''}${formattedPhone}`;
-      
-      const wrapper = document.getElementById('editProfileWrapper');
-      if (wrapper) { wrapper.classList.add('hidden'); wrapper.setAttribute('aria-hidden', 'true'); }
-      
-      showToast('Profil mis à jour ✨');
-    } catch (err) { 
-      console.error(err); 
-      showToast('Erreur lors de la modification.'); 
-    } finally { 
-      if (btn) { btn.disabled = false; btn.textContent = 'Enregistrer les modifications'; } 
+  async function handleLogout() {
+    if (typeof logoutUser === 'function') {
+      await logoutUser();
+      window.location.href = 'index.html';
     }
-  };
+  }
 
-  /* Déconnexion */
-  const handleLogout = async () => { 
-    if (typeof logoutUser === 'function') { 
-      await logoutUser(); 
-      window.location.href = 'index.html'; 
-    } 
-  };
-
-  /* Initialisation */
-  const init = async () => {
+  async function init() {
     try {
       if (typeof getMyProfile === 'function') {
         const profile = await getMyProfile();
         profile ? renderLoggedIn(profile) : renderLoggedOut();
-      } else { 
-        renderLoggedOut(); 
+      } else {
+        renderLoggedOut();
       }
-    } catch (err) { 
-      console.error("Erreur lors de l'initialisation du profil :", err); 
-      renderLoggedOut(); 
+    } catch (err) {
+      console.error("Erreur init profil :", err);
+      renderLoggedOut();
     }
-  };
+  }
 
   document.addEventListener('DOMContentLoaded', init);
-
-
-window.confirmDelete = (id) => {
-  if (confirm("Êtes-vous sûr de vouloir supprimer cette annonce ?")) {
-    deleteListing(id);
-  }
-};
-
-async function deleteListing(id) {
-  try {
-    // On utilise window.db (ton instance Supabase)
-    const { error } = await window.db.from('listings').delete().eq('id', id);
-    
-    if (error) throw error;
-    
-    showToast("Annonce supprimée ! ✅");
-    
-    // On retire l'annonce de la liste locale pour mettre à jour l'écran immédiatement
-    allActiveListings = allActiveListings.filter(l => l.id !== id);
-    allSoldListings = allSoldListings.filter(l => l.id !== id);
-    
-    // On redessine les grilles
-    renderActiveGrid();
-    renderSoldGrid();
-    
-  } catch (err) {
-    console.error(err);
-    showToast("Erreur lors de la suppression ❌");
-  }
-}
-
 </script>
 </body>
 </html>

@@ -12,26 +12,34 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 
   <style>
-    /* Ajustements locaux complémentaires pour l'affichage du profil public */
-    .profile-page-wrapper {
-      margin-top: 16px;
-      padding-bottom: 40px;
+    .profile-page-wrapper { margin-top: 16px; padding-bottom: 40px; }
+    .profile-header { animation: fadeIn 0.4s ease-out; }
+
+    .social-links-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 12px;
     }
-    .profile-header {
-      animation: fadeIn 0.4s ease-out;
+    .social-link-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      border-radius: var(--radius-pill);
+      font-size: 13px;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      transition: var(--transition);
+      text-decoration: none;
+      color: #fff;
     }
-    /* Style pour les boutons Voir Plus uniformisés */
-    .load-more-container {
-      text-align: center;
-      margin-top: 16px;
-      margin-bottom: 8px;
-    }
-    .btn-sm {
-      padding: 8px 24px !important;
-      font-size: 13px !important;
-      width: auto !important;
-      display: inline-block !important;
-    }
+    .social-link-btn.facebook  { background: #1877F2; }
+    .social-link-btn.instagram { background: linear-gradient(135deg, #F58529, #DD2A7B, #8134AF); }
+    .social-link-btn.tiktok    { background: #000; }
+
+    .seller-status { font-size: 13px; margin-top: 6px; }
   </style>
 </head>
 <body>
@@ -58,7 +66,6 @@
 <script>
   const sellerId = new URLSearchParams(window.location.search).get('id');
   
-  // Variables globales pour la pagination
   let allSellerListings = [];
   let visibleCount = 2;
 
@@ -95,12 +102,33 @@
 
       allSellerListings = await getListingsBySeller(sellerId) || [];
 
+      /* ==================== Réseaux sociaux ==================== */
+      const social = profile.social_links || {};
+      let socialHTML = '';
+      if (social.facebook || social.instagram || social.tiktok) {
+        socialHTML = `
+          <div class="social-links-row">
+            ${social.facebook ? `<a href="${social.facebook}" target="_blank" rel="noopener" class="social-link-btn facebook">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg>
+              Facebook
+            </a>` : ''}
+            ${social.instagram ? `<a href="https://instagram.com/${social.instagram.replace('@','')}" target="_blank" rel="noopener" class="social-link-btn instagram">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+              Instagram
+            </a>` : ''}
+            ${social.tiktok ? `<a href="https://tiktok.com/${social.tiktok.startsWith('@') ? social.tiktok : '@'+social.tiktok}" target="_blank" rel="noopener" class="social-link-btn tiktok">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04 .79 .1V9.01a6.33 6.33 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.69a8.18 8.18 0 004.78 1.52V6.75a4.85 4.85 0 01-1.01-.06z"/></svg>
+              TikTok
+            </a>` : ''}
+          </div>
+        `;
+      }
+
+      /* ==================== Status en ligne ==================== */
       let statusHTML = '';
       if (typeof getOnlineStatus === 'function') {
         const s = getOnlineStatus(profile.last_seen);
-        if (s && s.dot) {
-          statusHTML = `<p class="seller-status" style="margin-top: 6px; font-size: 13px;">${s.dot} ${s.label}</p>`;
-        }
+        if (s && s.dot) statusHTML = `<p class="seller-status">${s.dot} ${s.label}</p>`;
       }
 
       container.innerHTML = `
@@ -113,6 +141,13 @@
           </div>
         </div>
 
+        <!-- Bouton Contact -->
+        <button type="button" onclick="contactSeller('${profile.phone || ''}')" class="btn btn-primary btn-block" style="margin: 16px 0 24px;">
+          💬 Contacter via WhatsApp
+        </button>
+
+        ${socialHTML ? `<div class="social-links-row" style="margin-bottom: 24px;">${socialHTML}</div>` : ''}
+
         <div class="section-head" style="margin-top: 32px;">
           <h3>Annonces actives (<span id="activeCount">0</span>)</h3>
         </div>
@@ -120,7 +155,6 @@
         <div id="moreContainer" class="load-more-container"></div>
       `;
 
-      // Premier rendu de la grille
       renderListingsGrid();
 
     } catch (error) {
@@ -131,14 +165,21 @@
     if (typeof renderBottomNav === 'function') renderBottomNav('');
   }
 
-  /* Gestion de l'affichage segmenté des annonces du vendeur */
+  /* ==================== Contact WhatsApp ==================== */
+  function contactSeller(phone) {
+    if (!phone) {
+      alert("Ce vendeur n'a pas de numéro WhatsApp.");
+      return;
+    }
+    window.open(`https://wa.me/${phone.replace(/\D/g, '')}`, '_blank');
+  }
+
   function renderListingsGrid() {
     const grid = document.getElementById('sellerListingsGrid');
     const btnContainer = document.getElementById('moreContainer');
     const countSpan = document.getElementById('activeCount');
     if (!grid) return;
 
-    // Sécurité : masquer les articles marqués comme vendus du catalogue actif public
     const activeListings = allSellerListings.filter(l => l.status !== 'sold');
     if (countSpan) countSpan.textContent = activeListings.length;
 
@@ -164,17 +205,20 @@
       : `<div class="empty-state" style="grid-column:1/-1; padding: 40px 20px;"><div class="emoji">📭</div><p>Ce vendeur n'a aucune annonce active pour le moment.</p></div>`;
 
     if (activeListings.length > visibleCount) {
-      btnContainer.innerHTML = `<button class="btn btn-outline btn-sm" onclick="loadMoreListings()">Voir plus</button>`;
+      btnContainer.innerHTML = `<button class="btn btn-outline btn-sm" id="btnMoreListings">Voir plus</button>`;
     } else {
       btnContainer.innerHTML = '';
     }
 
-    if (typeof initLazyLoad === 'function') initLazyLoad();
-  }
+    const btnMore = document.getElementById('btnMoreListings');
+    if (btnMore) {
+      btnMore.addEventListener('click', () => {
+        visibleCount += 2;
+        renderListingsGrid();
+      });
+    }
 
-  function loadMoreListings() {
-    visibleCount += 2; // Charge la ligne suivante au clic
-    renderListingsGrid();
+    if (typeof initLazyLoad === 'function') initLazyLoad();
   }
 
   document.addEventListener('DOMContentLoaded', init);

@@ -54,7 +54,6 @@
   <section class="hero">
     <h1>Achète et vends<br><span class="accent">partout au Togo.</span></h1>
     
-    
     <div class="search-container">
       <div class="search">
         <input 
@@ -113,7 +112,8 @@
   </div>
 
   <!-- EXTERNAL SCRIPTS WITH DEFER -->
-<script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js" crossorigin="anonymous"></script>  <script defer src="js/supabase-config.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js" crossorigin="anonymous"></script>  
+  <script defer src="js/supabase-config.js"></script>
   <script defer src="js/app.js"></script>
   <script defer src="js/lazy-load.js"></script>
 
@@ -209,36 +209,22 @@
 
       document.body.appendChild(toast);
 
-      // Ajouter les animations CSS si elles n'existent pas
       if (!document.querySelector('style[data-toast-animation]')) {
         const style = document.createElement('style');
         style.setAttribute('data-toast-animation', 'true');
         style.textContent = `
           @keyframes slideUp {
-            from { 
-              opacity: 0;
-              transform: translateX(-50%) translateY(20px);
-            }
-            to { 
-              opacity: 1;
-              transform: translateX(-50%) translateY(0);
-            }
+            from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+            to   { opacity: 1; transform: translateX(-50%) translateY(0); }
           }
           @keyframes slideDown {
-            from { 
-              opacity: 1;
-              transform: translateX(-50%) translateY(0);
-            }
-            to { 
-              opacity: 0;
-              transform: translateX(-50%) translateY(20px);
-            }
+            from { opacity: 1; transform: translateX(-50%) translateY(20px); }
+            to   { opacity: 0; transform: translateX(-50%) translateY(20px); }
           }
         `;
         document.head.appendChild(style);
       }
 
-      // Auto-hide après 3 secondes
       setTimeout(() => {
         toast.style.animation = 'slideDown 0.3s ease-out forwards';
         setTimeout(() => toast.remove(), 300);
@@ -254,7 +240,7 @@
       
       const firstFour = CATEGORIES.slice(0, 4);
       grid.innerHTML = firstFour.map(c => `
-        <a href="category.html?cat=${encodeURIComponent(c.name)}" class="brand-tile" role="button">
+        <a href="category.html?cat=${encodeURIComponent(escapeHtml(c.name))}" class="brand-tile" role="button">
           <div class="icon" style="background-color: ${escapeHtml(c.color)};" aria-hidden="true">${escapeHtml(c.emoji)}</div>
           <span>${escapeHtml(c.name)}</span>
         </a>
@@ -412,7 +398,6 @@
     // INITIALIZATION
     // ============================================
     document.addEventListener('DOMContentLoaded', function() {
-      // Initialize components
       renderCategoryGrid();
       renderHomeProducts();
       
@@ -420,7 +405,6 @@
         renderBottomNav('accueil');
       }
 
-      // Restore theme preference
       const savedTheme = localStorage.getItem('theme') || 'light';
       document.documentElement.setAttribute('data-theme', savedTheme);
       const themeBtn = document.getElementById('themeToggleBtn');
@@ -428,9 +412,7 @@
         themeBtn.textContent = savedTheme === 'dark' ? '☀️' : '🌙';
       }
 
-      // ===== EVENT LISTENERS =====
-
-      // Search input - Enter key
+      // Event listeners
       const searchInput = document.getElementById('searchInput');
       if (searchInput) {
         searchInput.addEventListener('keydown', function(e) {
@@ -440,40 +422,33 @@
         });
       }
 
-      // Search button click
       const searchBtn = document.querySelector('.search-btn');
       if (searchBtn) {
         searchBtn.addEventListener('click', performSearch);
       }
 
-      // Menu button click
       const menuBtn = document.getElementById('menuBtn');
       if (menuBtn) {
         menuBtn.addEventListener('click', toggleDropdown);
       }
 
-      // Theme toggle button
       const themeBtnElement = document.getElementById('themeToggleBtn');
       if (themeBtnElement) {
         themeBtnElement.addEventListener('click', toggleTheme);
       }
 
-      // PWA Install button
       const pwaBtn = document.getElementById('pwaInstallBtn');
       if (pwaBtn) {
         pwaBtn.addEventListener('click', handlePWAInstall);
       }
 
-      // Load more button
       const loadMoreBtn = document.getElementById('loadMoreBtn');
       if (loadMoreBtn) {
         loadMoreBtn.addEventListener('click', loadMore);
       }
 
-      // Close dropdown on outside click
       document.addEventListener('click', function(e) {
         const dropdown = document.getElementById('dropdownMenu');
-        const searchContainer = document.querySelector('.search-container');
         const menuBtn = document.getElementById('menuBtn');
         
         if (!dropdown.classList.contains('hidden') && 
@@ -481,16 +456,8 @@
             !menuBtn.contains(e.target)) {
           toggleDropdown();
         }
-
-        if (searchContainer && !searchContainer.contains(e.target)) {
-          const searchDropdown = document.getElementById('searchDropdown');
-          if (searchDropdown) {
-            searchDropdown.classList.add('hidden');
-          }
-        }
       });
 
-      // Close dropdown on Escape key
       document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {
           const dropdown = document.getElementById('dropdownMenu');
