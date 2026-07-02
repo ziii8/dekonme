@@ -11,106 +11,149 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 
   <style>
-    .product-page-wrapper {
-      padding-bottom: 100px;
-    }
-    .detail-gallery-track {
-      display: flex;
-      overflow-x: auto;
-      scroll-snap-type: x mandatory;
-      scroll-behavior: smooth;
-      -webkit-overflow-scrolling: touch;
-      border-radius: 16px;
-      margin-bottom: 12px;
-      background: var(--border);
-      scrollbar-width: none;
-    }
-    .detail-gallery-track::-webkit-scrollbar {
-      display: none;
-    }
-    .detail-gallery-slide {
-      flex: 0 0 100%;
-      scroll-snap-align: start;
-      aspect-ratio: 4/3;
-      cursor: pointer;
-    }
-    /* FIX A11y : focus visible sur les slides devenues focusables */
-    .detail-gallery-slide:focus-visible {
-      outline: 2px solid var(--orange);
-      outline-offset: -2px;
-    }
-    .detail-gallery-slide img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-    .gallery-dots {
-      display: flex;
-      justify-content: center;
-      gap: 6px;
-      margin-bottom: 16px;
-    }
-    .gallery-dots .dot, .lightbox-dots .dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: var(--border);
-      transition: var(--transition);
-      cursor: pointer;
-    }
-    .gallery-dots .dot.active, .lightbox-dots .dot.active {
-      background: var(--orange);
-      transform: scale(1.2);
-    }
-    .detail-section {
-      background: var(--white);
-      padding: 16px;
-      border-radius: 16px;
-      margin-top: 16px;
-      border: 1px solid var(--border);
-    }
-    .pill-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-top: 8px;
-    }
-    .pill {
-      background: var(--bg);
-      padding: 6px 12px;
-      border-radius: 20px;
-      font-size: 13px;
-      font-weight: 600;
-    }
-    .pill.tag {
-      background: rgba(232, 115, 44, 0.1);
-      color: var(--orange);
-    }
+    /* ===== FIX: GALERIE D'IMAGES — DIMENSIONNEMENT RESPONSIVE ===== */
 
-    /* FIX UX : toast (cohérent avec profil.html) */
-    #toast {
-      position: fixed;
-      bottom: calc(var(--nav-height) + 16px);
-      left: 50%;
-      transform: translateX(-50%) translateY(20px);
-      background: var(--ink);
-      color: var(--bg);
-      padding: 10px 20px;
-      border-radius: var(--radius-pill);
-      font-size: 13px;
-      font-weight: 600;
-      z-index: 3000;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.25s ease, transform 0.25s ease;
-      white-space: nowrap;
-      max-width: 90vw;
-      text-align: center;
-    }
-    #toast.show {
-      opacity: 1;
-      transform: translateX(-50%) translateY(0);
-    }
+.detail-gallery-track {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 16px;
+  margin-bottom: 12px;
+  background: var(--border);
+  scrollbar-width: none;
+  
+  /* ✅ NOUVEAU: Max-width pour éviter que l'image soit énorme */
+  max-width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Mobile: 100% */
+@media (max-width: 480px) {
+  .detail-gallery-track {
+    max-width: 100%;
+  }
+}
+
+/* Petit téléphone à tablette: 100% */
+@media (min-width: 481px) and (max-width: 767px) {
+  .detail-gallery-track {
+    max-width: 100%;
+  }
+}
+
+/* Tablette: 90% */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .detail-gallery-track {
+    max-width: 90%;
+  }
+}
+
+/* Desktop: 600px fixe */
+@media (min-width: 1024px) {
+  .detail-gallery-track {
+    max-width: 600px;
+  }
+}
+
+.detail-gallery-track::-webkit-scrollbar {
+  display: none;
+}
+
+.detail-gallery-slide {
+  flex: 0 0 100%;
+  scroll-snap-align: start;
+  aspect-ratio: 4/3;
+  cursor: pointer;
+}
+
+.detail-gallery-slide:focus-visible {
+  outline: 2px solid var(--orange);
+  outline-offset: -2px;
+}
+
+.detail-gallery-slide img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.gallery-dots {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.gallery-dots .dot, .lightbox-dots .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--border);
+  transition: var(--transition);
+  cursor: pointer;
+}
+
+.gallery-dots .dot.active, .lightbox-dots .dot.active {
+  background: var(--orange);
+  transform: scale(1.2);
+}
+
+.detail-section {
+  background: var(--white);
+  padding: 16px;
+  border-radius: 16px;
+  margin-top: 16px;
+  border: 1px solid var(--border);
+}
+
+.pill-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.pill {
+  background: var(--bg);
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.pill.tag {
+  background: rgba(232, 115, 44, 0.1);
+  color: var(--orange);
+}
+
+/* Toast (identique à profil.html) */
+#toast {
+  position: fixed;
+  bottom: calc(var(--nav-height) + 16px);
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--ink);
+  color: var(--bg);
+  padding: 10px 20px;
+  border-radius: var(--radius-pill);
+  font-size: 13px;
+  font-weight: 600;
+  z-index: 3000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  white-space: nowrap;
+  max-width: 90vw;
+  text-align: center;
+}
+
+#toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
   </style>
 </head>
 <body>

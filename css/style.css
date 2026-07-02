@@ -1,14 +1,16 @@
 /* ============================================= */
-/* DEKONme — style.css v4.3 (Production)        */
+/* DEKONme — style.css v4.5 (Production)        */
 /* Design system factorisé + Sécurité Mobile    */
 /* Marketplace du Togo — 100% mobile-first      */
-/* CORRECTIFS v4.3 :                            */
-/*   - PWA install btn consolidé dans topbar    */
-/*   - Toast system unifié                      */
-/*   - line-clamp corrigé                       */
-/*   - .product-grid min-height supprimé        */
-/*   - Bouton 👤 Annuler bien placé             */
-/*   - Bloqueur de zoom (maximum-scale=1.0)     */
+/* CORRECTIFS v4.5:                             */
+/*   - ✅ Fix: html sans hauteur/fond            */
+/*   - ✅ Fix: touch-action bloquait le scroll   */
+/* CORRECTIFS v4.4:                             */
+/*   - ✅ Breakpoints TABLET & DESKTOP           */
+/*   - ✅ Grille responsive: 2/3/4/5 colonnes    */
+/*   - ✅ Images bien dimensionnées              */
+/*   - ✅ Max-width sur desktop                  */
+/*   - ✅ Gaps optimisés par écran               */
 /* ============================================= */
 
 :root {
@@ -76,7 +78,15 @@ html.light {
 
 /* ==================== RESET & BASE ==================== */
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-html { overflow-x: hidden; }
+
+/* FIX: html avait ni hauteur ni fond -> espace vide visible quand le
+   contenu est plus court que l'écran (peu d'annonces, desktop large, etc.) */
+html {
+  overflow-x: hidden;
+  height: 100%;
+  background: var(--bg);
+}
+
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
   background: var(--bg);
@@ -85,6 +95,8 @@ body {
   padding-bottom: calc(var(--nav-height) + 16px);
   overflow-x: hidden;
   width: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 a       { color: inherit; text-decoration: none; }
@@ -271,7 +283,7 @@ input:focus, select:focus, textarea:focus {
 .app-toast.toast-error   { background: var(--error);   color: #fff; }
 .app-toast.toast-info    { background: #2196F3;         color: #fff; }
 
-/* ==================== HERO, SEARCH, BRAND GRID, SECTION HEAD, PRODUCT GRID ==================== */
+/* ==================== HERO, SEARCH, BRAND GRID, SECTION HEAD ==================== */
 
 .hero { padding: 8px 20px 28px; max-width: var(--container-width); margin: 0 auto; animation: fadeUp 0.5s ease-out; }
 .hero h1 { font-size: 30px; font-weight: 800; line-height: 1.15; letter-spacing: -0.5px; margin-bottom: 10px; color: var(--ink); }
@@ -302,6 +314,8 @@ input:focus, select:focus, textarea:focus {
 
 .brand-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 24px; }
 @media (min-width: 480px) { .brand-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (min-width: 768px) { .brand-grid { grid-template-columns: repeat(4, 1fr); } }
+@media (min-width: 1024px) { .brand-grid { grid-template-columns: repeat(5, 1fr); } }
 
 .brand-tile {
   display: flex; flex-direction: column; align-items: center;
@@ -322,14 +336,59 @@ input:focus, select:focus, textarea:focus {
 .see-all { font-size: 13px; font-weight: 700; color: var(--orange); cursor: pointer; padding: 4px 8px; border-radius: 6px; transition: var(--transition); }
 .see-all:hover { background: rgba(232, 115, 44, 0.1); color: var(--orange-deep); }
 
+/* ==================== PRODUCT GRID — RESPONSIVE COMPLÈTE ==================== */
 .product-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 16px;
   padding-bottom: 20px;
 }
-@media (min-width: 480px) { .product-grid { grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); } }
 
+/* Petits téléphones */
+@media (max-width: 480px) { 
+  .product-grid { 
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  } 
+}
+
+/* Grands téléphones / Petite tablette */
+@media (min-width: 480px) and (max-width: 767px) { 
+  .product-grid { 
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+  } 
+}
+
+/* Tablette */
+@media (min-width: 768px) and (max-width: 1023px) { 
+  .product-grid { 
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+  } 
+}
+
+/* Bureau standard */
+@media (min-width: 1024px) and (max-width: 1439px) { 
+  .product-grid { 
+    grid-template-columns: repeat(5, 1fr);
+    gap: 18px;
+    max-width: 1200px;
+    margin: 0 auto;
+  } 
+}
+
+/* Grand bureau */
+@media (min-width: 1440px) { 
+  .product-grid { 
+    grid-template-columns: repeat(6, 1fr);
+    gap: 20px;
+    max-width: 1400px;
+    margin: 0 auto;
+  } 
+}
+
+/* ==================== PRODUCT CARD ==================== */
 .product-card {
   background: var(--white); border-radius: var(--radius-card);
   border: 1px solid var(--border); overflow: hidden; cursor: pointer;
@@ -702,8 +761,11 @@ input:focus, select:focus, textarea:focus {
 }
 
 /* ====================== BLOQUER LE ZOOM SUR TOUT LE SITE ====================== */
+/* FIX: touch-action: none bloquait TOUT geste tactile, y compris le scroll
+   vertical normal. pan-x/pan-y garde le scroll actif tout en bloquant le zoom
+   (déjà couvert par maximum-scale=1.0, user-scalable=no dans le viewport meta). */
 html {
-  touch-action: none;
+  touch-action: pan-x pan-y;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
   user-select: none;

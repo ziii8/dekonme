@@ -76,6 +76,24 @@
       border-radius: 50%;
       display: flex; align-items: center; justify-content: center;
       font-size: 18px;
+      position: relative;
+    }
+    /* Badge pour TikTok rempli */
+    .action-cat-icon.has-social::after {
+      content: '✓';
+      position: absolute;
+      top: -4px;
+      right: -4px;
+      background: #4CAF50;
+      color: white;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: bold;
     }
     .action-cat-label { font-size: 11px; font-weight: 600; line-height: 1.2; color: var(--ink); }
 
@@ -86,8 +104,13 @@
       border-radius: 12px;
       padding: 16px;
       margin-bottom: 16px;
-      animation: fadeIn 0.3s ease-out;
+      animation: slideDown 0.3s ease-out;
     }
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
     .edit-form-group { margin-bottom: 14px; }
     .edit-form-group label {
       display: block;
@@ -96,8 +119,13 @@
       margin-bottom: 6px;
       color: var(--ink);
     }
+    .edit-form-group .help-text {
+      font-size: 12px;
+      color: var(--ink-soft);
+      margin-top: 4px;
+    }
 
-    /* --- RÉSEAUX SOCIAUX — SEUL TIKTOK ====================== */
+    /* --- RÉSEAUX SOCIAUX — TIKTOK UNIQUEMENT --- */
     .social-links-row {
       display: flex;
       gap: 12px;
@@ -107,83 +135,145 @@
     .social-link-btn {
       display: flex;
       align-items: center;
-      gap: 6px;
-      padding: 8px 14px;
+      gap: 8px;
+      padding: 10px 16px;
       border-radius: var(--radius-pill);
       font-size: 13px;
       font-weight: 600;
       border: none;
       cursor: pointer;
-      transition: var(--transition);
+      transition: all 0.2s ease;
       text-decoration: none;
       color: #fff;
+      background: #000;
     }
-    .social-link-btn:hover { opacity: 0.85; transform: translateY(-1px); }
-    .social-link-btn.tiktok    { background: #000; }
+    .social-link-btn:hover { 
+      opacity: 0.9;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    .social-link-btn:focus-visible {
+      outline: 2px solid #fff;
+      outline-offset: 2px;
+    }
+    .social-link-btn svg {
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+    }
 
-    /* Input avec icône préfixe */
+    /* Input avec icône préfixe et validation */
     .social-input-group {
       display: flex;
-      align-items: center;
+      align-items: stretch;
       background: var(--white);
       border: 2px solid var(--border);
       border-radius: 12px;
       overflow: hidden;
-      transition: var(--transition);
+      transition: all 0.2s ease;
       margin-bottom: 14px;
+      position: relative;
     }
     .social-input-group:focus-within {
       border-color: var(--orange);
       box-shadow: 0 0 0 4px rgba(232, 115, 44, 0.15);
     }
+    .social-input-group.error {
+      border-color: #f44336;
+      box-shadow: 0 0 0 4px rgba(244, 67, 54, 0.15);
+    }
     .social-input-prefix {
-      padding: 12px 12px;
-      font-size: 18px;
+      padding: 12px 14px;
+      font-size: 16px;
       border-right: 2px solid var(--border);
       background: var(--bg-soft);
       line-height: 1;
+      display: flex;
+      align-items: center;
+      flex-shrink: 0;
     }
     .social-input-group input {
       border: none !important;
       border-radius: 0 !important;
       box-shadow: none !important;
-      margin-bottom: 0;
+      margin-bottom: 0 !important;
       flex: 1;
       font-size: 13px;
+      padding: 12px 14px !important;
     }
-    .social-input-group input:focus { box-shadow: none !important; }
+    .social-input-group input:focus { 
+      box-shadow: none !important;
+      outline: none;
+    }
+    .social-input-validation {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 18px;
+      display: none;
+    }
+    .social-input-validation.valid { 
+      display: block;
+      color: #4CAF50;
+    }
+    .social-input-validation.invalid { 
+      display: block;
+      color: #f44336;
+    }
+
+    .error-message {
+      font-size: 12px;
+      color: #f44336;
+      margin-top: 6px;
+      display: none;
+    }
+    .error-message.show { display: block; }
 
     /* Boutons Voir Plus */
     .load-more-container { text-align: center; margin-top: 14px; margin-bottom: 8px; }
     .btn-sm { padding: 8px 24px !important; font-size: 13px !important; width: auto !important; display: inline-flex !important; }
 
-    /* Toast */
+    /* Toast amélioré */
     #toast {
       position: fixed;
       bottom: calc(var(--nav-height) + 16px);
       left: 50%;
       transform: translateX(-50%) translateY(20px);
-      background: var(--ink); color: var(--bg);
-      padding: 10px 20px;
+      background: var(--ink);
+      color: var(--bg);
+      padding: 12px 20px;
       border-radius: var(--radius-pill);
-      font-size: 13px; font-weight: 600;
-      z-index: 3000; opacity: 0; pointer-events: none;
+      font-size: 13px;
+      font-weight: 600;
+      z-index: 3000;
+      opacity: 0;
+      pointer-events: none;
       transition: opacity 0.25s ease, transform 0.25s ease;
-      white-space: nowrap; max-width: 90vw; text-align: center;
+      white-space: nowrap;
+      max-width: 90vw;
+      text-align: center;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     }
-    #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    #toast.show { 
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+      pointer-events: auto;
+    }
+    #toast.success { background: #4CAF50; }
+    #toast.error { background: #f44336; }
   </style>
 </head>
 <body>
 
-<div class="topbar">
+<div class="topbar" role="banner">
   <button class="icon-btn back-btn"
     onclick="history.length > 1 ? history.back() : window.location.href='index.html'"
-    aria-label="Retour">
+    aria-label="Retour à la page précédente">
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
   </button>
   <div class="page-title">Mon profil</div>
-  <button id="themeToggleBtn" class="icon-btn" onclick="toggleTheme()" aria-label="Changer de thème">🌙</button>
+  <button id="themeToggleBtn" class="icon-btn" aria-label="Changer de thème">🌙</button>
 </div>
 
 <div class="container">
@@ -193,7 +283,7 @@
 </div>
 
 <div class="bottom-nav" id="bottomNav"></div>
-<div id="toast" role="status" aria-live="polite"></div>
+<div id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
 
 <script src="js/supabase-config.js"></script>
 <script src="js/app.js"></script>
@@ -203,6 +293,9 @@
   let visibleActiveCount = 2;
   let visibleSoldCount   = 2;
 
+  /* ============================================================
+     VALIDATION ET ÉCHAPPEMENT
+  ============================================================ */
   function escapeHTML(str) {
     return String(str == null ? '' : str)
       .replace(/&/g,  '&amp;')
@@ -212,16 +305,39 @@
       .replace(/'/g,  '&#39;');
   }
 
+  /* Validation TikTok - Username */
+  function validateTikTok(username) {
+    if (!username) return { valid: true, error: null };
+    // Accepter @username ou username
+    const ttPattern = /^@?[a-zA-Z0-9._]{3,24}$/;
+    if (!ttPattern.test(username)) {
+      return { 
+        valid: false, 
+        error: 'Username TikTok invalide (3-24 caractères, lettres/chiffres/. et _)' 
+      };
+    }
+    return { valid: true, error: null };
+  }
+
+  /* ============================================================
+     TOAST NOTIFICATIONS
+  ============================================================ */
   let _toastTimer = null;
-  function showToast(msg) {
+  function showToast(msg, type = 'default') {
     const el = document.getElementById('toast');
     if (!el) return;
     el.textContent = msg;
+    el.classList.remove('success', 'error');
+    if (type === 'success') el.classList.add('success');
+    if (type === 'error') el.classList.add('error');
     el.classList.add('show');
     clearTimeout(_toastTimer);
-    _toastTimer = setTimeout(() => el.classList.remove('show'), 2800);
+    _toastTimer = setTimeout(() => el.classList.remove('show'), 3000);
   }
 
+  /* ============================================================
+     UTILISATEUR NON CONNECTÉ
+  ============================================================ */
   function renderLoggedOut() {
     document.getElementById('profileContainer').innerHTML = `
       <div class="empty-state" style="padding-top: 40px;">
@@ -235,6 +351,9 @@
     if (typeof renderBottomNav === 'function') renderBottomNav('profil');
   }
 
+  /* ============================================================
+     UTILISATEUR CONNECTÉ
+  ============================================================ */
   async function renderLoggedIn(profile) {
     const cleanPhone = profile.phone ? profile.phone.replace('+228', '') : '';
 
@@ -244,7 +363,7 @@
         allActiveListings = myListings.filter(l => l.status !== 'sold');
         allSoldListings   = myListings.filter(l => l.status === 'sold');
       }
-    } catch (e) { console.error('Erreur stats :', e); }
+    } catch (e) { console.error('Erreur stats:', e); }
 
     const safeName     = escapeHTML(profile.name);
     const safeCity     = escapeHTML(profile.city  || '');
@@ -253,18 +372,21 @@
     const safeCleanPhone = escapeHTML(cleanPhone);
     const safeId       = escapeHTML(profile.id);
 
+    /* TikTok uniquement */
     const social = profile.social_links || {};
     const safeTt = escapeHTML(social.tiktok || '');
 
+    /* Lien TikTok affiché */
     const socialLinksHTML = safeTt ? `
       <div class="social-links-row">
         <a href="https://tiktok.com/${safeTt.startsWith('@') ? safeTt.replace('@', '') : safeTt}" 
-           target="_blank" rel="noopener" 
-           class="social-link-btn tiktok">
+           target="_blank" rel="noopener noreferrer" 
+           class="social-link-btn"
+           aria-label="Visiter TikTok">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04 .79 .1V9.01a6.33 6.33 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.69a8.18 8.18 0 004.78 1.52V6.75a4.85 4.85 0 01-1.01-.06z"/>
+            <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.69a8.18 8.18 0 004.78 1.52V6.75a4.85 4.85 0 01-1.01-.06z"/>
           </svg>
-          TikTok
+          <span>TikTok</span>
         </a>
       </div>
     ` : '';
@@ -291,8 +413,9 @@
         </div>
       </div>
 
+      <!-- GRILLE 2×2 : Actions principales -->
       <div class="profile-actions-grid">
-        <button type="button" class="action-cat-card" id="btnToggleEdit" aria-label="Modifier mes informations">
+        <button type="button" class="action-cat-card" id="btnToggleEdit" aria-label="Modifier mes informations personnelles">
           <div class="action-cat-icon">📝</div>
           <span class="action-cat-label">Modifier<br>Infos</span>
         </button>
@@ -303,54 +426,73 @@
           <span class="action-cat-label">Partager<br>Boutique</span>
         </button>
 
-        <button type="button" class="action-cat-card" id="btnToggleSocial" aria-label="Mes réseaux sociaux">
-          <div class="action-cat-icon">📱</div>
-          <span class="action-cat-label">Mes<br>Réseaux</span>
+        <button type="button" class="action-cat-card" id="btnToggleSocial" aria-label="Gérer mon TikTok">
+          <div class="action-cat-icon ${safeTt ? 'has-social' : ''}">🎵</div>
+          <span class="action-cat-label">Ajouter<br>TikTok</span>
         </button>
 
-        <button type="button" class="action-cat-card" onclick="window.open('https://wa.me/22899129916', '_blank')" aria-label="Contacter le support">
+        <button type="button" class="action-cat-card" onclick="window.open('https://wa.me/22899129916', '_blank')" aria-label="Contacter le support par WhatsApp">
           <div class="action-cat-icon">💬</div>
           <span class="action-cat-label">Besoin<br>d'aide ?</span>
         </button>
       </div>
 
-      <div id="socialWrapper" class="edit-profile-wrapper" style="display: none;" aria-hidden="true">
-        <p style="font-size: 13px; font-weight: 700; margin-bottom: 14px;">Mes réseaux sociaux</p>
-        <form id="socialForm">
+      <!-- PANEL : TIKTOK -->
+      <div id="socialWrapper" class="edit-profile-wrapper" style="display: none;" role="region" aria-label="Formulaire TikTok" aria-hidden="true">
+        <h3 style="font-size: 15px; font-weight: 700; margin-bottom: 16px; margin-top: 0;">🎵 Mon TikTok</h3>
+        <p style="font-size: 12px; color: var(--ink-soft); margin-bottom: 16px;">Ajoutez votre TikTok pour que les clients puissent vous suivre et découvrir vos produits en vidéo!</p>
+        
+        <form id="socialForm" novalidate>
           <div class="edit-form-group">
-            <label for="editTiktok">TikTok</label>
+            <label for="editTiktok">
+              <span style="display: inline-block; margin-right: 6px;">🎵</span>Nom d'utilisateur TikTok
+            </label>
             <div class="social-input-group">
-              <span class="social-input-prefix">📱</span>
-              <input type="text" id="editTiktok" value="${safeTt}"
-                     placeholder="@tonusername"
-                     autocomplete="off">
+              <span class="social-input-prefix">@</span>
+              <input 
+                type="text" 
+                id="editTiktok" 
+                value="${safeTt}"
+                placeholder="monusername"
+                autocomplete="off"
+                maxlength="24"
+                aria-describedby="ttError ttHelp"
+              >
+              <span class="social-input-validation" id="ttValidation"></span>
             </div>
+            <p class="help-text" id="ttHelp">Votre nom d'utilisateur TikTok (3-24 caractères, sans @ c'est ok)</p>
+            <p class="error-message" id="ttError"></p>
           </div>
+
           <button type="submit" id="btnSaveSocial" class="btn btn-primary btn-block">
-            Enregistrer les réseaux
+            Enregistrer mon TikTok
           </button>
         </form>
       </div>
 
-      <div id="editProfileWrapper" class="edit-profile-wrapper" style="display: none;" aria-hidden="true">
-        <form id="editProfileForm">
+      <!-- PANEL : MODIFIER PROFIL -->
+      <div id="editProfileWrapper" class="edit-profile-wrapper" style="display: none;" role="region" aria-label="Formulaire modification profil" aria-hidden="true">
+        <h3 style="font-size: 15px; font-weight: 700; margin-bottom: 16px; margin-top: 0;">✏️ Modifier mes informations</h3>
+        <form id="editProfileForm" novalidate>
           <div class="edit-form-group">
             <label for="editName">Nom complet / Nom de boutique</label>
-            <input type="text" id="editName" value="${safeName}" required autocomplete="name">
+            <input type="text" id="editName" value="${safeName}" required autocomplete="name" minlength="2" maxlength="50">
           </div>
           <div class="edit-form-group">
             <label for="editPhone">Numéro WhatsApp (sans +228)</label>
             <input type="tel" id="editPhone" value="${safeCleanPhone}" required
                    placeholder="Ex: 90123456" pattern="[0-9]{8}" maxlength="8"
-                   inputmode="numeric" autocomplete="tel-national">
+                   inputmode="numeric" autocomplete="tel-national" aria-describedby="phoneHelp">
+            <p class="help-text" id="phoneHelp">8 chiffres (ex: 90123456)</p>
           </div>
           <div class="edit-form-group">
             <label for="editCity">Ville</label>
-            <select id="editCity">
+            <select id="editCity" aria-describedby="cityHelp">
               ${['Lomé','Kara','Sokodé','Kpalimé','Atakpamé','Dapaong','Tsévié','Aného'].map(city =>
                 `<option value="${escapeHTML(city)}" ${profile.city === city ? 'selected' : ''}>${escapeHTML(city)}</option>`
               ).join('')}
             </select>
+            <p class="help-text" id="cityHelp">Sélectionnez votre ville principale</p>
           </div>
           <button type="submit" id="btnSaveProfile" class="btn btn-primary btn-block">
             Enregistrer les modifications
@@ -373,29 +515,80 @@
       </button>
     `;
 
-    /* ==================== ÉCOUTEURS UNIQUES ==================== */
-    const btnToggleEdit   = document.getElementById('btnToggleEdit');
-    const btnToggleSocial = document.getElementById('btnToggleSocial');
-    const btnShare        = document.getElementById('btnShareShop');
-    const editForm        = document.getElementById('editProfileForm');
-    const socialForm      = document.getElementById('socialForm');
-    const btnLogout       = document.getElementById('btnLogout');
+    /* ---- Event Listeners ---- */
+    document.getElementById('btnToggleEdit').addEventListener('click', toggleEditForm);
+    document.getElementById('btnToggleSocial').addEventListener('click', toggleSocialForm);
 
-    if (btnToggleEdit)   btnToggleEdit.addEventListener('click', toggleEditForm);
-    if (btnToggleSocial) btnToggleSocial.addEventListener('click', toggleSocialForm);
-    if (btnShare)        btnShare.addEventListener('click', () => shareMyShop(btnShare.dataset.id, btnShare.dataset.name));
-    if (editForm)        editForm.addEventListener('submit', handleProfileUpdate);
-    if (socialForm)      socialForm.addEventListener('submit', handleSocialUpdate);
-    if (btnLogout)       btnLogout.addEventListener('click', handleLogout);
+    const btnShare = document.getElementById('btnShareShop');
+    if (btnShare) {
+      btnShare.addEventListener('click', () => shareMyShop(btnShare.dataset.id, btnShare.dataset.name));
+    }
+
+    const editForm = document.getElementById('editProfileForm');
+    if (editForm) editForm.addEventListener('submit', handleProfileUpdate);
+
+    const socialForm = document.getElementById('socialForm');
+    if (socialForm) {
+      socialForm.addEventListener('submit', handleSocialUpdate);
+      
+      /* Validation en temps réel */
+      document.getElementById('editTiktok')?.addEventListener('blur', validateSocialField);
+    }
+
+    const btnLogout = document.getElementById('btnLogout');
+    if (btnLogout) btnLogout.addEventListener('click', handleLogout);
 
     renderActiveGrid();
     renderSoldGrid();
     if (typeof renderBottomNav === 'function') renderBottomNav('profil');
   }
 
+  /* ============================================================
+     VALIDATION EN TEMPS RÉEL
+  ============================================================ */
+  function validateSocialField(e) {
+    const input = e.target;
+    const value = input.value.trim();
+    const validation = validateTikTok(value);
+    const validationEl = document.getElementById('ttValidation');
+    const errorEl = document.getElementById('ttError');
+    const groupEl = input.closest('.social-input-group');
+
+    if (!value) {
+      // Champ vide = valide
+      if (validationEl) validationEl.classList.remove('valid', 'invalid');
+      if (errorEl) errorEl.classList.remove('show');
+      if (groupEl) groupEl.classList.remove('error');
+    } else if (validation.valid) {
+      // Valide
+      if (validationEl) {
+        validationEl.classList.remove('invalid');
+        validationEl.classList.add('valid');
+        validationEl.textContent = '✓';
+      }
+      if (errorEl) errorEl.classList.remove('show');
+      if (groupEl) groupEl.classList.remove('error');
+    } else {
+      // Invalide
+      if (validationEl) {
+        validationEl.classList.remove('valid');
+        validationEl.classList.add('invalid');
+        validationEl.textContent = '✗';
+      }
+      if (errorEl) {
+        errorEl.textContent = validation.error;
+        errorEl.classList.add('show');
+      }
+      if (groupEl) groupEl.classList.add('error');
+    }
+  }
+
+  /* ============================================================
+     CARTES ANNONCES
+  ============================================================ */
   function myListingCardHTML(l, editable) {
     const image  = escapeHTML((l.images && l.images[0]) || l.image_url || 'https://picsum.photos/seed/' + encodeURIComponent(l.id) + '/600/600');
-    const target = editable ? `publish.html?id=${encodeURIComponent(l.id)}` : `product.html?id=${encodeURIComponent(l.id)}`;
+    const target = editable ? `/publish.html?id=${encodeURIComponent(l.id)}` : `/product.html?id=${encodeURIComponent(l.id)}`;
     const formattedPrice = typeof formatPrice === 'function' ? formatPrice(l.price) : l.price;
     return `
       <div class="product-card" onclick="window.location.href='${escapeHTML(target)}'">
@@ -414,6 +607,9 @@
     `;
   }
 
+  /* ============================================================
+     GRILLES PAGINÉES
+  ============================================================ */
   function renderActiveGrid() {
     const grid = document.getElementById('myListingsGrid');
     const btn  = document.getElementById('activeMoreContainer');
@@ -424,7 +620,7 @@
     btn.innerHTML = allActiveListings.length > visibleActiveCount
       ? `<button class="btn btn-outline btn-sm" id="btnMoreActive">Voir plus</button>` : '';
     if (allActiveListings.length > visibleActiveCount)
-      document.getElementById('btnMoreActive').addEventListener('click', () => { visibleActiveCount += 2; renderActiveGrid(); });
+      document.getElementById('btnMoreActive')?.addEventListener('click', () => { visibleActiveCount += 2; renderActiveGrid(); });
     if (typeof initLazyLoad === 'function') initLazyLoad();
   }
 
@@ -439,7 +635,7 @@
       btn.innerHTML = allSoldListings.length > visibleSoldCount
         ? `<button class="btn btn-outline btn-sm" id="btnMoreSold">Voir plus</button>` : '';
       if (allSoldListings.length > visibleSoldCount)
-        document.getElementById('btnMoreSold').addEventListener('click', () => { visibleSoldCount += 2; renderSoldGrid(); });
+        document.getElementById('btnMoreSold')?.addEventListener('click', () => { visibleSoldCount += 2; renderSoldGrid(); });
     } else {
       if (head) head.innerHTML = '';
       grid.innerHTML = '';
@@ -448,18 +644,31 @@
     if (typeof initLazyLoad === 'function') initLazyLoad();
   }
 
+  /* ============================================================
+     VOLETS DÉPLIANTS
+  ============================================================ */
   function togglePanel(showId, hideId) {
     const show = document.getElementById(showId);
     const hide = document.getElementById(hideId);
-    if (hide) { hide.style.display = 'none'; hide.setAttribute('aria-hidden', 'true'); }
+    if (hide) { 
+      hide.style.display = 'none'; 
+      hide.setAttribute('aria-hidden', 'true'); 
+    }
     if (!show) return;
     const open = show.style.display === 'none';
     show.style.display = open ? 'block' : 'none';
     show.setAttribute('aria-hidden', String(!open));
+    if (open && show.querySelector('input')) {
+      // Focus le premier input quand le panel s'ouvre
+      setTimeout(() => show.querySelector('input')?.focus(), 100);
+    }
   }
   function toggleEditForm()   { togglePanel('editProfileWrapper', 'socialWrapper'); }
   function toggleSocialForm() { togglePanel('socialWrapper', 'editProfileWrapper'); }
 
+  /* ============================================================
+     MISE À JOUR TIKTOK
+  ============================================================ */
   async function handleSocialUpdate(e) {
     e.preventDefault();
     const btn = document.getElementById('btnSaveSocial');
@@ -468,11 +677,21 @@
 
     const tiktok = document.getElementById('editTiktok').value.trim();
 
+    // Validation avant envoi
+    const ttValidation = validateTikTok(tiktok);
+
+    if (tiktok && !ttValidation.valid) {
+      showToast('❌ ' + ttValidation.error, 'error');
+      if (btn) { btn.disabled = false; btn.textContent = 'Enregistrer mon TikTok'; }
+      return;
+    }
+
     try {
       const { data: { user } } = await window.db.auth.getUser();
       if (!user) { window.location.href = 'auth.html'; return; }
 
-      const social_links = { tiktok };
+      const social_links = {};
+      if (tiktok) social_links.tiktok = tiktok;
 
       const { error } = await window.db
         .from('profiles')
@@ -482,19 +701,24 @@
       if (error) throw error;
 
       const wrapper = document.getElementById('socialWrapper');
-      if (wrapper) { wrapper.style.display = 'none'; wrapper.setAttribute('aria-hidden', 'true'); }
+      if (wrapper) { 
+        wrapper.style.display = 'none'; 
+        wrapper.setAttribute('aria-hidden', 'true'); 
+      }
 
-      showToast('Réseaux sociaux mis à jour 📱');
-
+      showToast('✅ TikTok mis à jour! 🎵', 'success');
       init();
     } catch (err) {
-      console.error(err);
-      showToast('Erreur lors de la mise à jour.');
+      console.error('Erreur TikTok:', err);
+      showToast('❌ Erreur lors de la mise à jour.', 'error');
     } finally {
-      if (btn) { btn.disabled = false; btn.textContent = 'Enregistrer les réseaux'; }
+      if (btn) { btn.disabled = false; btn.textContent = 'Enregistrer mon TikTok'; }
     }
   }
 
+  /* ============================================================
+     MISE À JOUR PROFIL
+  ============================================================ */
   async function handleProfileUpdate(e) {
     e.preventDefault();
     const btn = document.getElementById('btnSaveProfile');
@@ -504,6 +728,19 @@
     const name  = document.getElementById('editName').value.trim();
     const phone = document.getElementById('editPhone').value.trim();
     const city  = document.getElementById('editCity').value;
+
+    // Validation de base
+    if (!name || name.length < 2) {
+      showToast('❌ Le nom doit contenir au moins 2 caractères.', 'error');
+      if (btn) { btn.disabled = false; btn.textContent = 'Enregistrer les modifications'; }
+      return;
+    }
+
+    if (!/^\d{8}$/.test(phone)) {
+      showToast('❌ Le numéro doit contenir 8 chiffres.', 'error');
+      if (btn) { btn.disabled = false; btn.textContent = 'Enregistrer les modifications'; }
+      return;
+    }
 
     try {
       const { data: { user } } = await window.db.auth.getUser();
@@ -525,34 +762,52 @@
       if (subtitle) subtitle.textContent = `${city ? city + ' · ' : ''}${formattedPhone}`;
 
       const wrapper = document.getElementById('editProfileWrapper');
-      if (wrapper) { wrapper.style.display = 'none'; wrapper.setAttribute('aria-hidden', 'true'); }
+      if (wrapper) { 
+        wrapper.style.display = 'none'; 
+        wrapper.setAttribute('aria-hidden', 'true'); 
+      }
 
-      showToast('Profil mis à jour ✨');
+      showToast('✅ Profil mis à jour! ✨', 'success');
     } catch (err) {
-      console.error(err);
-      showToast('Erreur lors de la modification.');
+      console.error('Erreur profil:', err);
+      showToast('❌ Erreur lors de la modification.', 'error');
     } finally {
       if (btn) { btn.disabled = false; btn.textContent = 'Enregistrer les modifications'; }
     }
   }
 
+  /* ============================================================
+     PARTAGE BOUTIQUE
+  ============================================================ */
   async function shareMyShop(id, name) {
     const shopUrl   = `${window.location.origin}/vendeur.html?id=${encodeURIComponent(id)}`;
     const shareText = `Découvrez ma vitrine "${name}" sur DEKONme !`;
     if (navigator.share) {
       try { 
-        await navigator.share({ title: name, text: shareText, url: shopUrl }); 
-      } catch (err) { 
+        await navigator.share({ 
+          title: name, 
+          text: shareText, 
+          url: shopUrl 
+        }); 
+        showToast('✅ Lien partagé! 🔗', 'success');
+      }
+      catch (err) { 
         if (err.name !== 'AbortError') console.error(err); 
       }
     } else {
       try {
         await navigator.clipboard.writeText(`${shareText} ${shopUrl}`);
-        showToast('Lien copié ! Collez-le dans votre statut WhatsApp 📋');
-      } catch { showToast('Votre lien : ' + shopUrl); }
+        showToast('✅ Lien copié! Collez-le sur WhatsApp 📋', 'success');
+      } catch (err) {
+        console.error('Erreur copie:', err);
+        showToast('Votre lien: ' + shopUrl, 'default');
+      }
     }
   }
 
+  /* ============================================================
+     DÉCONNEXION
+  ============================================================ */
   async function handleLogout() {
     if (typeof logoutUser === 'function') {
       await logoutUser();
@@ -560,6 +815,9 @@
     }
   }
 
+  /* ============================================================
+     INITIALISATION
+  ============================================================ */
   async function init() {
     try {
       if (typeof getMyProfile === 'function') {
@@ -569,12 +827,15 @@
         renderLoggedOut();
       }
     } catch (err) {
-      console.error("Erreur init profil :", err);
+      console.error("Erreur init profil:", err);
       renderLoggedOut();
     }
   }
 
   document.addEventListener('DOMContentLoaded', init);
+
+  // Toggle theme
+  document.getElementById('themeToggleBtn')?.addEventListener('click', toggleTheme);
 </script>
 </body>
 </html>

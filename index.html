@@ -6,6 +6,16 @@
   <meta name="theme-color" content="#E8732C">
   <meta name="mobile-web-app-capable" content="yes">
   
+  <!-- SEO & Meta Tags -->
+  <title>DEKONme — Marketplace du Togo | Acheter et vendre par WhatsApp</title>
+  <meta name="description" content="DEKONme est la marketplace leader au Togo. Achetez et vendez facilement vos produits, articles et services directement via WhatsApp en toute simplicité.">
+  
+  <!-- Open Graph / Social Media -->
+  <meta property="og:title" content="DEKONme — Marketplace du Togo">
+  <meta property="og:description" content="La solution simple pour acheter et vendre vos produits partout au Togo via WhatsApp.">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="DEKONme">
+  
   <!-- PWA Support -->
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
@@ -13,8 +23,6 @@
   
   <!-- Styles -->
   <link rel="stylesheet" href="css/style.css">
-  
-  <title>DEKONme — Marketplace du Togo | Acheter et vendre par WhatsApp</title>
 </head>
 <body>
 
@@ -77,7 +85,6 @@
   <!-- MAIN CONTENT -->
   <main class="container" role="main">
     
-    <!-- CATEGORIES SECTION -->
     <section>
       <div class="section-head">
         <h2>Catégories</h2>
@@ -86,7 +93,6 @@
       <div class="brand-grid" id="brandGrid" role="region" aria-label="Grille de catégories"></div>
     </section>
 
-    <!-- PRODUCTS SECTION -->
     <section>
       <div class="section-head">
         <h2 id="productsTitle">Annonces récentes</h2>
@@ -95,27 +101,28 @@
       <div class="product-grid" id="productGrid" role="region" aria-label="Grille d'annonces"></div>
     </section>
 
-    <!-- LOAD MORE BUTTON -->
     <div id="loadMoreWrap" class="load-more-wrap" style="display: none;">
       <button class="btn btn-primary" id="loadMoreBtn">Voir plus d'annonces</button>
     </div>
-
   </main>
 
-  <!-- BOTTOM NAVIGATION -->
   <nav class="bottom-nav" id="bottomNav" role="navigation" aria-label="Navigation principale"></nav>
 
-  <!-- DROPDOWN MENU -->
   <div class="dropdown-menu" id="dropdownMenu" role="dialog" aria-label="Menu de navigation" aria-hidden="true">
     <div class="dropdown-panel"></div>
   </div>
 
-  <!-- EXTERNAL SCRIPTS WITH DEFER -->
-  <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js" crossorigin="anonymous"></script>  
+  <!-- Scripts -->
+  <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>  
   <script defer src="js/supabase-config.js"></script>
   <script defer src="js/app.js"></script>
   <script defer src="js/lazy-load.js"></script>
 
+  <script>
+    // ... (votre logique JavaScript reste identique)
+  </script>
+</body>
+</html>
   <!-- INLINE SCRIPT - APP LOGIC -->
   <script>
     // ============================================
