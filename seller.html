@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#E8732C">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
@@ -107,7 +107,7 @@
       let socialHTML = '';
       if (social.facebook || social.instagram || social.tiktok) {
         socialHTML = `
-          <div class="social-links-row">
+          <div class="social-links-row" style="margin-bottom: 24px;">
             ${social.facebook ? `<a href="${social.facebook}" target="_blank" rel="noopener" class="social-link-btn facebook">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg>
               Facebook
@@ -146,7 +146,7 @@
           💬 Contacter via WhatsApp
         </button>
 
-        ${socialHTML ? `<div class="social-links-row" style="margin-bottom: 24px;">${socialHTML}</div>` : ''}
+        ${socialHTML}
 
         <div class="section-head" style="margin-top: 32px;">
           <h3>Annonces actives (<span id="activeCount">0</span>)</h3>
