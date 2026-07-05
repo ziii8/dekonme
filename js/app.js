@@ -1,6 +1,7 @@
 /* ============================================= */
-/* DEKONme — app.js v3.5 (Auth complet)           */
+/* DEKONme — app.js v3.6 (Auth complet + Animations) */
 /* Logique Globale & Rendu UI Marketplace         */
+/* CORRIGÉ : onclick UUID + admin.deleteUser bug  */
 /* ============================================= */
 
 const CATEGORIES = [
@@ -15,6 +16,172 @@ const CATEGORIES = [
 const PHONE_BRANDS = ["Apple","Samsung","Tecno","Infinix","Itel","Huawei","Xiaomi","Oppo","Vivo","Nokia","Autre"];
 
 let _heartbeatTimer = null;
+
+/* ============================================================
+   ANIMATIONS — CSS injecté une seule fois
+============================================================ */
+(function injectAnimationStyles() {
+  if (document.getElementById('dekonme-anim-styles')) return;
+
+  const style = document.createElement('style');
+  style.id = 'dekonme-anim-styles';
+  style.textContent = `
+    @keyframes dkm-card-in {
+      from { opacity: 0; transform: translateY(14px) scale(0.98); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .product-card {
+      opacity: 0;
+      animation: dkm-card-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      will-change: transform, opacity;
+    }
+    .product-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 10px 24px rgba(0,0,0,0.08);
+    }
+    .product-card:active {
+      transform: translateY(-1px) scale(0.99);
+    }
+
+    .product-card img {
+      opacity: 0;
+      transition: opacity 0.35s ease;
+    }
+    .product-card img.dkm-loaded {
+      opacity: 1;
+    }
+
+    @keyframes dkm-heart-pop {
+      0%   { transform: scale(1); }
+      30%  { transform: scale(1.35); }
+      55%  { transform: scale(0.9); }
+      100% { transform: scale(1); }
+    }
+    .fav-btn svg {
+      transition: fill 0.2s ease, stroke 0.2s ease;
+    }
+    .fav-btn.dkm-pop svg {
+      animation: dkm-heart-pop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .fav-btn.active svg {
+      color: #E8567A;
+    }
+
+    .btn, .nav-publish-circle, .fav-btn {
+      position: relative;
+      overflow: hidden;
+    }
+    .dkm-ripple {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.55);
+      transform: scale(0);
+      animation: dkm-ripple-anim 0.55s ease-out;
+      pointer-events: none;
+    }
+    @keyframes dkm-ripple-anim {
+      to { transform: scale(2.8); opacity: 0; }
+    }
+
+    @keyframes dkm-toast-in {
+      from { opacity: 0; transform: translate(-50%, 12px); }
+      to   { opacity: 1; transform: translate(-50%, 0); }
+    }
+    @keyframes dkm-toast-out {
+      from { opacity: 1; transform: translate(-50%, 0); }
+      to   { opacity: 0; transform: translate(-50%, 12px); }
+    }
+    .dkm-toast {
+      position: fixed;
+      left: 50%;
+      bottom: 90px;
+      z-index: 9999;
+      padding: 12px 20px;
+      border-radius: 999px;
+      font-size: 14px;
+      font-weight: 500;
+      color: #fff;
+      background: #2b2b2b;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.18);
+      animation: dkm-toast-in 0.3s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+      white-space: nowrap;
+    }
+    .dkm-toast.dkm-toast-error { background: #D64545; }
+    .dkm-toast.dkm-toast-success { background: #2E9E5B; }
+    .dkm-toast.dkm-toast-out { animation: dkm-toast-out 0.25s ease forwards; }
+
+    .security-modal {
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    .security-modal.open { opacity: 1; }
+    .security-modal-content {
+      transform: translateY(30px) scale(0.97);
+      transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .security-modal.open .security-modal-content {
+      transform: translateY(0) scale(1);
+    }
+
+    #bottomNav a.active svg {
+      animation: dkm-nav-bounce 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    @keyframes dkm-nav-bounce {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.18); }
+      100% { transform: scale(1); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .product-card, .fav-btn.dkm-pop svg, .dkm-toast, .security-modal-content, #bottomNav a.active svg {
+        animation: none !important;
+        transition: none !important;
+      }
+    }
+  `;
+  document.head.appendChild(style);
+})();
+
+function staggerProductCards(containerSelector = null) {
+  const cards = containerSelector
+    ? document.querySelectorAll(`${containerSelector} .product-card`)
+    : document.querySelectorAll('.product-card');
+  cards.forEach((card, i) => {
+    card.style.animationDelay = `${Math.min(i * 45, 400)}ms`;
+  });
+}
+
+function attachRipple(el, event) {
+  if (!el) return;
+  const rect = el.getBoundingClientRect();
+  const ripple = document.createElement('span');
+  const size = Math.max(rect.width, rect.height);
+  const x = (event?.clientX ?? rect.left + rect.width / 2) - rect.left - size / 2;
+  const y = (event?.clientY ?? rect.top + rect.height / 2) - rect.top - size / 2;
+  ripple.className = 'dkm-ripple';
+  ripple.style.width = ripple.style.height = `${size}px`;
+  ripple.style.left = `${x}px`;
+  ripple.style.top = `${y}px`;
+  el.appendChild(ripple);
+  setTimeout(() => ripple.remove(), 550);
+}
+document.addEventListener('click', (e) => {
+  const target = e.target.closest('.btn, .nav-publish-circle');
+  if (target) attachRipple(target, e);
+});
+
+function showToast(message, type = 'default', duration = 2600) {
+  const toast = document.createElement('div');
+  toast.className = `dkm-toast ${type === 'error' ? 'dkm-toast-error' : type === 'success' ? 'dkm-toast-success' : ''}`;
+  toast.textContent = message;
+  document.body.appendChild(toast);
+  setTimeout(() => {
+    toast.classList.add('dkm-toast-out');
+    setTimeout(() => toast.remove(), 280);
+  }, duration);
+}
+if (!window.showToast) window.showToast = showToast;
 
 /* ==================== getCategories ==================== */
 function getCategories() {
@@ -303,8 +470,13 @@ async function signUpUser({ name, email, phone, city, password }) {
     });
 
   if (profileError) {
-    await window.db.auth.admin.deleteUser(user.id);
-    return { error: "Erreur lors de la création du profil" };
+    // CORRIGÉ : auth.admin.deleteUser() nécessite la service_role key
+    // et ne peut PAS être appelé depuis le client avec la clé anon.
+    // On log l'incident au lieu de planter avec une exception non gérée.
+    // Un vrai nettoyage du compte orphelin doit passer par une Edge Function
+    // Supabase côté serveur (avec service_role key), jamais ici.
+    console.error("Erreur création profil (compte Auth orphelin possible) :", profileError, "user_id:", user?.id);
+    return { error: "Erreur lors de la création du profil. Réessayez ou contactez le support." };
   }
 
   return { data: user, redirect: "/profil.html" };
@@ -379,6 +551,13 @@ window.toggleFavorite = async function (id, btnEl) {
       btnEl.classList.toggle("active", !already);
       const svg = btnEl.querySelector("svg");
       if (svg) svg.setAttribute("fill", !already ? "currentColor" : "none");
+
+      if (!already) {
+        btnEl.classList.remove('dkm-pop');
+        void btnEl.offsetWidth;
+        btnEl.classList.add('dkm-pop');
+        setTimeout(() => btnEl.classList.remove('dkm-pop'), 450);
+      }
     }
   } catch (err) {
     console.error("Erreur toggleFavorite :", err);
@@ -549,11 +728,17 @@ async function reportListing(listingId, reason, comment) {
 function productCardHTML(l, fav) {
   const favClass = fav ? "active" : "";
   const image = l.image_url || (l.images && l.images[0]) || `https://picsum.photos/seed/${l.id}/600/600`;
+  const safeId = escapeHtml(String(l.id));
   return `
-    <div class="product-card" onclick="goToProduct(${l.id})">
+    <div class="product-card" onclick="goToProduct('${safeId}')">
       <div class="img-wrap">
-        <img data-src="${image}" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'%3E%3C/svg%3E" alt="${escapeHtml(l.title)}">
-        <button class="fav-btn ${favClass}" onclick="event.stopPropagation(); toggleFavorite(${l.id}, this)" aria-label="Favori">
+        <img
+          data-src="${image}"
+          src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'%3E%3C/svg%3E"
+          alt="${escapeHtml(l.title)}"
+          onload="this.classList.add('dkm-loaded')"
+        >
+        <button class="fav-btn ${favClass}" onclick="event.stopPropagation(); toggleFavorite('${safeId}', this)" aria-label="Favori">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="${fav ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2.5"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
         </button>
       </div>
@@ -570,11 +755,13 @@ function productCardHTML(l, fav) {
 
 async function renderListingGrid(listings) {
   const favIds = await getFavoriteIds();
-  return listings.map(l => productCardHTML(l, favIds.includes(l.id))).join("");
+  const html = listings.map(l => productCardHTML(l, favIds.includes(l.id))).join("");
+  requestAnimationFrame(() => staggerProductCards());
+  return html;
 }
 
 window.goToProduct = function (id) {
-  window.location.href = `/product.html?id=${id}`;
+  window.location.href = `/product.html?id=${encodeURIComponent(id)}`;
 };
 
 window.performSearch = function () {

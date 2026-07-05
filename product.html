@@ -257,11 +257,17 @@
   }
 
   const params = new URLSearchParams(window.location.search);
-  let id = Number(params.get('id'));
+
+  // FIX : les IDs Supabase sont des UUID, pas des entiers — on ne les caste plus en Number.
+  // Ordre de priorité :
+  //   1. ?id=... dans l'URL (ancien format /product.html?id=xxx)
+  //   2. window.__DEKONME_LISTING_ID__ injecté par la Cloudflare Function (nouveau format /annonce/slug-uuid)
+  //   3. extraction directe de l'UUID à la fin du slug, en secours si la Function n'a pas tourné
+  let id = params.get('id') || window.__DEKONME_LISTING_ID__ || null;
   if (!id) {
-    const slug = window.location.pathname.split('/').pop();
-    const match = slug.match(/-(\d+)$/);
-    if (match) id = Number(match[1]);
+    const slug = window.location.pathname.split('/').pop() || '';
+    const uuidMatch = slug.match(/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i);
+    if (uuidMatch) id = uuidMatch[1];
   }
 
   let listing = null;
@@ -320,8 +326,8 @@
     const container = document.getElementById('productContainer');
     if (!container) return;
 
-    /* FIX : guard sur id invalide avant tout appel réseau */
-    if (!id || isNaN(id)) {
+    /* FIX : guard sur id invalide avant tout appel réseau (id est maintenant un UUID/string) */
+    if (!id) {
       container.innerHTML = `
         <div class="empty-state">
           <div class="emoji">🔍</div>
