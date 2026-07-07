@@ -1,116 +1,87 @@
-// functions/annonce/[slug].js
+// functions/_middleware.js
 //
-// Cloudflare Pages Function : intercepte /annonce/:slug-:id AVANT que le HTML
-// n'arrive au navigateur ou au crawler WhatsApp/Facebook.
+// Injecte du contenu réel Supabase dans les pages qui en ont besoin (visible
+// sans JavaScript, pour la conformité AdSense).
 //
-// - Balises OpenGraph dans <head> (déjà présent) : pour les aperçus de lien
-//   WhatsApp/Facebook, qui ne lisent que le HTML brut.
-// - NOUVEAU : texte visible dans <body> (titre, prix, ville, description) :
-//   c'est ce que le robot de conformité AdSense doit voir. Les balises OG
-//   seules ne suffisent pas, elles sont invisibles pour un lecteur normal.
+// Les fiches produit individuelles NE sont PAS gérées ici : elles sont
+// gérées par functions/annonce/[slug].js (URLs /annonce/<id ou slug-id>).
+//
+// À PERSONNALISER :
+//   - SUPABASE_KEY ci-dessous (même valeur que dans functions/annonce/[slug].js)
+//   - Noms de colonnes non confirmés : category_id, seller_id (à vérifier
+//     dans votre schéma réel). "title" et "price" sont confirmés via
+//     [slug].js, qui utilise déjà la table "listings" avec ces noms.
 
-const SUPABASE_URL = 'https://msqmyzwmddiyuirazfrp.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1zcW15endtZGRpeXVpcmF6ZnJwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE5NjE3NzEsImV4cCI6MjA5NzUzNzc3MX0.BkkaPRGVMlBUmcJjMavddIwIGOuwcLMGwpd1Fo6X9no';
+const SUPABASE_URL = "https://msqmyzwmddiyuirazfrp.supabase.co";
+const SUPABASE_KEY = "COLLEZ_ICI_LA_MEME_CLE_QUE_DANS_SLUG_JS";
 
-function extractIdFromSlug(pathSegment) {
-  const uuidRegex = /([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i;
-  const match = pathSegment.match(uuidRegex);
-  return match ? match[1] : null;
+async function supabaseQuery(chemin) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${chemin}`, {
+    headers: {
+      apikey: SUPABASE_KEY,
+      Authorization: `Bearer ${SUPABASE_KEY}`,
+    },
+  });
+  return res.json();
 }
 
-function escapeForHtmlAttr(str) {
-  return String(str || '')
-    .replace(/&/g, '&amp;')
-    .replace(/"/g, '&quot;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
+async function injecter(context, remplacements) {
+  const asset = await context.env.ASSETS.fetch(context.request);
+  let html = await asset.text();
+  for (const [marqueur, contenu] of Object.entries(remplacements)) {
+    html = html.split(marqueur).join(contenu);
+  }
+  return new Response(html, {
+    headers: { "content-type": "text/html;charset=UTF-8" },
+  });
 }
 
-function formatPriceFCFA(price) {
-  if (!price) return '0';
-  return new Intl.NumberFormat('fr-FR').format(Math.floor(price));
+// Lien vers une fiche produit : /annonce/<id> suffit, [slug].js n'a besoin
+// que de l'UUID à la fin du segment pour retrouver l'annonce.
+function listeAnnonces(annonces) {
+  return annonces
+    .map(
+      (a) => `<li><a href="/annonce/${a.id}">${a.title} — ${a.price} FCFA</a></li>`
+    )
+    .join("");
 }
 
 export async function onRequest(context) {
-  const { request, env, params } = context;
-  const url = new URL(request.url);
+  const url = new URL(context.request.url);
+  const path = url.pathname;
+  const id = url.searchParams.get("id");
 
-  const pathSegment = params.slug || url.pathname.split('/').filter(Boolean).pop() || '';
-  const listingId = extractIdFromSlug(pathSegment);
-
-  const assetUrl = new URL('/product.html', url.origin);
-  let response = await env.ASSETS.fetch(new Request(assetUrl, request));
-
-  if (!listingId) {
-    return response;
-  }
-
-  try {
-    const apiRes = await fetch(
-      // AJOUT : "description" dans le select. Vérifiez que ce nom de colonne
-      // correspond bien à votre table "listings" (sinon, adaptez-le).
-      `${SUPABASE_URL}/rest/v1/listings?id=eq.${listingId}&select=title,price,city,images,image_url,description`,
-      {
-        headers: {
-          apikey: SUPABASE_ANON_KEY,
-          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-        },
-      }
+  // Page d'accueil : aperçu des catégories + dernières annonces
+  if (path === "/" || path === "/index.html") {
+    const categories = await supabaseQuery("categories?select=*&limit=8");
+    const annonces = await supabaseQuery(
+      "listings?select=*&order=created_at.desc&limit=8"
     );
-
-    if (!apiRes.ok) return response;
-
-    const rows = await apiRes.json();
-    const listing = rows && rows[0];
-    if (!listing) return response;
-
-    const title = escapeForHtmlAttr(listing.title || 'Annonce sur DEKONme');
-    const price = formatPriceFCFA(listing.price);
-    const city = escapeForHtmlAttr(listing.city || 'Togo');
-    const image = escapeForHtmlAttr(
-      listing.image_url ||
-      (listing.images && listing.images[0]) ||
-      `https://picsum.photos/seed/${listingId}/1200/630`
-    );
-    // Renommé (avant : "description") pour ne pas confondre avec la vraie
-    // description du produit, utilisée plus bas.
-    const ogDescription = `${price} FCFA · ${city} · Disponible sur DEKONme`;
-    const pageUrl = escapeForHtmlAttr(url.href);
-
-    let html = await response.text();
-
-    const ogTags = `
-    <meta property="og:type" content="product">
-    <meta property="og:title" content="${title}">
-    <meta property="og:description" content="${escapeForHtmlAttr(ogDescription)}">
-    <meta property="og:image" content="${image}">
-    <meta property="og:url" content="${pageUrl}">
-    <meta property="og:site_name" content="DEKONme">
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="${title}">
-    <meta name="twitter:description" content="${escapeForHtmlAttr(ogDescription)}">
-    <meta name="twitter:image" content="${image}">
-    <title>${title} — DEKONme</title>
-    <script>window.__DEKONME_LISTING_ID__ = ${JSON.stringify(listingId)};</script>
-  </head>`;
-
-    html = html.replace('</head>', ogTags);
-
-    // NOUVEAU : contenu visible dans le <body>, pour la conformité AdSense.
-    // Ces 4 marqueurs doivent exister dans le corps de product.html, à
-    // l'endroit exact où le titre/prix/ville/description doivent apparaître.
-    html = html
-      .replace('<!--TITRE-->', title)
-      .replace('<!--PRIX-->', `${price} FCFA`)
-      .replace('<!--VILLE-->', city)
-      .replace('<!--DESCRIPTION-->', escapeForHtmlAttr(listing.description || ogDescription));
-
-    return new Response(html, {
-      status: response.status,
-      headers: response.headers,
+    return injecter(context, {
+      "<!--CATEGORIES-->": categories
+        .map((c) => `<li><a href="/category.html?id=${c.id}">${c.nom}</a></li>`)
+        .join(""),
+      "<!--ANNONCES-->": listeAnnonces(annonces),
     });
-  } catch (err) {
-    console.error('Erreur og-meta function:', err);
-    return response;
   }
+
+  // Page catégorie : annonces filtrées par catégorie
+  if (path === "/category.html" && id) {
+    const annonces = await supabaseQuery(`listings?category_id=eq.${id}&select=*`);
+    return injecter(context, { "<!--ANNONCES-->": listeAnnonces(annonces) });
+  }
+
+  // Vitrine vendeur : infos du vendeur + ses annonces
+  if (path === "/seller.html" && id) {
+    const [vendeur] = await supabaseQuery(`vendeurs?id=eq.${id}&select=*`);
+    const annonces = await supabaseQuery(`listings?seller_id=eq.${id}&select=*`);
+    return injecter(context, {
+      "<!--NOM_VENDEUR-->": vendeur ? vendeur.nom : "",
+      "<!--ANNONCES-->": listeAnnonces(annonces),
+    });
+  }
+
+  // /annonce/... => géré par functions/annonce/[slug].js, pas ici.
+  // auth, profil, publish, favoris, CSS, JS, images... passent normalement.
+  return context.next();
 }
