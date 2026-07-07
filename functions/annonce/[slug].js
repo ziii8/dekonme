@@ -109,3 +109,16 @@ export async function onRequest(context) {
     return response;
   }
 }
+html = html.replace('</head>', ogTags);
+
+    // AJOUT : injecte aussi le contenu visible dans le corps de la page
+    // (le robot AdSense ne lit que le HTML brut, comme WhatsApp)
+    html = html
+      .replace('<!--TITRE-->', title)
+      .replace('<!--PRIX-->', `${price} FCFA`)
+      .replace('<!--VILLE-->', city);
+
+    return new Response(html, {
+      status: response.status,
+      headers: response.headers,
+    });
