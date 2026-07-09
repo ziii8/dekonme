@@ -9,7 +9,7 @@
 // de remplacement (c'est la cause la plus probable du plantage).
 
 const SUPABASE_URL = "https://msqmyzwmddiyuirazfrp.supabase.co";
-const SUPABASE_KEY = "COLLEZ_ICI_LA_MEME_CLE_QUE_DANS_SLUG_JS"; // <-- à remplacer
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1zcW15endtZGRpeXVpcmF6ZnJwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE5NjE3NzEsImV4cCI6MjA5NzUzNzc3MX0.BkkaPRGVMlBUmcJjMavddIwIGOuwcLMGwpd1Fo6X9no"; // <-- à remplacer
 
 async function supabaseQuery(chemin) {
   try {
