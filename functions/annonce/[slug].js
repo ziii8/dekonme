@@ -11,10 +11,11 @@
 const SUPABASE_URL = 'https://msqmyzwmddiyuirazfrp.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1zcW15endtZGRpeXVpcmF6ZnJwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE5NjE3NzEsImV4cCI6MjA5NzUzNzc3MX0.BkkaPRGVMlBUmcJjMavddIwIGOuwcLMGwpd1Fo6X9no';
 
-// Extrait l'UUID à la fin d'un slug du type "chaussures-nike-a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+// Extrait l'ID à la fin d'un slug du type "t-shirt-disponible-2"
+// Les IDs de la table "listings" sont des entiers simples (pas des UUID) —
+// seul user_id est un UUID, à ne pas confondre.
 function extractIdFromSlug(pathSegment) {
-  const uuidRegex = /([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i;
-  const match = pathSegment.match(uuidRegex);
+  const match = pathSegment.match(/-(\d+)$/);
   return match ? match[1] : null;
 }
 
@@ -109,16 +110,3 @@ export async function onRequest(context) {
     return response;
   }
 }
-html = html.replace('</head>', ogTags);
-
-    // AJOUT : injecte aussi le contenu visible dans le corps de la page
-    // (le robot AdSense ne lit que le HTML brut, comme WhatsApp)
-    html = html
-      .replace('<!--TITRE-->', title)
-      .replace('<!--PRIX-->', `${price} FCFA`)
-      .replace('<!--VILLE-->', city);
-
-    return new Response(html, {
-      status: response.status,
-      headers: response.headers,
-    });
