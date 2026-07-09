@@ -2,6 +2,8 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2163275269884844"
+     crossorigin="anonymous"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#E8732C">
@@ -254,35 +256,19 @@
     _toastTimer = setTimeout(() => el.classList.remove('show'), 2800);
   }
 
-  /* FIX AdSense : le script ne doit JAMAIS charger sur une page sans contenu réel
-     (chargement en cours, annonce introuvable, etc.) — sinon violation des règles
-     "Annonces sur pages sans contenu d'éditeur". On l'injecte dynamiquement,
-     uniquement une fois que l'annonce est confirmée et affichée à l'écran. */
-  function loadAdSenseIfContentReady() {
-    if (document.getElementById('adsbygoogle-script')) return;
-    const script = document.createElement('script');
-    script.id = 'adsbygoogle-script';
-    script.async = true;
-    script.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2163275269884844';
-    script.crossOrigin = 'anonymous';
-    document.head.appendChild(script);
-  }
-
   const params = new URLSearchParams(window.location.search);
 
-  // FIX : les ID de la table "listings" sont des entiers simples (ex: 2),
-  // pas des UUID — seul user_id est un UUID, à ne pas confondre.
+  // FIX : les IDs Supabase sont des UUID, pas des entiers — on ne les caste plus en Number.
   // Ordre de priorité :
   //   1. ?id=... dans l'URL (ancien format /product.html?id=xxx)
-  //   2. window.__DEKONME_LISTING_ID__ injecté par la Cloudflare Function (nouveau format /annonce/slug-id)
-  //   3. extraction directe des chiffres à la fin du slug, en secours si la Function n'a pas tourné
+  //   2. window.__DEKONME_LISTING_ID__ injecté par la Cloudflare Function (nouveau format /annonce/slug-uuid)
+  //   3. extraction directe de l'UUID à la fin du slug, en secours si la Function n'a pas tourné
   let id = params.get('id') || window.__DEKONME_LISTING_ID__ || null;
   if (!id) {
     const slug = window.location.pathname.split('/').pop() || '';
-    const match = slug.match(/-(\d+)$/);
-    if (match) id = match[1];
+    const uuidMatch = slug.match(/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i);
+    if (uuidMatch) id = uuidMatch[1];
   }
-  if (id) id = Number(id);
 
   let listing = null;
   let fav = false;
@@ -340,8 +326,8 @@
     const container = document.getElementById('productContainer');
     if (!container) return;
 
-    /* FIX : guard sur id invalide avant tout appel réseau (id est un entier) */
-    if (!id || isNaN(id)) {
+    /* FIX : guard sur id invalide avant tout appel réseau (id est maintenant un UUID/string) */
+    if (!id) {
       container.innerHTML = `
         <div class="empty-state">
           <div class="emoji">🔍</div>
@@ -506,9 +492,6 @@
 
         renderFavBtn();
         renderActions();
-
-        /* FIX AdSense : contenu réel confirmé et affiché, on peut charger les pubs */
-        loadAdSenseIfContentReady();
       } else {
         container.innerHTML = `
           <div class="empty-state">
