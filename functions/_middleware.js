@@ -1,18 +1,18 @@
 // functions/_middleware.js
-// Version corrigée : Sécurisée (variables d'environnement) et optimisée (requêtes parallèles)
+// Version corrigée pour le partage et l'ouverture directe des liens d'annonces
 
 const SUPABASE_URL = "https://msqmyzwmddiyuirazfrp.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1zcW15endtZGRpeXVpcmF6ZnJwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE5NjE3NzEsImV4cCI6MjA5NzUzNzc3MX0.BkkaPRGVMlBUmcJjMavddIwIGOuwcLMGwpd1Fo6X9no";
 
-async function supabaseQuery(chemin, apiKey) {
+async function supabaseQuery(chemin) {
   try {
     const res = await fetch(`${SUPABASE_URL}/rest/v1/${chemin}`, {
       headers: {
-        apikey: apiKey,
-        Authorization: `Bearer ${apiKey}`,
+        apikey: SUPABASE_KEY,
+        Authorization: `Bearer ${SUPABASE_KEY}`,
       },
     });
     
-    // Vérifie que Supabase renvoie bien du JSON (évite le crash si le serveur renvoie du texte/HTML)
     const contentType = res.headers.get("content-type");
     if (!contentType || !contentType.includes("application/json")) {
       console.error("Supabase n'a pas renvoyé de JSON:", res.status);
@@ -47,6 +47,7 @@ async function injecter(context, remplacements) {
   }
 }
 
+// Génère les liens au format /annonce.html?id=... pour correspondre au routeur ci-dessous
 function listeAnnonces(annonces) {
   return annonces
     .map(
@@ -59,20 +60,15 @@ export async function onRequest(context) {
   try {
     const url = new URL(context.request.url);
     const path = url.pathname;
-    const id = url.searchParams.get("id");
     
-    // Récupération de la clé depuis l'environnement Cloudflare pour éviter les fuites de sécurité
-    const apiKey = context.env.SUPABASE_KEY;
-    if (!apiKey) {
-      console.error("Variable d'environnement SUPABASE_KEY manquante dans Cloudflare !");
-      return context.next();
-    }
+    // Récupération de l'ID, soit depuis les paramètres (?id=...), soit depuis l'URL (/annonce/...)
+    let id = url.searchParams.get("id");
 
-    // 1. PAGE D'ACCUEIL (Requêtes exécutées en parallèle)
+    // 1. PAGE D'ACCUEIL
     if (path === "/" || path === "/index.html") {
       const [categories, annonces] = await Promise.all([
-        supabaseQuery("categories?select=*&limit=8", apiKey),
-        supabaseQuery("listings?select=*&order=created_at.desc&limit=8", apiKey)
+        supabaseQuery("categories?select=*&limit=8"),
+        supabaseQuery("listings?select=*&order=created_at.desc&limit=8")
       ]);
 
       return injecter(context, {
@@ -85,15 +81,15 @@ export async function onRequest(context) {
 
     // 2. PAGE CATEGORIE
     if (path === "/category.html" && id) {
-      const annonces = await supabaseQuery(`listings?category_id=eq.${id}&select=*`, apiKey);
+      const annonces = await supabaseQuery(`listings?category_id=eq.${id}&select=*`);
       return injecter(context, { "<!--ANNONCES-->": listeAnnonces(annonces) });
     }
 
-    // 3. PAGE VENDEUR (Requêtes exécutées en parallèle)
+    // 3. PAGE VENDEUR
     if (path === "/seller.html" && id) {
       const [vendeurs, annonces] = await Promise.all([
-        supabaseQuery(`vendeurs?id=eq.${id}&select=*`, apiKey),
-        supabaseQuery(`listings?seller_id=eq.${id}&select=*`, apiKey)
+        supabaseQuery(`vendeurs?id=eq.${id}&select=*`),
+        supabaseQuery(`listings?seller_id=eq.${id}&select=*`)
       ]);
       
       const vendeur = vendeurs[0];
@@ -103,16 +99,26 @@ export async function onRequest(context) {
       });
     }
 
-    // 4. PAGE DETAIL ANNONCE
-    if (path === "/annonce.html" && id) {
-      const listings = await supabaseQuery(`listings?id=eq.${id}&select=*`, apiKey);
-      const annonce = listings[0];
+    // 4. PAGE DÉTAIL ANNONCE (Gère à la fois /annonce.html?id=XX et /annonce/XX)
+    if (path === "/annonce.html" || path.startsWith("/annonce/")) {
       
-      return injecter(context, {
-        "<!--TITRE_ANNONCE-->": annonce ? annonce.title : "Annonce introuvable",
-        "<!--PRIX_ANNONCE-->": annonce ? `${annonce.price} FCFA` : "",
-        "<!--DESCRIPTION_ANNONCE-->": annonce ? annonce.description : "",
-      });
+      // Si l'URL est sous la forme /annonce/123, on extrait l'ID depuis le chemin
+      if (path.startsWith("/annonce/")) {
+        id = path.split("/")[2];
+      }
+
+      if (id) {
+        const listings = await supabaseQuery(`listings?id=eq.${id}&select=*`);
+        const annonce = listings[0];
+        
+        if (annonce) {
+          return injecter(context, {
+            "<!--TITRE_ANNONCE-->": annonce.title,
+            "<!--PRIX_ANNONCE-->": `${annonce.price} FCFA`,
+            "<!--DESCRIPTION_ANNONCE-->": annonce.description || "Aucune description",
+          });
+        }
+      }
     }
 
     return context.next();
