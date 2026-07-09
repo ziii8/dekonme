@@ -14,148 +14,58 @@
 
   <style>
     /* ===== FIX: GALERIE D'IMAGES — DIMENSIONNEMENT RESPONSIVE ===== */
+    .detail-gallery-track {
+      display: flex;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      scroll-behavior: smooth;
+      -webkit-overflow-scrolling: touch;
+      border-radius: 16px;
+      margin-bottom: 12px;
+      background: var(--border);
+      scrollbar-width: none;
+      max-width: 100%;
+      margin-left: auto;
+      margin-right: auto;
+    }
 
-.detail-gallery-track {
-  display: flex;
-  overflow-x: auto;
-  scroll-snap-type: x mandatory;
-  scroll-behavior: smooth;
-  -webkit-overflow-scrolling: touch;
-  border-radius: 16px;
-  margin-bottom: 12px;
-  background: var(--border);
-  scrollbar-width: none;
-  
-  /* ✅ NOUVEAU: Max-width pour éviter que l'image soit énorme */
-  max-width: 100%;
-  margin-left: auto;
-  margin-right: auto;
-}
+    @media (max-width: 480px) { .detail-gallery-track { max-width: 100%; } }
+    @media (min-width: 481px) and (max-width: 767px) { .detail-gallery-track { max-width: 100%; } }
+    @media (min-width: 768px) and (max-width: 1023px) { .detail-gallery-track { max-width: 90%; } }
+    @media (min-width: 1024px) { .detail-gallery-track { max-width: 600px; } }
 
-/* Mobile: 100% */
-@media (max-width: 480px) {
-  .detail-gallery-track {
-    max-width: 100%;
-  }
-}
+    .detail-gallery-track::-webkit-scrollbar { display: none; }
+    .detail-gallery-slide { flex: 0 0 100%; scroll-snap-align: start; aspect-ratio: 4/3; cursor: pointer; }
+    .detail-gallery-slide:focus-visible { outline: 2px solid var(--orange); outline-offset: -2px; }
+    .detail-gallery-slide img { width: 100%; height: 100%; object-fit: cover; }
+    .gallery-dots { display: flex; justify-content: center; gap: 6px; margin-bottom: 16px; }
+    .gallery-dots .dot, .lightbox-dots .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--border); transition: var(--transition); cursor: pointer; }
+    .gallery-dots .dot.active, .lightbox-dots .dot.active { background: var(--orange); transform: scale(1.2); }
+    .detail-section { background: var(--white); padding: 16px; border-radius: 16px; margin-top: 16px; border: 1px solid var(--border); }
+    .pill-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+    .pill { background: var(--bg); padding: 6px 12px; border-radius: 20px; font-size: 13px; font-weight: 600; }
+    .pill.tag { background: rgba(232, 115, 44, 0.1); color: var(--orange); }
 
-/* Petit téléphone à tablette: 100% */
-@media (min-width: 481px) and (max-width: 767px) {
-  .detail-gallery-track {
-    max-width: 100%;
-  }
-}
-
-/* Tablette: 90% */
-@media (min-width: 768px) and (max-width: 1023px) {
-  .detail-gallery-track {
-    max-width: 90%;
-  }
-}
-
-/* Desktop: 600px fixe */
-@media (min-width: 1024px) {
-  .detail-gallery-track {
-    max-width: 600px;
-  }
-}
-
-.detail-gallery-track::-webkit-scrollbar {
-  display: none;
-}
-
-.detail-gallery-slide {
-  flex: 0 0 100%;
-  scroll-snap-align: start;
-  aspect-ratio: 4/3;
-  cursor: pointer;
-}
-
-.detail-gallery-slide:focus-visible {
-  outline: 2px solid var(--orange);
-  outline-offset: -2px;
-}
-
-.detail-gallery-slide img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.gallery-dots {
-  display: flex;
-  justify-content: center;
-  gap: 6px;
-  margin-bottom: 16px;
-}
-
-.gallery-dots .dot, .lightbox-dots .dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--border);
-  transition: var(--transition);
-  cursor: pointer;
-}
-
-.gallery-dots .dot.active, .lightbox-dots .dot.active {
-  background: var(--orange);
-  transform: scale(1.2);
-}
-
-.detail-section {
-  background: var(--white);
-  padding: 16px;
-  border-radius: 16px;
-  margin-top: 16px;
-  border: 1px solid var(--border);
-}
-
-.pill-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 8px;
-}
-
-.pill {
-  background: var(--bg);
-  padding: 6px 12px;
-  border-radius: 20px;
-  font-size: 13px;
-  font-weight: 600;
-}
-
-.pill.tag {
-  background: rgba(232, 115, 44, 0.1);
-  color: var(--orange);
-}
-
-/* Toast (identique à profil.html) */
-#toast {
-  position: fixed;
-  bottom: calc(var(--nav-height) + 16px);
-  left: 50%;
-  transform: translateX(-50%) translateY(20px);
-  background: var(--ink);
-  color: var(--bg);
-  padding: 10px 20px;
-  border-radius: var(--radius-pill);
-  font-size: 13px;
-  font-weight: 600;
-  z-index: 3000;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.25s ease, transform 0.25s ease;
-  white-space: nowrap;
-  max-width: 90vw;
-  text-align: center;
-}
-
-#toast.show {
-  opacity: 1;
-  transform: translateX(-50%) translateY(0);
-}
+    #toast {
+      position: fixed;
+      bottom: calc(var(--nav-height) + 16px);
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--ink);
+      color: var(--bg);
+      padding: 10px 20px;
+      border-radius: var(--radius-pill);
+      font-size: 13px;
+      font-weight: 600;
+      z-index: 3000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease, transform 0.25s ease;
+      white-space: nowrap;
+      max-width: 90vw;
+      text-align: center;
+    }
+    #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
   </style>
 </head>
 <body>
@@ -227,9 +137,6 @@
 <script src="js/supabase-config.js"></script>
 <script src="js/app.js"></script>
 <script>
-  /* ============================================================
-     FIX XSS : échappement HTML — identique à profil.html
-  ============================================================ */
   function escapeHTML(str) {
     return String(str == null ? '' : str)
       .replace(/&/g,  '&amp;')
@@ -239,13 +146,11 @@
       .replace(/'/g,  '&#39;');
   }
 
-  /* FIX XSS : n'autoriser que des URLs http(s) pour les images */
   function safeImageUrl(url) {
     if (typeof url === 'string' && /^https?:\/\//i.test(url)) return url;
     return 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1 1"%3E%3C/svg%3E';
   }
 
-  /* FIX UX : toast au lieu de alert() */
   let _toastTimer = null;
   function showToast(msg) {
     const el = document.getElementById('toast');
@@ -258,11 +163,7 @@
 
   const params = new URLSearchParams(window.location.search);
 
-  // FIX : les IDs Supabase sont des UUID, pas des entiers — on ne les caste plus en Number.
-  // Ordre de priorité :
-  //   1. ?id=... dans l'URL (ancien format /product.html?id=xxx)
-  //   2. window.__DEKONME_LISTING_ID__ injecté par la Cloudflare Function (nouveau format /annonce/slug-uuid)
-  //   3. extraction directe de l'UUID à la fin du slug, en secours si la Function n'a pas tourné
+  // Correction de la récupération : écoute en priorité ?id=... ou les URL de redirection Cloudflare adaptées à product.html
   let id = params.get('id') || window.__DEKONME_LISTING_ID__ || null;
   if (!id) {
     const slug = window.location.pathname.split('/').pop() || '';
@@ -293,10 +194,6 @@
     shareListing(listing.id, listing.title, listing.price);
   };
 
-  /* ============================================================
-     FIX XSS : actions de contact via data-* + addEventListener
-     (plus de onclick inline avec données utilisateur interpolées)
-  ============================================================ */
   function renderActions() {
     const actionsBox = document.getElementById('detailActions');
     if (!actionsBox) return;
@@ -311,7 +208,6 @@
       </div>
     `;
 
-    /* FIX XSS : pas d'interpolation dans onclick — lecture via closure */
     const btn = document.getElementById('btnContactWhatsapp');
     if (btn) {
       btn.addEventListener('click', () => {
@@ -326,7 +222,6 @@
     const container = document.getElementById('productContainer');
     if (!container) return;
 
-    /* FIX : guard sur id invalide avant tout appel réseau (id est maintenant un UUID/string) */
     if (!id) {
       container.innerHTML = `
         <div class="empty-state">
@@ -355,7 +250,6 @@
           ? `★ ${escapeHTML(listing.rating)} (${escapeHTML(listing.reviews)} avis)`
           : 'Nouvelle annonce';
 
-        /* FIX XSS : validation des URLs d'image (http/https uniquement) */
         const rawImages = listing.images && listing.images.length
           ? listing.images
           : [listing.image_url || 'https://picsum.photos/seed/' + encodeURIComponent(listing.id) + '/600/600'];
@@ -363,7 +257,6 @@
 
         const safeTitle = escapeHTML(listing.title);
 
-        /* FIX A11y : slides focusables (role=button, tabindex, keydown) */
         const galleryHTML = `
           <div class="detail-gallery-track" id="galleryTrack">
             ${images.map((url, i) => `
@@ -396,8 +289,6 @@
           typeof formatPrice === 'function' ? formatPrice(listing.price) : listing.price
         );
 
-        /* FIX XSS : toutes les valeurs échappées via escapeHTML()        */
-        /* FIX XSS : description échappée puis sauts de ligne convertis   */
         const safeDescription = escapeHTML(listing.description || '').replace(/\n/g, '<br>');
         const safeModel     = escapeHTML(listing.model || '');
         const safeCondition = escapeHTML(listing.condition || '');
@@ -453,7 +344,6 @@
           ${ownerActionsHTML}
         `;
 
-        /* FIX XSS : navigation vendeur via addEventListener (user_id encodé) */
         if (!isOwner) {
           const sellerCard = document.getElementById('sellerCard');
           if (sellerCard) {
@@ -478,7 +368,6 @@
           });
         }
 
-        /* FIX XSS + A11y : clic et clavier (Entrée/Espace) sur les slides */
         document.querySelectorAll('.detail-gallery-slide').forEach(slide => {
           const open = () => openLightbox(Number(slide.dataset.i));
           slide.addEventListener('click', open);
@@ -512,10 +401,7 @@
   }
 
   // ==================== VISIONNEUSE PLEIN ÉCRAN (lightbox) ====================
-
-  /* FIX mémoire : référence du handler de scroll pour pouvoir le retirer */
   let _lightboxScrollHandler = null;
-  /* FIX UX : navigation clavier (Échap, flèches) */
   let _lightboxKeyHandler = null;
   let _lightboxImagesCount = 0;
   let _lightboxCurrentIndex = 0;
@@ -535,7 +421,6 @@
 
     const safeTitle = escapeHTML(listing.title);
 
-    /* FIX XSS : alt échappé, URL validée en amont */
     track.innerHTML = images.map((url, i) => `
       <div class="lightbox-slide" style="flex:0 0 100%; scroll-snap-align:start; display:flex; align-items:center; justify-content:center;"><img src="${url}" alt="${safeTitle} — photo ${i + 1}" style="max-width:100%; max-height:80vh; object-fit:contain;"></div>
     `).join('');
@@ -551,7 +436,6 @@
       track.scrollTo({ left: startIndex * track.clientWidth });
     });
 
-    /* FIX mémoire : retirer un éventuel ancien listener avant d'en ajouter un nouveau */
     if (_lightboxScrollHandler) {
       track.removeEventListener('scroll', _lightboxScrollHandler);
     }
@@ -562,7 +446,6 @@
     };
     track.addEventListener('scroll', _lightboxScrollHandler, { passive: true });
 
-    /* FIX UX : navigation clavier — Échap ferme, flèches changent de slide */
     if (_lightboxKeyHandler) {
       document.removeEventListener('keydown', _lightboxKeyHandler);
     }
@@ -582,7 +465,6 @@
     document.getElementById('lightbox').classList.remove('open');
     document.body.style.overflow = '';
 
-    /* FIX mémoire : nettoyage des listeners à la fermeture */
     const track = document.getElementById('lightboxTrack');
     if (track && _lightboxScrollHandler) {
       track.removeEventListener('scroll', _lightboxScrollHandler);
@@ -622,7 +504,6 @@
       submitBtn.textContent = 'Envoyer le signalement';
 
       if (error) {
-        /* FIX sécurité/UX : toast générique au lieu d'exposer le message Supabase brut */
         showToast("Une erreur est survenue, merci de réessayer.");
         return false;
       }
