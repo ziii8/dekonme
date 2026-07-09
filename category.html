@@ -2,9 +2,8 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2163275269884844"
-     crossorigin="anonymous"></script>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">  <link rel="manifest" href="manifest.json">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#E8732C">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
   <meta name="description" content="Parcourez toutes les catégories de DEKONme — Mode, Électronique, Maison, Beauté, Sport, Accessoires. Achetez et vendez partout au Togo.">
@@ -121,6 +120,22 @@
   let currentFilter = null;
   let allResults = [];
 
+  /* ============================================================
+     FIX AdSense : le script ne doit JAMAIS charger sur une page sans
+     contenu réel (chargement en cours, "Aucune annonce trouvée", etc.)
+     On l'injecte dynamiquement, uniquement une fois qu'il y a du
+     contenu confirmé et affiché à l'écran.
+  ============================================================ */
+  function loadAdSenseIfContentReady() {
+    if (document.getElementById('adsbygoogle-script')) return;
+    const script = document.createElement('script');
+    script.id = 'adsbygoogle-script';
+    script.async = true;
+    script.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2163275269884844';
+    script.crossOrigin = 'anonymous';
+    document.head.appendChild(script);
+  }
+
   async function renderCategoryListView() {
     document.getElementById('pageTitle').textContent = 'Catégories';
     document.getElementById('brandListView').classList.remove('hidden');
@@ -151,6 +166,9 @@
           </span>
         </div>
       `).join('');
+
+      // FIX AdSense : liste des catégories réellement affichée, contenu éditorial valable
+      loadAdSenseIfContentReady();
     } catch (err) {
       console.error("Erreur d'initialisation des catégories :", err);
       list.innerHTML = '<p class="loading-text" style="color:var(--error);">Impossible de récupérer les catégories.</p>';
@@ -198,6 +216,8 @@
         grid.innerHTML = await renderListingGrid(filtered);
         if (typeof initLazyLoad === 'function') initLazyLoad();
       }
+      // FIX AdSense : résultats filtrés réellement affichés
+      loadAdSenseIfContentReady();
     } else {
       grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1; padding:40px 20px;"><div class="emoji">📭</div><p>Aucune annonce ne correspond à ce filtre.</p></div>`;
     }
@@ -224,8 +244,11 @@
       if (allResults.length > 0 && typeof renderListingGrid === 'function') {
         grid.innerHTML = await renderListingGrid(allResults);
         if (typeof initLazyLoad === 'function') initLazyLoad();
+        // FIX AdSense : résultats de recherche/catégorie réellement affichés
+        loadAdSenseIfContentReady();
       } else {
         grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1; padding:40px 20px;"><div class="emoji">📭</div><p>Aucune annonce trouvée pour votre demande.</p></div>`;
+        // Pas de contenu réel => pas de pub sur une page de résultats vide
       }
     } catch (err) {
       console.error("Erreur lors de la récupération des listes :", err);
@@ -252,8 +275,11 @@
       if (allResults.length > 0 && typeof renderListingGrid === 'function') {
         grid.innerHTML = await renderListingGrid(allResults);
         if (typeof initLazyLoad === 'function') initLazyLoad();
+        // FIX AdSense : catalogue réellement affiché avec du contenu
+        loadAdSenseIfContentReady();
       } else {
         grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1; padding:40px 20px;"><div class="emoji">📭</div><p>Aucune annonce disponible actuellement.</p></div>`;
+        // Pas de contenu réel => pas de pub tant que le catalogue est vide
       }
     } catch (err) {
       console.error("Erreur lors de la récupération de tous les produits :", err);

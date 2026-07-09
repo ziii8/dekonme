@@ -2,8 +2,6 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2163275269884844"
-     crossorigin="anonymous"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="theme-color" content="#E8732C">
   <meta name="mobile-web-app-capable" content="yes">
@@ -120,11 +118,6 @@
   <script defer src="js/app.js"></script>
   <script defer src="js/lazy-load.js"></script>
 
-  <script>
-    // ... (votre logique JavaScript reste identique)
-  </script>
-</body>
-</html>
   <!-- INLINE SCRIPT - APP LOGIC -->
   <script>
     // ============================================
@@ -135,6 +128,22 @@
     let totalListings = 0;
     let isLoading = false;
     let deferredPrompt = null;
+
+    // ============================================
+    // FIX AdSense : le script ne doit JAMAIS charger sur une page sans
+    // contenu réel (chargement en cours, "Aucune annonce pour le moment").
+    // On l'injecte dynamiquement, uniquement après confirmation qu'il y a
+    // au moins une annonce réellement affichée à l'écran.
+    // ============================================
+    function loadAdSenseIfContentReady() {
+      if (document.getElementById('adsbygoogle-script')) return;
+      const script = document.createElement('script');
+      script.id = 'adsbygoogle-script';
+      script.async = true;
+      script.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2163275269884844';
+      script.crossOrigin = 'anonymous';
+      document.head.appendChild(script);
+    }
 
     // ============================================
     // PWA INSTALL PROMPT HANDLING
@@ -282,8 +291,11 @@
           if (typeof initLazyLoad === 'function') {
             initLazyLoad();
           }
+          // FIX AdSense : au moins une annonce est réellement affichée, on peut charger les pubs
+          loadAdSenseIfContentReady();
         } else {
           grid.innerHTML = '<p class="loading-text">Aucune annonce pour le moment.</p>';
+          // Pas de contenu réel => pas de pub sur cette page tant qu'il n'y a rien à afficher
         }
       } catch (error) {
         console.error("Erreur lors du chargement des annonces:", error);
