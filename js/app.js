@@ -820,7 +820,7 @@ function updateThemeIcon() {
   const btn = document.getElementById("themeToggleBtn");
   if (!btn) return;
   const isDark = document.documentElement.classList.contains("dark") ||
-    (!document.documentElement.classList.contains("light") && window.matchMedia("(prefers-color-scheme: dark)").matches());
+    (!document.documentElement.classList.contains("light") && window.matchMedia("(prefers-color-scheme: dark)").matches);
   btn.textContent = isDark ? "☀️" : "🌙";
   btn.title = isDark ? "Passer en mode clair" : "Passer en mode sombre";
 }
@@ -828,7 +828,7 @@ function updateThemeIcon() {
 window.toggleTheme = function () {
   const htmlEl = document.documentElement;
   const isDark = htmlEl.classList.contains("dark") ||
-    (!htmlEl.classList.contains("light") && window.matchMedia("(prefers-color-scheme: dark)").matches());
+    (!htmlEl.classList.contains("light") && window.matchMedia("(prefers-color-scheme: dark)").matches);
   const nextTheme = isDark ? "light" : "dark";
   htmlEl.classList.remove("dark", "light");
   htmlEl.classList.add(nextTheme);
