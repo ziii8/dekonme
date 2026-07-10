@@ -36,7 +36,7 @@ export async function onRequest(context) {
   const { request, env, params } = context;
   const url = new URL(request.url);
 
-  // params.slug correspond au segment après /annonce/ (ex: "chaussures-nike-abc123...")
+  // params.slug correspond au segment après /annonce/ (ex: "t-shirt-disponible-2")
   const pathSegment = params.slug || url.pathname.split('/').filter(Boolean).pop() || '';
   const listingId = extractIdFromSlug(pathSegment);
 
@@ -45,7 +45,7 @@ export async function onRequest(context) {
   // On va donc chercher product.html nous-mêmes via le binding ASSETS,
   // au lieu de compter sur un rewrite _redirects qui ne se déclenchera jamais ici.
   const assetUrl = new URL('/product.html', url.origin);
-  let response = await env.ASSETS.fetch(new Request(assetUrl, request));
+  const response = await env.ASSETS.fetch(new Request(assetUrl, request));
 
   if (!listingId) {
     return response;
@@ -78,12 +78,16 @@ export async function onRequest(context) {
     );
     const description = `${price} FCFA · ${city} · Disponible sur DEKONme`;
     const pageUrl = escapeForHtmlAttr(url.href);
+    const fullTitle = `${title} — DEKONme`;
 
     let html = await response.text();
 
-    // L'URL affichée est /annonce/slug-id, donc il n'y a pas de "?id=..." pour app.js.
-    // On injecte l'ID dans une variable globale que product.html doit lire en secours
-    // (voir instructions : ajouter le fallback dans le script qui charge la fiche produit).
+    // FIX : on remplace le contenu de la balise <title> existante au lieu d'en
+    // ajouter une deuxième (deux <title> dans un document = invalide, et les
+    // navigateurs privilégient souvent le premier trouvé, donc l'ancien titre
+    // générique aurait gagné).
+    html = html.replace(/<title>.*?<\/title>/i, `<title>${fullTitle}</title>`);
+
     const ogTags = `
     <meta property="og:type" content="product">
     <meta property="og:title" content="${title}">
@@ -95,15 +99,21 @@ export async function onRequest(context) {
     <meta name="twitter:title" content="${title}">
     <meta name="twitter:description" content="${escapeForHtmlAttr(description)}">
     <meta name="twitter:image" content="${image}">
-    <title>${title} — DEKONme</title>
     <script>window.__DEKONME_LISTING_ID__ = ${JSON.stringify(listingId)};</script>
   </head>`;
 
     html = html.replace('</head>', ogTags);
 
+    // FIX : on reconstruit des headers propres au lieu de recopier ceux de la
+    // réponse d'origine — l'ancien Content-Length ne correspond plus à la
+    // nouvelle taille du HTML modifié, ce qui peut tronquer la réponse.
+    const headers = new Headers(response.headers);
+    headers.delete('content-length');
+    headers.set('content-type', 'text/html;charset=UTF-8');
+
     return new Response(html, {
       status: response.status,
-      headers: response.headers,
+      headers,
     });
   } catch (err) {
     console.error('Erreur og-meta function:', err);
