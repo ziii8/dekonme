@@ -40,12 +40,24 @@ export async function onRequest(context) {
   const pathSegment = params.slug || url.pathname.split('/').filter(Boolean).pop() || '';
   const listingId = extractIdFromSlug(pathSegment);
 
-  // IMPORTANT : les règles du fichier _redirects NE s'appliquent PAS aux requêtes
-  // interceptées par une Pages Function, même si le chemin correspond.
-  // On va donc chercher product.html nous-mêmes via le binding ASSETS,
-  // au lieu de compter sur un rewrite _redirects qui ne se déclenchera jamais ici.
-  const assetUrl = new URL('/product.html', url.origin);
-  const response = await env.ASSETS.fetch(new Request(assetUrl, request));
+  // FIX : Cloudflare Pages redirige automatiquement /product.html vers /product
+  // (comportement "clean URLs" par défaut). En demandant /product.html, on
+  // recevait une réponse de redirection (301/308) qu'on propageait telle
+  // quelle au navigateur — celui-ci suivait alors la redirection SANS l'ID
+  // injecté, d'où "cette annonce n'existe plus". On demande donc directement
+  // la forme canonique /product, déjà servie sans redirection.
+  const assetUrl = new URL('/product', url.origin);
+  let response = await env.ASSETS.fetch(new Request(assetUrl, request));
+
+  // Garde-fou : si Cloudflare renvoie quand même une redirection (301/308),
+  // on ne la propage jamais au navigateur — on retente en suivant l'URL
+  // indiquée, sinon on abandonne l'injection OG et on sert la réponse brute.
+  if (response.status >= 300 && response.status < 400) {
+    const location = response.headers.get('location');
+    if (location) {
+      response = await env.ASSETS.fetch(new Request(new URL(location, url.origin), request));
+    }
+  }
 
   if (!listingId) {
     return response;
