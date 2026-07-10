@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <link rel="manifest" href="manifest.json">
+  <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#E8732C">
-  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="/icons/icon-192.png">
   <title>DEKONme - Détail produit</title>
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="/css/style.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 
   <style>
@@ -70,7 +70,7 @@
 
 <!-- TOP BAR -->
 <div class="topbar">
-  <button class="icon-btn back-btn" onclick="history.length > 1 ? history.back() : window.location.href='index.html'" aria-label="Retour">
+  <button class="icon-btn back-btn" onclick="history.length > 1 ? history.back() : window.location.href='/index.html'" aria-label="Retour">
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
   </button>
   <div style="flex:1;"></div>
@@ -132,8 +132,8 @@
 <div id="toast" role="status" aria-live="polite"></div>
 
 <!-- SCRIPTS -->
-<script src="js/supabase-config.js"></script>
-<script src="js/app.js"></script>
+<script src="/js/supabase-config.js"></script>
+<script src="/js/app.js"></script>
 <script>
   function escapeHTML(str) {
     return String(str == null ? '' : str)
@@ -247,7 +247,7 @@
           <div class="emoji">🔍</div>
           <p>Cette annonce n'existe plus ou a été retirée.</p>
           <div style="margin-top:20px;">
-            <button class="btn btn-primary" onclick="window.location.href='index.html'">Retour à l'accueil</button>
+            <button class="btn btn-primary" onclick="window.location.href='/index.html'">Retour à l'accueil</button>
           </div>
         </div>
       `;
@@ -296,7 +296,7 @@
 
         const ownerActionsHTML = isOwner ? `
           <div class="detail-section owner-actions">
-            <button class="btn btn-primary btn-block" onclick="window.location.href='publish.html?id=${encodeURIComponent(listing.id)}'">✏️ Modifier l'annonce</button>
+            <button class="btn btn-primary btn-block" onclick="window.location.href='/publish.html?id=${encodeURIComponent(listing.id)}'">✏️ Modifier l'annonce</button>
           </div>
         ` : `
           <div class="detail-section owner-actions" style="text-align: center;">
@@ -367,7 +367,7 @@
           const sellerCard = document.getElementById('sellerCard');
           if (sellerCard) {
             sellerCard.addEventListener('click', () => {
-              window.location.href = 'seller.html?id=' + safeUserId;
+              window.location.href = '/seller.html?id=' + safeUserId;
             });
           }
         }
@@ -409,7 +409,7 @@
             <div class="emoji">🔍</div>
             <p>Cette annonce n'existe plus ou a été retirée.</p>
             <div style="margin-top:20px;">
-              <button class="btn btn-primary" onclick="window.location.href='index.html'">Retour à l'accueil</button>
+              <button class="btn btn-primary" onclick="window.location.href='/index.html'">Retour à l'accueil</button>
             </div>
           </div>
         `;
