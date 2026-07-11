@@ -2,12 +2,12 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">  <link rel="manifest" href="manifest.json">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">  <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#E8732C">
-  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="/icons/icon-192.png">
   <meta name="description" content="Connectez-vous à DEKONme pour publier vos annonces et contacter des vendeurs partout au Togo.">
   <title>Connexion — DEKONme</title>
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="/css/style.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   
   <!-- Styles complémentaires pour l'authentification (à intégrer à la fin de style.css) -->
@@ -118,7 +118,7 @@
 <body>
 
 <div class="topbar">
-  <button class="icon-btn back-btn" onclick="history.length > 1 ? history.back() : window.location.href='index.html'" aria-label="Retour">
+  <button class="icon-btn back-btn" onclick="history.length > 1 ? history.back() : window.location.href='/index.html'" aria-label="Retour">
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
   </button>
   <div class="page-title" id="pageTitle">Connexion</div>
@@ -185,16 +185,25 @@
   </div>
 </div>
 
-<script src="js/supabase-config.js"></script>
-<script src="js/app.js"></script>
+<script src="/js/supabase-config.js"></script>
+<script src="/js/app.js"></script>
 <script>
-  // Sécurisation de l'URL de redirection (Evite les open-redirects malveillants)
-  let next = new URLSearchParams(window.location.search).get('next') || 'index.html';
-  if (next.startsWith('http://') || next.startsWith('https://')) {
-    if (!next.includes(window.location.hostname)) {
-      next = 'index.html';
-    }
+  /* FIX SÉCURITÉ : protection contre les "open redirects".
+     L'ancienne vérification (startsWith + includes) était contournable :
+     - "?next=//site-pirate.com" ne commence ni par http:// ni par https://,
+       mais le navigateur le traite comme une redirection externe complète.
+     - "?next=https://pirate.com/?x=dekonmetg.pages.dev" contient bien le nom
+       de domaine quelque part dans la chaîne, donc .includes() le laissait passer.
+     On passe à une LISTE BLANCHE stricte : on n'autorise qu'un nom de fichier
+     .html interne, avec une query string optionnelle — tout le reste retombe
+     sur index.html. */
+  function sanitizeNextParam(raw) {
+    if (typeof raw !== 'string') return 'index.html';
+    const isValid = /^\/?[a-zA-Z0-9_-]+\.html(\?[^\s]*)?$/.test(raw);
+    return isValid ? raw : 'index.html';
   }
+
+  let next = sanitizeNextParam(new URLSearchParams(window.location.search).get('next'));
 
   let mode = 'login';
 

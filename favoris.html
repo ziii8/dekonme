@@ -4,12 +4,12 @@
   <meta charset="UTF-8">
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <link rel="manifest" href="manifest.json">
+  <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#E8732C">
-  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="/icons/icon-192.png">
   <meta name="description" content="Vos annonces favorites sur DEKONme — retrouvez rapidement les produits qui vous intéressent.">
   <title>Mes favoris — DEKONme</title>
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="/css/style.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   
   <style>
@@ -20,14 +20,14 @@
 
 <!-- TOP BAR -->
 <div class="topbar">
-  <button class="icon-btn back-btn" onclick="history.length > 1 ? history.back() : window.location.href='index.html'" aria-label="Retour">
+  <button class="icon-btn back-btn" onclick="history.length > 1 ? history.back() : window.location.href='/index.html'" aria-label="Retour">
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
   </button>
   <div class="page-title">Mes favoris</div>
   <div style="display: flex; gap: 8px; align-items: center;">
     <button id="themeToggleBtn" class="icon-btn" onclick="toggleTheme()" aria-label="Changer de thème">🌙</button>
     <!-- Bouton Annuler → Profil -->
-    <button class="icon-btn" onclick="window.location.href='profil.html'" aria-label="Retour à mon profil">👤</button>
+    <button class="icon-btn" onclick="window.location.href='/profil.html'" aria-label="Retour à mon profil">👤</button>
   </div>
 </div>
 
@@ -41,10 +41,17 @@
 <!-- BOTTOM NAV -->
 <div class="bottom-nav" id="bottomNav"></div>
 
-<script src="js/supabase-config.js"></script>
-<script src="js/app.js"></script>
-<script src="js/lazy-load.js"></script>
+<script src="/js/supabase-config.js"></script>
+<script src="/js/app.js"></script>
+<script src="/js/lazy-load.js"></script>
 <script>
+  /* FIX XSS : titre/ville/condition viennent du vendeur — jamais insérés
+     bruts dans le HTML. On réutilise escapeHtml(), déjà défini dans app.js. */
+  function safeFavImageUrl(url) {
+    if (typeof url === 'string' && /^https?:\/\//i.test(url)) return url;
+    return 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1 1"%3E%3C/svg%3E';
+  }
+
   async function renderFavorites() {
     const grid = document.getElementById('favGrid');
     if (!grid) return;
@@ -60,20 +67,25 @@
 
       if (favListings.length > 0) {
         grid.innerHTML = favListings.map(l => {
-          const image = (l.images && l.images[0]) || l.image_url || 'https://picsum.photos/seed/' + l.id + '/600/600';
+          const rawImage = (l.images && l.images[0]) || l.image_url || 'https://picsum.photos/seed/' + encodeURIComponent(l.id) + '/600/600';
+          const image = safeFavImageUrl(rawImage);
           const formattedPrice = typeof formatPrice === 'function' ? formatPrice(l.price) : l.price;
-          
+          const safeTitle = typeof escapeHtml === 'function' ? escapeHtml(l.title) : String(l.title || '');
+          const safeCity = typeof escapeHtml === 'function' ? escapeHtml(l.city || '') : String(l.city || '');
+          const safeCondition = typeof escapeHtml === 'function' ? escapeHtml(l.condition || '') : String(l.condition || '');
+          const safeId = encodeURIComponent(l.id);
+
           return `
-            <div class="product-card" onclick="window.location.href='product.html?id=${l.id}'">
+            <div class="product-card" onclick="window.location.href='/product.html?id=${safeId}'">
               <div class="img-wrap">
-                <img data-src="${image}" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'%3E%3C/svg%3E" alt="${l.title}" class="lazy">
+                <img data-src="${image}" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'%3E%3C/svg%3E" alt="${safeTitle}" class="lazy">
               </div>
               <div class="product-info">
-                <h4>${l.title}</h4>
+                <h4>${safeTitle}</h4>
                 <div class="price-row">
                   <span class="price">${formattedPrice} F</span>
                 </div>
-                <p class="meta">${l.city || ''} · ${l.condition || ''}</p>
+                <p class="meta">${safeCity}${safeCity && safeCondition ? ' · ' : ''}${safeCondition}</p>
               </div>
             </div>
           `;
@@ -86,7 +98,7 @@
             <div class="emoji">🤍</div>
             <p>Aucun favori pour le moment.</p>
             <div style="margin-top: 20px;">
-              <button class="btn btn-primary" onclick="window.location.href='index.html'">Découvrir des annonces</button>
+              <button class="btn btn-primary" onclick="window.location.href='/index.html'">Découvrir des annonces</button>
             </div>
           </div>
         `;

@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <link rel="manifest" href="manifest.json">
+  <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#E8732C">
-  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="/icons/icon-192.png">
   <meta name="description" content="Parcourez toutes les catégories de DEKONme — Mode, Électronique, Maison, Beauté, Sport, Accessoires. Achetez et vendez partout au Togo.">
   <title>Catégories — DEKONme Marketplace Togo</title>
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="/css/style.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 
   <style>
@@ -65,7 +65,7 @@
 
 <!-- TOP BAR -->
 <div class="topbar">
-  <button class="icon-btn back-btn" onclick="history.length > 1 ? history.back() : window.location.href='index.html'" aria-label="Retour">
+  <button class="icon-btn back-btn" onclick="history.length > 1 ? history.back() : window.location.href='/index.html'" aria-label="Retour">
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
   </button>
   <div class="page-title" id="pageTitle">Catégories</div>
@@ -98,7 +98,7 @@
           </div>
         </div>
       </div>
-      <button onclick="window.location.href='category.html'" class="btn-clear-filter" style="background: none; border: 1px solid var(--border); padding: 6px 12px; border-radius: 20px; font-size: 13px; cursor: pointer;">
+      <button onclick="window.location.href='/category.html'" class="btn-clear-filter" style="background: none; border: 1px solid var(--border); padding: 6px 12px; border-radius: 20px; font-size: 13px; cursor: pointer;">
         Tous les produits
       </button>
     </div>
@@ -109,9 +109,9 @@
 <!-- BOTTOM NAV -->
 <div class="bottom-nav" id="bottomNav"></div>
 
-<script src="js/supabase-config.js"></script>
-<script src="js/app.js"></script>
-<script src="js/lazy-load.js"></script>
+<script src="/js/supabase-config.js"></script>
+<script src="/js/app.js"></script>
+<script src="/js/lazy-load.js"></script>
 <script>
   const params = new URLSearchParams(window.location.search);
   const cat = params.get('cat');
@@ -153,7 +153,7 @@
       }));
 
       list.innerHTML = CATEGORIES.map((c, i) => `
-        <div class="brand-row" onclick="window.location.href='category.html?cat=${encodeURIComponent(c.name)}'" style="display:flex; align-items:center; justify-content:space-between; padding:12px; border-bottom:1px solid var(--border); cursor:pointer;">
+        <div class="brand-row" onclick="window.location.href='/category.html?cat=${encodeURIComponent(c.name)}'" style="display:flex; align-items:center; justify-content:space-between; padding:12px; border-bottom:1px solid var(--border); cursor:pointer;">
           <div style="display:flex; align-items:center; gap:12px;">
             <div class="icon" style="background:${c.color}; width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:18px;">${c.emoji}</div>
             <div class="info">
@@ -288,7 +288,7 @@
   }
 
   window.toggleFavListView = function () {
-    window.location.href = 'favoris.html';
+    window.location.href = '/favoris.html';
   };
 
   document.addEventListener('click', (e) => {

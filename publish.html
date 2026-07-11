@@ -4,11 +4,11 @@
   <meta charset="UTF-8">
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <link rel="manifest" href="manifest.json">
+  <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#E8732C">
-  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="/icons/icon-192.png">
   <title id="docTitle">DEKONme - Publier une annonce</title>
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="/css/style.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 
   <style>
@@ -219,8 +219,8 @@
 
 <div id="toast" role="status" aria-live="polite"></div>
 
-<script src="js/supabase-config.js"></script>
-<script src="js/app.js"></script>
+<script src="/js/supabase-config.js"></script>
+<script src="/js/app.js"></script>
 <script>
   let existingImages = [];
   let newFiles       = [];
@@ -323,10 +323,12 @@
   });
 
   function compressImage(file, maxWidth = 1200, quality = 0.82) {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       const reader = new FileReader();
+      reader.onerror = () => reject(new Error('Lecture du fichier impossible'));
       reader.onload = (ev) => {
         const img = new Image();
+        img.onerror = () => reject(new Error('Image invalide ou corrompue'));
         img.onload = () => {
           const ratio = Math.min(1, maxWidth / img.width);
           const canvas = document.createElement('canvas');
@@ -362,7 +364,8 @@
         const compressed = await Promise.all(newFiles.map(f => compressImage(f)));
         const result = await uploadListingPhotos(compressed);
         if (result.error) {
-          showToast('Erreur lors de l\'upload des photos.');
+          /* FIX sécurité/UX : message générique au lieu du message brut Supabase */
+          showToast('Erreur lors de l\'upload des photos. Veuillez réessayer.');
           submitBtn.disabled = false;
           submitBtn.textContent = editId ? 'Modifier l\'annonce' : 'Publier l\'annonce';
           return;
@@ -392,7 +395,9 @@
       }
 
       if (result.error) {
-        showToast('Erreur : ' + result.error);
+        /* FIX sécurité/UX : message générique au lieu du message brut Supabase */
+        console.error('Erreur publication (détail) :', result.error);
+        showToast('Une erreur est survenue lors de la publication. Veuillez réessayer.');
         submitBtn.disabled = false;
         submitBtn.textContent = editId ? 'Modifier l\'annonce' : 'Publier l\'annonce';
         return;
@@ -425,27 +430,48 @@
 
       try {
         const listing = await getListingById(editId);
-        if (listing) {
-          await populateCategorySelect(listing.category);
-          document.getElementById('pTitle').value       = listing.title || '';
-          document.getElementById('pModel').value       = listing.model || '';
-          document.getElementById('pPrice').value       = listing.price || '';
-          document.getElementById('pCondition').value   = listing.condition || '';
-          document.getElementById('pCity').value        = listing.city || '';
-          document.getElementById('pDescription').value = listing.description || '';
 
-          const cleanPhone = listing.whatsapp
-            ? String(listing.whatsapp).replace('+228', '')
-            : '';
-          document.getElementById('pWhatsapp').value = cleanPhone;
-
-          existingImages = listing.images && listing.images.length
-            ? listing.images
-            : (listing.image_url ? [listing.image_url] : []);
-
-          renderPhotoGrid();
+        if (!listing) {
+          showToast('Annonce introuvable.');
+          setTimeout(() => window.location.href = '/index.html', 1500);
+          return;
         }
+
+        /* FIX SÉCURITÉ CRITIQUE (IDOR) : sans cette vérification, n'importe quel
+           utilisateur connecté pouvait ouvrir publish.html?id=<id d'un autre>
+           et modifier l'annonce de quelqu'un d'autre — les ID étant de simples
+           entiers séquentiels, faciles à deviner un par un.
+           IMPORTANT : ce contrôle côté client améliore l'UX mais n'est PAS une
+           vraie protection à lui seul (un utilisateur peut contourner le JS).
+           La protection réelle doit venir d'une politique RLS Supabase sur la
+           table "listings" restreignant les UPDATE au propriétaire (user_id). */
+        const currentUser = typeof getCurrentUser === 'function' ? await getCurrentUser() : null;
+        if (!currentUser || currentUser.id !== listing.user_id) {
+          showToast('Vous n\'êtes pas autorisé à modifier cette annonce.');
+          setTimeout(() => window.location.href = '/index.html', 1500);
+          return;
+        }
+
+        await populateCategorySelect(listing.category);
+        document.getElementById('pTitle').value       = listing.title || '';
+        document.getElementById('pModel').value       = listing.model || '';
+        document.getElementById('pPrice').value       = listing.price || '';
+        document.getElementById('pCondition').value   = listing.condition || '';
+        document.getElementById('pCity').value        = listing.city || '';
+        document.getElementById('pDescription').value = listing.description || '';
+
+        const cleanPhone = listing.whatsapp
+          ? String(listing.whatsapp).replace('+228', '')
+          : '';
+        document.getElementById('pWhatsapp').value = cleanPhone;
+
+        existingImages = listing.images && listing.images.length
+          ? listing.images
+          : (listing.image_url ? [listing.image_url] : []);
+
+        renderPhotoGrid();
       } catch (err) {
+        console.error('Erreur chargement annonce :', err);
         showToast('Impossible de charger l\'annonce.');
       }
     } else {

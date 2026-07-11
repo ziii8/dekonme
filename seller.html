@@ -2,15 +2,13 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2163275269884844"
-     crossorigin="anonymous"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <link rel="manifest" href="manifest.json">
+  <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#E8732C">
-  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="/icons/icon-192.png">
   <meta name="description" content="Découvrez les annonces de ce vendeur sur DEKONme — marketplace du Togo.">
   <title>Profil vendeur — DEKONme</title>
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="/css/style.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 
   <style>
@@ -47,7 +45,7 @@
 <body>
 
 <div class="topbar">
-  <button class="icon-btn back-btn" onclick="history.length > 1 ? history.back() : window.location.href='index.html'" aria-label="Retour">
+  <button class="icon-btn back-btn" onclick="history.length > 1 ? history.back() : window.location.href='/index.html'" aria-label="Retour">
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
   </button>
   <div class="page-title">Profil vendeur</div>
@@ -62,14 +60,43 @@
 
 <div class="bottom-nav" id="bottomNav"></div>
 
-<script src="js/supabase-config.js"></script>
-<script src="js/app.js"></script>
-<script src="js/lazy-load.js"></script>
+<script src="/js/supabase-config.js"></script>
+<script src="/js/app.js"></script>
+<script src="/js/lazy-load.js"></script>
 <script>
   const sellerId = new URLSearchParams(window.location.search).get('id');
   
   let allSellerListings = [];
   let visibleCount = 2;
+
+  /* FIX AdSense : chargement conditionnel, uniquement quand le profil
+     vendeur est réellement trouvé et affiché — jamais pendant le
+     chargement ni sur "profil introuvable". */
+  function loadAdSenseIfContentReady() {
+    if (document.getElementById('adsbygoogle-script')) return;
+    const script = document.createElement('script');
+    script.id = 'adsbygoogle-script';
+    script.async = true;
+    script.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2163275269884844';
+    script.crossOrigin = 'anonymous';
+    document.head.appendChild(script);
+  }
+
+  /* FIX XSS : n'autoriser que des liens http(s) absolus — bloque les
+     tentatives d'injection type "javascript:alert(1)" dans un champ
+     "lien Facebook" configuré par l'utilisateur. */
+  function safeExternalUrl(url) {
+    if (typeof url === 'string' && /^https?:\/\//i.test(url)) return url;
+    return null;
+  }
+
+  /* FIX XSS : les pseudos Instagram/TikTok ne doivent contenir que des
+     caractères de nom d'utilisateur valides avant d'être insérés dans une URL. */
+  function safeHandle(handle) {
+    if (typeof handle !== 'string') return '';
+    const cleaned = handle.replace(/^@/, '').trim();
+    return /^[a-zA-Z0-9_.]{1,30}$/.test(cleaned) ? cleaned : '';
+  }
 
   function timeAgo(dateString) {
     if (!dateString) return "Membre de DEKONme";
@@ -104,21 +131,30 @@
 
       allSellerListings = await getListingsBySeller(sellerId) || [];
 
+      /* FIX XSS : toutes les valeurs affichées échappées via escapeHtml() (app.js) */
+      const safeName = typeof escapeHtml === 'function' ? escapeHtml(profile.name || 'Vendeur DEKONme') : String(profile.name || 'Vendeur DEKONme');
+      const safeCity = typeof escapeHtml === 'function' ? escapeHtml(profile.city || '') : String(profile.city || '');
+      const safeAvatar = typeof escapeHtml === 'function' ? escapeHtml(profile.avatar_emoji || '👤') : '👤';
+
       /* ==================== Réseaux sociaux ==================== */
       const social = profile.social_links || {};
+      const fbUrl = safeExternalUrl(social.facebook);
+      const igHandle = safeHandle(social.instagram);
+      const ttHandle = safeHandle(social.tiktok);
+
       let socialHTML = '';
-      if (social.facebook || social.instagram || social.tiktok) {
+      if (fbUrl || igHandle || ttHandle) {
         socialHTML = `
           <div class="social-links-row" style="margin-bottom: 24px;">
-            ${social.facebook ? `<a href="${social.facebook}" target="_blank" rel="noopener" class="social-link-btn facebook">
+            ${fbUrl ? `<a href="${escapeHtml(fbUrl)}" target="_blank" rel="noopener noreferrer" class="social-link-btn facebook">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg>
               Facebook
             </a>` : ''}
-            ${social.instagram ? `<a href="https://instagram.com/${social.instagram.replace('@','')}" target="_blank" rel="noopener" class="social-link-btn instagram">
+            ${igHandle ? `<a href="https://instagram.com/${encodeURIComponent(igHandle)}" target="_blank" rel="noopener noreferrer" class="social-link-btn instagram">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
               Instagram
             </a>` : ''}
-            ${social.tiktok ? `<a href="https://tiktok.com/${social.tiktok.startsWith('@') ? social.tiktok : '@'+social.tiktok}" target="_blank" rel="noopener" class="social-link-btn tiktok">
+            ${ttHandle ? `<a href="https://tiktok.com/@${encodeURIComponent(ttHandle)}" target="_blank" rel="noopener noreferrer" class="social-link-btn tiktok">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04 .79 .1V9.01a6.33 6.33 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.69a8.18 8.18 0 004.78 1.52V6.75a4.85 4.85 0 01-1.01-.06z"/></svg>
               TikTok
             </a>` : ''}
@@ -130,21 +166,23 @@
       let statusHTML = '';
       if (typeof getOnlineStatus === 'function') {
         const s = getOnlineStatus(profile.last_seen);
-        if (s && s.dot) statusHTML = `<p class="seller-status">${s.dot} ${s.label}</p>`;
+        if (s && s.dot) statusHTML = `<p class="seller-status">${escapeHtml(s.dot)} ${escapeHtml(s.label)}</p>`;
       }
+
+      const safePhone = typeof escapeHtml === 'function' ? escapeHtml(profile.phone || '') : String(profile.phone || '');
 
       container.innerHTML = `
         <div class="profile-header">
-          <div class="profile-avatar">${profile.avatar_emoji || '👤'}</div>
+          <div class="profile-avatar">${safeAvatar}</div>
           <div class="info">
-            <h2>${profile.name}</h2>
-            <p>${profile.city ? profile.city + ' · ' : ''}${timeAgo(profile.created_at)}</p>
+            <h2>${safeName}</h2>
+            <p>${safeCity ? safeCity + ' · ' : ''}${timeAgo(profile.created_at)}</p>
             ${statusHTML}
           </div>
         </div>
 
         <!-- Bouton Contact -->
-        <button type="button" onclick="contactSeller('${profile.phone || ''}')" class="btn btn-primary btn-block" style="margin: 16px 0 24px;">
+        <button type="button" onclick="contactSeller('${safePhone}')" class="btn btn-primary btn-block" style="margin: 16px 0 24px;">
           💬 Contacter via WhatsApp
         </button>
 
@@ -158,6 +196,9 @@
       `;
 
       renderListingsGrid();
+
+      /* FIX AdSense : profil réellement trouvé et affiché, on peut charger les pubs */
+      loadAdSenseIfContentReady();
 
     } catch (error) {
       console.error("Erreur lors du chargement du profil vendeur :", error);
@@ -176,6 +217,11 @@
     window.open(`https://wa.me/${phone.replace(/\D/g, '')}`, '_blank');
   }
 
+  function safeListingImageUrl(url) {
+    if (typeof url === 'string' && /^https?:\/\//i.test(url)) return url;
+    return 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1 1"%3E%3C/svg%3E';
+  }
+
   function renderListingsGrid() {
     const grid = document.getElementById('sellerListingsGrid');
     const btnContainer = document.getElementById('moreContainer');
@@ -189,17 +235,22 @@
 
     grid.innerHTML = activeListings.length
       ? visibleListings.map(l => {
-          const image = (l.images && l.images[0]) || l.image_url || 'https://picsum.photos/seed/' + l.id + '/600/600';
+          const rawImage = (l.images && l.images[0]) || l.image_url || 'https://picsum.photos/seed/' + encodeURIComponent(l.id) + '/600/600';
+          const image = safeListingImageUrl(rawImage);
           const formattedPrice = typeof formatPrice === 'function' ? formatPrice(l.price) : l.price;
+          const safeTitle = typeof escapeHtml === 'function' ? escapeHtml(l.title) : String(l.title || '');
+          const safeCity = typeof escapeHtml === 'function' ? escapeHtml(l.city || '') : String(l.city || '');
+          const safeCondition = typeof escapeHtml === 'function' ? escapeHtml(l.condition || '') : String(l.condition || '');
+          const safeId = encodeURIComponent(l.id);
           return `
-            <div class="product-card" onclick="window.location.href='product.html?id=${l.id}'">
+            <div class="product-card" onclick="window.location.href='/product.html?id=${safeId}'">
               <div class="img-wrap">
-                <img data-src="${image}" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'%3E%3C/svg%3E" alt="${l.title}" class="lazy">
+                <img data-src="${image}" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'%3E%3C/svg%3E" alt="${safeTitle}" class="lazy">
               </div>
               <div class="product-info">
-                <h4>${l.title}</h4>
+                <h4>${safeTitle}</h4>
                 <div class="price-row"><span class="price">${formattedPrice} F</span></div>
-                <p class="meta">${l.city || ''} · ${l.condition || ''}</p>
+                <p class="meta">${safeCity}${safeCity && safeCondition ? ' · ' : ''}${safeCondition}</p>
               </div>
             </div>
           `;
