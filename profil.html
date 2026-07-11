@@ -4,12 +4,12 @@
   <meta charset="UTF-8">
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <link rel="manifest" href="manifest.json">
+  <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#E8732C">
-  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="/icons/icon-192.png">
   <meta name="description" content="Gérez votre profil, vos annonces et vos favoris sur DEKONme, le marketplace du Togo.">
   <title>Mon profil — DEKONme</title>
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="/css/style.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 
   <style>
@@ -269,7 +269,7 @@
 
 <div class="topbar" role="banner">
   <button class="icon-btn back-btn"
-    onclick="history.length > 1 ? history.back() : window.location.href='index.html'"
+    onclick="history.length > 1 ? history.back() : window.location.href='/index.html'"
     aria-label="Retour à la page précédente">
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
   </button>
@@ -286,8 +286,8 @@
 <div class="bottom-nav" id="bottomNav"></div>
 <div id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
 
-<script src="js/supabase-config.js"></script>
-<script src="js/app.js"></script>
+<script src="/js/supabase-config.js"></script>
+<script src="/js/app.js"></script>
 <script>
   let allActiveListings = [];
   let allSoldListings   = [];
@@ -320,6 +320,16 @@
     return { valid: true, error: null };
   }
 
+  /* FIX : même liste blanche que sur seller.html, appliquée avant de
+     construire le lien affiché — défense en profondeur même si la valeur
+     vient déjà de la base (au cas où elle aurait été insérée autrement
+     qu'via ce formulaire). */
+  function safeTikTokHandle(handle) {
+    if (typeof handle !== 'string') return '';
+    const cleaned = handle.replace(/^@/, '').trim();
+    return /^[a-zA-Z0-9_.]{1,30}$/.test(cleaned) ? cleaned : '';
+  }
+
   /* ============================================================
      TOAST NOTIFICATIONS
   ============================================================ */
@@ -345,7 +355,7 @@
         <div class="emoji">👤</div>
         <p>Connectez-vous pour accéder à votre profil, vos annonces et vos favoris.</p>
         <div style="margin-top:24px; display:flex; flex-direction:column; gap:10px; width:100%; max-width:280px; margin-left:auto; margin-right:auto;">
-          <button class="btn btn-primary btn-block" onclick="window.location.href='auth.html?next=profil.html'">Se connecter</button>
+          <button class="btn btn-primary btn-block" onclick="window.location.href='/auth.html?next=profil.html'">Se connecter</button>
         </div>
       </div>
     `;
@@ -376,11 +386,13 @@
     /* TikTok uniquement */
     const social = profile.social_links || {};
     const safeTt = escapeHTML(social.tiktok || '');
+    const ttHandle = safeTikTokHandle(social.tiktok || '');
 
-    /* Lien TikTok affiché */
-    const socialLinksHTML = safeTt ? `
+    /* FIX : le lien TikTok pointait vers tiktok.com/pseudo (sans @), un
+       format invalide — l'URL officielle exige tiktok.com/@pseudo. */
+    const socialLinksHTML = ttHandle ? `
       <div class="social-links-row">
-        <a href="https://tiktok.com/${safeTt.startsWith('@') ? safeTt.replace('@', '') : safeTt}" 
+        <a href="https://tiktok.com/@${encodeURIComponent(ttHandle)}" 
            target="_blank" rel="noopener noreferrer" 
            class="social-link-btn"
            aria-label="Visiter TikTok">
@@ -428,7 +440,7 @@
         </button>
 
         <button type="button" class="action-cat-card" id="btnToggleSocial" aria-label="Gérer mon TikTok">
-          <div class="action-cat-icon ${safeTt ? 'has-social' : ''}">🎵</div>
+          <div class="action-cat-icon ${ttHandle ? 'has-social' : ''}">🎵</div>
           <span class="action-cat-label">Ajouter<br>TikTok</span>
         </button>
 
@@ -689,7 +701,7 @@
 
     try {
       const { data: { user } } = await window.db.auth.getUser();
-      if (!user) { window.location.href = 'auth.html'; return; }
+      if (!user) { window.location.href = '/auth.html'; return; }
 
       const social_links = {};
       if (tiktok) social_links.tiktok = tiktok;
@@ -745,7 +757,7 @@
 
     try {
       const { data: { user } } = await window.db.auth.getUser();
-      if (!user) { window.location.href = 'auth.html'; return; }
+      if (!user) { window.location.href = '/auth.html'; return; }
 
       const formattedPhone = typeof toE164 === 'function'
         ? toE164(phone) : ('+228' + phone.replace(/\D/g, ''));
@@ -781,7 +793,10 @@
      PARTAGE BOUTIQUE
   ============================================================ */
   async function shareMyShop(id, name) {
-    const shopUrl   = `${window.location.origin}/vendeur.html?id=${encodeURIComponent(id)}`;
+    /* FIX : "vendeur.html" n'existe pas dans le projet — le fichier
+       réel s'appelle "seller.html". Ce lien menait à un 404 pour
+       toute personne qui cliquait dessus. */
+    const shopUrl   = `${window.location.origin}/seller.html?id=${encodeURIComponent(id)}`;
     const shareText = `Découvrez ma vitrine "${name}" sur DEKONme !`;
     if (navigator.share) {
       try { 
@@ -812,7 +827,7 @@
   async function handleLogout() {
     if (typeof logoutUser === 'function') {
       await logoutUser();
-      window.location.href = 'index.html';
+      window.location.href = '/index.html';
     }
   }
 
