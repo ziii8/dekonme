@@ -103,6 +103,10 @@
       </button>
     </div>
     <div class="product-grid" id="productGrid"></div>
+    <div id="infiniteScrollSentinel" class="dkm-scroll-sentinel"></div>
+    <div id="infiniteSpinner" class="dkm-infinite-spinner" style="display: none;">
+      <div class="dot"></div>
+    </div>
   </div>
 </div>
 
@@ -230,7 +234,9 @@
 
     const grid = document.getElementById('productGrid');
     if (!grid) return;
-    grid.innerHTML = '<p class="loading-text">Recherche en cours…</p>';
+    grid.innerHTML = typeof renderSkeletonCards === 'function'
+      ? renderSkeletonCards(8)
+      : '<p class="loading-text">Recherche en cours…</p>';
 
     try {
       if (cat && typeof getListingsByCategory === 'function') {
@@ -256,6 +262,12 @@
     }
   }
 
+  const CATALOG_PAGE_SIZE = 12;
+  let catalogOffset = 0;
+  let catalogTotal  = 0;
+  let catalogLoading = false;
+  let _catalogInfiniteScrollObserver = null;
+
   async function renderAllProducts() {
     document.getElementById('brandListView').classList.add('hidden');
     document.getElementById('productListView').classList.remove('hidden');
@@ -263,13 +275,24 @@
 
     const grid = document.getElementById('productGrid');
     if (!grid) return;
-    grid.innerHTML = '<p class="loading-text">Chargement des articles…</p>';
+
+    grid.innerHTML = typeof renderSkeletonCards === 'function'
+      ? renderSkeletonCards(CATALOG_PAGE_SIZE)
+      : '<p class="loading-text">Chargement des articles…</p>';
+
+    catalogOffset = 0;
+    allResults = [];
 
     try {
-      if (typeof getAllListings === 'function') {
-        allResults = await getAllListings(100) || [];
-      }
-      
+      const [first, total] = await Promise.all([
+        typeof getAllListings === 'function' ? getAllListings(CATALOG_PAGE_SIZE, 0) : Promise.resolve([]),
+        typeof countAllListings === 'function' ? countAllListings() : Promise.resolve(0),
+      ]);
+
+      allResults = first || [];
+      catalogTotal = total || 0;
+      catalogOffset = allResults.length;
+
       buildCategoryDropdown();
 
       if (allResults.length > 0 && typeof renderListingGrid === 'function') {
@@ -277,6 +300,7 @@
         if (typeof initLazyLoad === 'function') initLazyLoad();
         // FIX AdSense : catalogue réellement affiché avec du contenu
         loadAdSenseIfContentReady();
+        if (!_catalogInfiniteScrollObserver) setupCatalogInfiniteScroll();
       } else {
         grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1; padding:40px 20px;"><div class="emoji">📭</div><p>Aucune annonce disponible actuellement.</p></div>`;
         // Pas de contenu réel => pas de pub tant que le catalogue est vide
@@ -285,6 +309,43 @@
       console.error("Erreur lors de la récupération de tous les produits :", err);
       grid.innerHTML = '<p class="loading-text" style="color:var(--error);">Erreur de chargement du catalogue.</p>';
     }
+  }
+
+  async function loadMoreCatalog() {
+    if (catalogLoading || typeof getAllListings !== 'function') return;
+    catalogLoading = true;
+    try {
+      const more = await getAllListings(CATALOG_PAGE_SIZE, catalogOffset) || [];
+      if (more.length) {
+        allResults = allResults.concat(more);
+        catalogOffset += more.length;
+
+        const grid = document.getElementById('productGrid');
+        if (grid && typeof renderListingGrid === 'function') {
+          const tempDiv = document.createElement('div');
+          tempDiv.innerHTML = await renderListingGrid(more);
+          while (tempDiv.firstChild) grid.appendChild(tempDiv.firstChild);
+          if (typeof initLazyLoad === 'function') initLazyLoad();
+        }
+      }
+    } catch (err) {
+      console.error("Erreur chargement supplémentaire du catalogue :", err);
+    } finally {
+      catalogLoading = false;
+    }
+  }
+
+  function setupCatalogInfiniteScroll() {
+    if (typeof attachInfiniteScroll !== 'function') return;
+    _catalogInfiniteScrollObserver = attachInfiniteScroll({
+      sentinelId: 'infiniteScrollSentinel',
+      spinnerId: 'infiniteSpinner',
+      // On ne charge plus automatiquement si un filtre de catégorie est actif :
+      // les nouveaux éléments chargés viennent du catalogue complet, pas du
+      // sous-ensemble filtré, ce qui mélangerait les résultats affichés.
+      hasMore: () => !currentFilter && catalogOffset < catalogTotal,
+      loadMore: loadMoreCatalog,
+    });
   }
 
   window.toggleFavListView = function () {

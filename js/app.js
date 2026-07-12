@@ -139,9 +139,101 @@ let _heartbeatTimer = null;
         transition: none !important;
       }
     }
+
+    /* --- Skeleton loaders (chargement) --- */
+    @keyframes dkm-skeleton-shimmer {
+      0%   { background-position: -400px 0; }
+      100% { background-position: 400px 0; }
+    }
+    .dkm-skeleton-card {
+      border-radius: 16px;
+      overflow: hidden;
+      background: var(--white, #fff);
+      border: 1px solid var(--border, #eee);
+    }
+    .dkm-skeleton-img {
+      width: 100%;
+      aspect-ratio: 1;
+      background: linear-gradient(90deg, #eee 0px, #f6f6f6 40px, #eee 80px);
+      background-size: 800px 100%;
+      animation: dkm-skeleton-shimmer 1.4s ease-in-out infinite;
+    }
+    .dkm-skeleton-line {
+      height: 12px;
+      margin: 10px 10px 0;
+      border-radius: 6px;
+      background: linear-gradient(90deg, #eee 0px, #f6f6f6 40px, #eee 80px);
+      background-size: 800px 100%;
+      animation: dkm-skeleton-shimmer 1.4s ease-in-out infinite;
+    }
+    .dkm-skeleton-line.short { width: 50%; margin-bottom: 10px; }
+    .dkm-skeleton-line.medium { width: 75%; }
+
+    /* --- Sentinelle de scroll infini (invisible, juste un déclencheur) --- */
+    .dkm-scroll-sentinel {
+      width: 100%;
+      height: 1px;
+    }
+    .dkm-infinite-spinner {
+      display: flex;
+      justify-content: center;
+      padding: 20px 0;
+    }
+    @keyframes dkm-spin { to { transform: rotate(360deg); } }
+    .dkm-infinite-spinner .dot {
+      width: 22px;
+      height: 22px;
+      border: 3px solid var(--border, #eee);
+      border-top-color: var(--orange, #E8732C);
+      border-radius: 50%;
+      animation: dkm-spin 0.7s linear infinite;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .dkm-skeleton-img, .dkm-skeleton-line, .dkm-infinite-spinner .dot {
+        animation: none !important;
+      }
+    }
   `;
   document.head.appendChild(style);
 })();
+
+/* Génère N cartes "skeleton" (placeholders animés) pendant le chargement */
+function renderSkeletonCards(count = 6) {
+  return Array.from({ length: count }).map(() => `
+    <div class="dkm-skeleton-card">
+      <div class="dkm-skeleton-img"></div>
+      <div class="dkm-skeleton-line medium"></div>
+      <div class="dkm-skeleton-line short"></div>
+    </div>
+  `).join('');
+}
+
+/* Attache un scroll infini à un conteneur : appelle loadMoreFn() quand la
+   sentinelle devient visible. loadMoreFn doit renvoyer une Promise et gérer
+   elle-même l'ajout du contenu + la mise à jour de hasMore(). */
+function attachInfiniteScroll({ sentinelId, hasMore, loadMore, spinnerId }) {
+  const sentinel = document.getElementById(sentinelId);
+  if (!sentinel || typeof IntersectionObserver === 'undefined') return null;
+
+  let loading = false;
+  const observer = new IntersectionObserver(async (entries) => {
+    if (!entries[0].isIntersecting || loading || !hasMore()) return;
+    loading = true;
+    const spinner = spinnerId ? document.getElementById(spinnerId) : null;
+    if (spinner) spinner.style.display = 'flex';
+    try {
+      await loadMore();
+    } finally {
+      loading = false;
+      if (spinner) spinner.style.display = hasMore() ? 'flex' : 'none';
+      if (!hasMore() && observer) observer.disconnect();
+    }
+  }, { rootMargin: '300px' });
+
+  observer.observe(sentinel);
+  return observer;
+}
 
 function staggerProductCards(containerSelector = null) {
   const cards = containerSelector

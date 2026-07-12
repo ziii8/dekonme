@@ -17,12 +17,12 @@
   <meta property="og:site_name" content="DEKONme">
   
   <!-- PWA Support -->
-  <link rel="manifest" href="manifest.json">
-  <link rel="apple-touch-icon" href="icons/icon-192.png">
-  <link rel="icon" type="image/x-icon" href="icons/favicon.ico">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/icons/icon-192.png">
+  <link rel="icon" type="image/x-icon" href="/icons/favicon.ico">
   
   <!-- Styles -->
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
 
@@ -35,7 +35,7 @@
     </button>
     
     <div class="logo-wrapper">
-      <a href="index.html" class="logo" aria-label="Accueil DEKONme">
+      <a href="/index.html" class="logo" aria-label="Accueil DEKONme">
         <span class="mark">D</span>EKONme
       </a>
       <button class="icon-btn pwa-install-btn" id="pwaInstallBtn" aria-label="Installer DEKONme" title="Installer l'application sur votre appareil" style="display: none;">
@@ -49,7 +49,7 @@
     
     <button class="icon-btn" id="themeToggleBtn" aria-label="Changer de thème">🌙</button>
     
-    <a href="profil.html" class="icon-btn" aria-label="Profil et Notifications">
+    <a href="/profil.html" class="icon-btn" aria-label="Profil et Notifications">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M15 17h5l-1.4-1.4A2 2 0 0118 14.2V11a6 6 0 00-4-5.7V5a2 2 0 10-4 0v.3A6 6 0 006 11v3.2c0 .5-.2 1-.6 1.4L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
       </svg>
@@ -88,7 +88,7 @@
     <section>
       <div class="section-head">
         <h2>Catégories</h2>
-        <a href="category.html?view=categories" class="see-all">Voir tout</a>
+        <a href="/category.html?view=categories" class="see-all">Voir tout</a>
       </div>
       <div class="brand-grid" id="brandGrid" role="region" aria-label="Grille de catégories"></div>
     </section>
@@ -96,11 +96,15 @@
     <section>
       <div class="section-head">
         <h2 id="productsTitle">Annonces récentes</h2>
-        <a href="category.html" class="see-all">Voir tout</a>
+        <a href="/category.html" class="see-all">Voir tout</a>
       </div>
       <div class="product-grid" id="productGrid" role="region" aria-label="Grille d'annonces"></div>
     </section>
 
+    <div id="infiniteScrollSentinel" class="dkm-scroll-sentinel"></div>
+    <div id="infiniteSpinner" class="dkm-infinite-spinner" style="display: none;">
+      <div class="dot"></div>
+    </div>
     <div id="loadMoreWrap" class="load-more-wrap" style="display: none;">
       <button class="btn btn-primary" id="loadMoreBtn">Voir plus d'annonces</button>
     </div>
@@ -114,9 +118,9 @@
 
   <!-- Scripts -->
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>  
-  <script defer src="js/supabase-config.js"></script>
-  <script defer src="js/app.js"></script>
-  <script defer src="js/lazy-load.js"></script>
+  <script defer src="/js/supabase-config.js"></script>
+  <script defer src="/js/app.js"></script>
+  <script defer src="/js/lazy-load.js"></script>
 
   <!-- INLINE SCRIPT - APP LOGIC -->
   <script>
@@ -257,7 +261,7 @@
       
       const firstFour = CATEGORIES.slice(0, 4);
       grid.innerHTML = firstFour.map(c => `
-        <a href="category.html?cat=${encodeURIComponent(escapeHtml(c.name))}" class="brand-tile" role="button">
+        <a href="/category.html?cat=${encodeURIComponent(escapeHtml(c.name))}" class="brand-tile" role="button">
           <div class="icon" style="background-color: ${escapeHtml(c.color)};" aria-hidden="true">${escapeHtml(c.emoji)}</div>
           <span>${escapeHtml(c.name)}</span>
         </a>
@@ -271,7 +275,9 @@
       const grid = document.getElementById('productGrid');
       if (!grid) return;
       
-      grid.innerHTML = '<p class="loading-text" aria-live="polite">Chargement des annonces…</p>';
+      grid.innerHTML = typeof renderSkeletonCards === 'function'
+        ? renderSkeletonCards(PAGE_SIZE)
+        : '<p class="loading-text" aria-live="polite">Chargement des annonces…</p>';
 
       try {
         if (typeof getAllListings !== 'function' || typeof countAllListings !== 'function') {
@@ -303,37 +309,41 @@
       }
 
       updateLoadMoreBtn();
+      if (!_infiniteScrollObserver) setupInfiniteScroll();
     }
 
     // ============================================
-    // LOAD MORE FUNCTIONALITY
+    // LOAD MORE FUNCTIONALITY (scroll infini + bouton de secours)
     // ============================================
+    let _infiniteScrollObserver = null;
+
     async function loadMore() {
       if (isLoading) return;
-      
-      const btn = document.getElementById('loadMoreBtn');
+
       const grid = document.getElementById('productGrid');
-      
-      if (!btn || !grid) return;
+      const btn  = document.getElementById('loadMoreBtn');
+
+      if (!grid) return;
 
       isLoading = true;
-      btn.disabled = true;
-      btn.setAttribute('aria-busy', 'true');
-      const originalText = btn.textContent;
-      btn.textContent = 'Chargement…';
+      if (btn) {
+        btn.disabled = true;
+        btn.setAttribute('aria-busy', 'true');
+        btn.textContent = 'Chargement…';
+      }
 
       try {
         const more = await getAllListings(PAGE_SIZE, currentOffset);
         if (more && more.length) {
           currentOffset += more.length;
-          
+
           const tempDiv = document.createElement('div');
           tempDiv.innerHTML = await renderListingGrid(more);
-          
+
           while (tempDiv.firstChild) {
             grid.appendChild(tempDiv.firstChild);
           }
-          
+
           if (typeof initLazyLoad === 'function') {
             initLazyLoad();
           }
@@ -342,21 +352,37 @@
         console.error("Erreur de chargement supplémentaire:", error);
       } finally {
         isLoading = false;
-        btn.disabled = false;
-        btn.setAttribute('aria-busy', 'false');
-        btn.textContent = originalText;
+        if (btn) {
+          btn.disabled = false;
+          btn.setAttribute('aria-busy', 'false');
+          btn.textContent = "Voir plus d'annonces";
+        }
         updateLoadMoreBtn();
       }
     }
 
     // ============================================
-    // UPDATE LOAD MORE BUTTON
+    // UPDATE LOAD MORE BUTTON (bouton de secours uniquement)
     // ============================================
     function updateLoadMoreBtn() {
       const wrap = document.getElementById('loadMoreWrap');
+      const hasMore = currentOffset < totalListings;
+      // Le bouton ne s'affiche que si le scroll infini n'a pas pu s'activer
+      // (ex: navigateur très ancien sans IntersectionObserver)
       if (wrap) {
-        wrap.style.display = currentOffset < totalListings ? 'block' : 'none';
+        wrap.style.display = (hasMore && !_infiniteScrollObserver) ? 'block' : 'none';
       }
+    }
+
+    function setupInfiniteScroll() {
+      if (typeof attachInfiniteScroll !== 'function') return;
+      _infiniteScrollObserver = attachInfiniteScroll({
+        sentinelId: 'infiniteScrollSentinel',
+        spinnerId: 'infiniteSpinner',
+        hasMore: () => currentOffset < totalListings,
+        loadMore: loadMore,
+      });
+      updateLoadMoreBtn();
     }
 
     // ============================================
