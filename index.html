@@ -23,6 +23,66 @@
   
   <!-- Styles -->
   <link rel="stylesheet" href="/css/style.css">
+  <style>
+    /* Rangée de catégories façon "stories" — scroll horizontal compact */
+    .sr-only {
+      position: absolute;
+      width: 1px; height: 1px;
+      padding: 0; margin: -1px;
+      overflow: hidden;
+      clip: rect(0,0,0,0);
+      white-space: nowrap;
+      border: 0;
+    }
+    .cat-scroll-section {
+      margin: 4px 0 8px;
+    }
+    .cat-scroll-row {
+      display: flex;
+      gap: 14px;
+      overflow-x: auto;
+      padding: 4px 2px 8px;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+    }
+    .cat-scroll-row::-webkit-scrollbar { display: none; }
+    .cat-pill {
+      flex: 0 0 auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      width: 62px;
+      text-decoration: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .cat-pill .cat-pill-icon {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      transition: transform 0.15s ease;
+    }
+    .cat-pill:active .cat-pill-icon { transform: scale(0.92); }
+    .cat-pill span {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--ink, #1a1a1a);
+      text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 62px;
+    }
+    .cat-pill.cat-pill-all .cat-pill-icon {
+      background: var(--orange, #E8732C);
+      color: #fff;
+      font-size: 18px;
+    }
+  </style>
 </head>
 <body>
 
@@ -85,12 +145,9 @@
   <!-- MAIN CONTENT -->
   <main class="container" role="main">
     
-    <section>
-      <div class="section-head">
-        <h2>Catégories</h2>
-        <a href="/category.html?view=categories" class="see-all">Voir tout</a>
-      </div>
-      <div class="brand-grid" id="brandGrid" role="region" aria-label="Grille de catégories"></div>
+    <section class="cat-scroll-section">
+      <h2 class="sr-only">Catégories</h2>
+      <div class="cat-scroll-row" id="brandGrid" role="region" aria-label="Catégories"></div>
     </section>
 
     <section>
@@ -258,14 +315,22 @@
     function renderCategoryGrid() {
       const grid = document.getElementById('brandGrid');
       if (!grid || typeof CATEGORIES === 'undefined') return;
-      
-      const firstFour = CATEGORIES.slice(0, 4);
-      grid.innerHTML = firstFour.map(c => `
-        <a href="/category.html?cat=${encodeURIComponent(escapeHtml(c.name))}" class="brand-tile" role="button">
-          <div class="icon" style="background-color: ${escapeHtml(c.color)};" aria-hidden="true">${escapeHtml(c.emoji)}</div>
+
+      const pillsHTML = CATEGORIES.map(c => `
+        <a href="/category.html?cat=${encodeURIComponent(escapeHtml(c.name))}" class="cat-pill" role="button">
+          <div class="cat-pill-icon" style="background-color: ${escapeHtml(c.color)};" aria-hidden="true">${escapeHtml(c.emoji)}</div>
           <span>${escapeHtml(c.name)}</span>
         </a>
       `).join('');
+
+      const allPillHTML = `
+        <a href="/category.html?view=categories" class="cat-pill cat-pill-all" role="button">
+          <div class="cat-pill-icon" aria-hidden="true">•••</div>
+          <span>Toutes</span>
+        </a>
+      `;
+
+      grid.innerHTML = pillsHTML + allPillHTML;
     }
 
     // ============================================
