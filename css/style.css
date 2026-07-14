@@ -1,7 +1,11 @@
 /* ============================================= */
-/* DEKONme — style.css v4.5 (Production)        */
+/* DEKONme — style.css v4.6 (Production)        */
 /* Design system factorisé + Sécurité Mobile    */
 /* Marketplace du Togo — 100% mobile-first      */
+/* CORRECTIFS v4.6:                             */
+/*   - ✅ Fix: container-width laissait un cadre */
+/*     vide autour du contenu sur mobile (92vw   */
+/*     appliqué partout au lieu du desktop only) */
 /* CORRECTIFS v4.5:                             */
 /*   - ✅ Fix: html sans hauteur/fond            */
 /*   - ✅ Fix: touch-action bloquait le scroll   */
@@ -33,8 +37,21 @@
   --radius-card:  18px;
   --radius-pill:  999px;
   --nav-height:   64px;
-  --container-width: clamp(320px, 92vw, 1100px);
+  /* FIX : sur mobile, le conteneur doit prendre 100% de la largeur —
+     l'ancien "clamp(320px, 92vw, 1100px)" appliqué à toutes les tailles
+     d'écran laissait un cadre vide visible autour du contenu (~71px de
+     marge cumulée sur un téléphone de 390px, en comptant le padding du
+     .container en plus). La contrainte 92vw/1100px ne s'applique
+     maintenant qu'à partir de 640px (tablette et plus) via la media
+     query juste en dessous. */
+  --container-width: 100%;
   --transition:   all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@media (min-width: 640px) {
+  :root {
+    --container-width: clamp(320px, 92vw, 1100px);
+  }
 }
 
 /* ==================== MODE SOMBRE AUTO ==================== */
