@@ -205,9 +205,9 @@
              pattern="[0-9\s]{8,9}" maxlength="9" inputmode="numeric" required>
     </div>
 
-    <label class="field-label">Photos (exactement 2)</label>
+    <label class="field-label">Photos (1 minimum, jusqu'à 5)</label>
     <div id="photoGrid" class="photo-preview-grid"></div>
-    <p class="photo-counter" id="photoCounter">0 / 2 photos</p>
+    <p class="photo-counter" id="photoCounter">0 / 5 photos</p>
 
     <input type="file" id="pImageFiles" accept="image/*" multiple style="display:none;">
 
@@ -256,13 +256,24 @@
     }
   }
 
+  const MIN_PHOTOS = 1;
+  const MAX_PHOTOS = 5;
+
   function renderPhotoGrid() {
     const grid    = document.getElementById('photoGrid');
     const counter = document.getElementById('photoCounter');
     const total   = existingImages.length + newFiles.length;
 
-    counter.textContent = `${total} / 2 photos`;
-    counter.className   = 'photo-counter' + (total > 2 ? ' error' : '');
+    if (total === 0) {
+      counter.textContent = `${total} / ${MAX_PHOTOS} photos — ajoutez-en au moins 1`;
+      counter.className   = 'photo-counter';
+    } else if (total === 1) {
+      counter.textContent = `${total} / ${MAX_PHOTOS} photo — ajoutez-en une 2ᵉ pour rassurer les acheteurs 👍`;
+      counter.className   = 'photo-counter';
+    } else {
+      counter.textContent = `${total} / ${MAX_PHOTOS} photos`;
+      counter.className   = 'photo-counter';
+    }
 
     let html = '';
 
@@ -285,7 +296,7 @@
       `;
     });
 
-    if (total < 2) {
+    if (total < MAX_PHOTOS) {
       html += `
         <div class="photo-add-slot" onclick="document.getElementById('pImageFiles').click()">
           <span class="icon">📷</span>
@@ -310,7 +321,7 @@
   document.getElementById('pImageFiles').addEventListener('change', (e) => {
     const files  = Array.from(e.target.files);
     const total  = existingImages.length + newFiles.length;
-    const canAdd = 2 - total;
+    const canAdd = MAX_PHOTOS - total;
     const toAdd  = files.slice(0, canAdd);
 
     if (files.length > canAdd) {
@@ -349,8 +360,8 @@
     e.preventDefault();
     const total = existingImages.length + newFiles.length;
 
-    if (total !== 2) {
-      showToast('Ajoutez exactement 2 photos avant de publier.');
+    if (total < MIN_PHOTOS) {
+      showToast('Ajoutez au moins 1 photo avant de publier.');
       return;
     }
 
