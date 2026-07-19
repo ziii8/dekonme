@@ -329,7 +329,7 @@
           <div class="detail-section">
             <h3 style="margin-bottom:8px;">Détails</h3>
             <div class="pill-row">
-              <span class="pill">${safeModel}</span>
+              ${safeModel ? `<span class="pill">${safeModel}</span>` : ''}
               <span class="pill">${safeCondition}</span>
               <span class="pill tag">📍 ${safeCity}</span>
             </div>
