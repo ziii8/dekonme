@@ -40,6 +40,77 @@
     .social-link-btn.tiktok    { background: #000; }
 
     .seller-status { font-size: 13px; margin-top: 6px; }
+
+    /* --- BOUTONS D'ACTION SUR LA MÊME LIGNE --- */
+    .action-buttons-row {
+      display: flex;
+      gap: 12px;
+      margin: 16px 0 24px;
+    }
+
+    /* Bouton WhatsApp principal */
+    .btn-whatsapp-main {
+      flex: 1;
+      background-color: #25D366;
+      color: white;
+      border: none;
+      font-size: 14px;
+      font-weight: 700;
+      border-radius: var(--radius-pill);
+      height: 46px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 4px 12px rgba(37, 211, 102, 0.3);
+      transition: transform 0.2s ease;
+    }
+    /* FIX : l'animation pulsait à l'infini (distrayant sur la durée) —
+       on la limite à 3 répétitions au chargement, puis ça se calme. */
+    .btn-whatsapp-main.pulse-intro {
+      animation: wtsPulse 1.6s ease-in-out 3;
+    }
+
+    .btn-whatsapp-main:active {
+      transform: scale(0.96);
+    }
+
+    /* Bouton Avis secondaire — FIX : couleurs en dur remplacées par les
+       variables du design system, pour s'adapter automatiquement au
+       mode sombre sans bloc CSS séparé (qui ne fonctionnait pas). */
+    .btn-reviews-shortcut {
+      flex: 0 0 35%;
+      background: var(--bg-soft);
+      color: var(--ink-soft);
+      border: 1px solid var(--border);
+      font-size: 11px;
+      font-weight: 600;
+      border-radius: var(--radius-pill);
+      height: 46px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      text-decoration: none;
+      transition: var(--transition);
+    }
+    .btn-reviews-shortcut:active { background: var(--border); }
+    .btn-reviews-shortcut .stars { color: var(--orange); font-weight: 700; }
+
+    /* Keyframes de l'animation Pulse pour WhatsApp */
+    @keyframes wtsPulse {
+      0% { transform: scale(1); box-shadow: 0 4px 12px rgba(37, 211, 102, 0.3); }
+      15% { transform: scale(1.03); box-shadow: 0 6px 16px rgba(37, 211, 102, 0.5); }
+      30% { transform: scale(1); box-shadow: 0 4px 12px rgba(37, 211, 102, 0.3); }
+      100% { transform: scale(1); box-shadow: 0 4px 12px rgba(37, 211, 102, 0.3); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .btn-whatsapp-main.pulse-intro { animation: none !important; }
+    }
   </style>
 </head>
 <body>
@@ -69,9 +140,6 @@
   let allSellerListings = [];
   let visibleCount = 2;
 
-  /* FIX AdSense : chargement conditionnel, uniquement quand le profil
-     vendeur est réellement trouvé et affiché — jamais pendant le
-     chargement ni sur "profil introuvable". */
   function loadAdSenseIfContentReady() {
     if (document.getElementById('adsbygoogle-script')) return;
     const script = document.createElement('script');
@@ -82,16 +150,11 @@
     document.head.appendChild(script);
   }
 
-  /* FIX XSS : n'autoriser que des liens http(s) absolus — bloque les
-     tentatives d'injection type "javascript:alert(1)" dans un champ
-     "lien Facebook" configuré par l'utilisateur. */
   function safeExternalUrl(url) {
     if (typeof url === 'string' && /^https?:\/\//i.test(url)) return url;
     return null;
   }
 
-  /* FIX XSS : les pseudos Instagram/TikTok ne doivent contenir que des
-     caractères de nom d'utilisateur valides avant d'être insérés dans une URL. */
   function safeHandle(handle) {
     if (typeof handle !== 'string') return '';
     const cleaned = handle.replace(/^@/, '').trim();
@@ -131,7 +194,6 @@
 
       allSellerListings = await getListingsBySeller(sellerId) || [];
 
-      /* FIX XSS : toutes les valeurs affichées échappées via escapeHtml() (app.js) */
       const safeName = typeof escapeHtml === 'function' ? escapeHtml(profile.name || 'Vendeur DEKONme') : String(profile.name || 'Vendeur DEKONme');
       const safeCity = typeof escapeHtml === 'function' ? escapeHtml(profile.city || '') : String(profile.city || '');
       const safeAvatar = typeof escapeHtml === 'function' ? escapeHtml(profile.avatar_emoji || '👤') : '👤';
@@ -178,6 +240,12 @@
         ? `<span class="seller-rating-badge">⭐ ${ratingSummary.average.toFixed(1)} · ${ratingSummary.count} avis</span>`
         : `<span class="seller-rating-badge new">Nouveau vendeur</span>`;
 
+      /* Le raccourci "Avis" montre la note elle-même, pas juste le mot "Avis" —
+         plus rapide à scanner d'un coup d'œil. */
+      const reviewsShortcutLabel = ratingSummary.average !== null
+        ? `<span class="stars">⭐ ${ratingSummary.average.toFixed(1)}</span>`
+        : `<span>⭐ Avis</span>`;
+
       const safePhone = typeof escapeHtml === 'function' ? escapeHtml(profile.phone || '') : String(profile.phone || '');
 
       const currentUser = typeof getCurrentUser === 'function' ? await getCurrentUser() : null;
@@ -194,17 +262,19 @@
           </div>
         </div>
 
-        <!-- Bouton Contact -->
-        <button type="button" onclick="contactSeller('${safePhone}')" class="btn btn-primary btn-block" style="margin: 16px 0 24px;">
-          💬 Contacter via WhatsApp
-        </button>
+        <!-- Ligne des boutons d'action alignés -->
+        <div class="action-buttons-row">
+          <button type="button" class="btn-reviews-shortcut" id="reviewsShortcutBtn">
+            ${reviewsShortcutLabel}
+            <span style="font-size: 10px; opacity: 0.8;">(${ratingSummary.count})</span>
+          </button>
+
+          <button type="button" onclick="contactSeller('${safePhone}')" class="btn-whatsapp-main pulse-intro">
+            💬 Contacter via WhatsApp
+          </button>
+        </div>
 
         ${socialHTML}
-
-        <div class="section-head" style="margin-top: 32px;">
-          <h3>Avis (<span id="reviewCount">${ratingSummary.count}</span>)</h3>
-        </div>
-        <div id="reviewsSection"></div>
 
         <div class="section-head" style="margin-top: 32px;">
           <h3>Annonces actives (<span id="activeCount">0</span>)</h3>
@@ -213,14 +283,13 @@
         <div id="moreContainer" class="load-more-container"></div>
       `;
 
-      renderListingsGrid();
-      if (!isOwnProfile) {
-        renderReviewsSection(currentUser);
-      } else {
-        await renderReviewsList();
+      const reviewsShortcutBtn = document.getElementById('reviewsShortcutBtn');
+      if (reviewsShortcutBtn) {
+        reviewsShortcutBtn.addEventListener('click', () => openReviewsModal(currentUser));
       }
 
-      /* FIX AdSense : profil réellement trouvé et affiché, on peut charger les pubs */
+      renderListingsGrid();
+
       loadAdSenseIfContentReady();
 
     } catch (error) {
@@ -240,15 +309,43 @@
     window.open(`https://wa.me/${phone.replace(/\D/g, '')}`, '_blank');
   }
 
-  /* ==================== SECTION AVIS ==================== */
+  /* ==================== MODAL AVIS ==================== */
   let _selectedStars = 0;
+  let _reviewsLoadedOnce = false;
+
+  window.openReviewsModal = async function (currentUser) {
+    const modal = document.getElementById('reviewsModal');
+    if (!modal) return;
+    modal.classList.add('open');
+    document.body.style.overflow = 'hidden';
+
+    if (!_reviewsLoadedOnce) {
+      await renderReviewsSection(currentUser);
+      _reviewsLoadedOnce = true;
+    }
+
+    if (!_reviewsModalKeyHandler) {
+      _reviewsModalKeyHandler = (e) => {
+        if (e.key === 'Escape') closeReviewsModal();
+      };
+      document.addEventListener('keydown', _reviewsModalKeyHandler);
+    }
+  };
+
+  let _reviewsModalKeyHandler = null;
+
+  window.closeReviewsModal = function () {
+    const modal = document.getElementById('reviewsModal');
+    if (!modal) return;
+    modal.classList.remove('open');
+    document.body.style.overflow = '';
+  };
 
   async function renderReviewsSection(currentUser) {
-    const section = document.getElementById('reviewsSection');
+    const section = document.getElementById('reviewsModalBody');
     if (!section) return;
 
     if (!currentUser) {
-      // Non connecté : on affiche juste la liste, avec une invitation à se connecter pour noter
       await renderReviewsList();
       const list = document.getElementById('reviewsList');
       if (list) {
@@ -325,7 +422,36 @@
     }
 
     showToast('✅ Merci pour votre avis !', 'success');
-    init(); // recharge tout pour mettre à jour le badge de note global
+
+    // On rafraîchit le contenu du modal en place (sans le fermer), et on
+    // met à jour le badge/compteur affichés sur le reste de la page.
+    const currentUser = typeof getCurrentUser === 'function' ? await getCurrentUser() : null;
+    await renderReviewsSection(currentUser);
+    await refreshRatingDisplay();
+  }
+
+  /* Met à jour le badge de note + compteur du bouton "Avis" sans tout
+     recharger la page — évite de fermer le modal après soumission. */
+  async function refreshRatingDisplay() {
+    const summary = typeof getSellerRatingSummary === 'function'
+      ? await getSellerRatingSummary(sellerId)
+      : { average: null, count: 0 };
+
+    const badge = document.querySelector('.seller-rating-badge');
+    if (badge) {
+      badge.className = 'seller-rating-badge' + (summary.average === null ? ' new' : '');
+      badge.textContent = summary.average !== null
+        ? `⭐ ${summary.average.toFixed(1)} · ${summary.count} avis`
+        : 'Nouveau vendeur';
+    }
+
+    const shortcutBtn = document.getElementById('reviewsShortcutBtn');
+    if (shortcutBtn) {
+      shortcutBtn.innerHTML = `
+        ${summary.average !== null ? `<span class="stars">⭐ ${summary.average.toFixed(1)}</span>` : '<span>⭐ Avis</span>'}
+        <span style="font-size: 10px; opacity: 0.8;">(${summary.count})</span>
+      `;
+    }
   }
 
   function renderStars(rating) {
@@ -336,8 +462,7 @@
   async function renderReviewsList() {
     let list = document.getElementById('reviewsList');
     if (!list) {
-      // Cas "profil connecté au vendeur lui-même" : pas de formulaire, juste la liste
-      const section = document.getElementById('reviewsSection');
+      const section = document.getElementById('reviewsModalBody');
       if (!section) return;
       section.innerHTML = '<div id="reviewsList"></div>';
       list = document.getElementById('reviewsList');
@@ -428,7 +553,21 @@
     if (typeof initLazyLoad === 'function') initLazyLoad();
   }
 
-  document.addEventListener('DOMContentLoaded', init);
+  document.addEventListener('DOMContentLoaded', () => {
+    init();
+    const closeBtn = document.getElementById('reviewsModalClose');
+    if (closeBtn) closeBtn.addEventListener('click', closeReviewsModal);
+  });
 </script>
+
+<!-- MODAL : AVIS SUR LE VENDEUR -->
+<div class="modal" id="reviewsModal" onclick="if(event.target===this) closeReviewsModal()">
+  <div class="modal-content" style="max-height: 80vh; overflow-y: auto;">
+    <button class="modal-close" id="reviewsModalClose" aria-label="Fermer">✕</button>
+    <h3 style="margin-bottom: 16px;">Avis sur ce vendeur</h3>
+    <div id="reviewsModalBody"></div>
+  </div>
+</div>
+
 </body>
 </html>
