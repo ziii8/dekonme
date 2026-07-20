@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#E8732C">
+  <link rel="apple-touch-icon" href="/icons/icon-192.png">
+  <meta name="description" content="DEKONme est la marketplace du Togo pour acheter et vendre facilement via WhatsApp.">
+  <title>À propos — DEKONme</title>
+  <link rel="stylesheet" href="/css/style.css">
+
+  <style>
+    .legal-content { padding: 8px 0 40px; }
+    .legal-content h2 { font-size: 17px; font-weight: 800; margin: 28px 0 10px; color: var(--ink); }
+    .legal-content h2:first-child { margin-top: 8px; }
+    .legal-content p, .legal-content li { font-size: 14px; line-height: 1.7; color: var(--ink); margin-bottom: 10px; }
+    .legal-content ul { padding-left: 20px; margin-bottom: 14px; }
+    .legal-content a { color: var(--orange); font-weight: 600; text-decoration: underline; }
+    .about-hero { text-align: center; padding: 16px 0 24px; }
+    .about-hero .logo-big { font-size: 32px; font-weight: 800; margin-bottom: 8px; }
+    .about-hero .logo-big .mark {
+      display: inline-flex; width: 40px; height: 40px;
+      background: var(--ink); color: var(--bg);
+      border-radius: 12px; align-items: center; justify-content: center;
+      font-size: 20px; vertical-align: middle; margin-right: 4px;
+    }
+    .about-hero p { color: var(--ink-soft); font-size: 14px; }
+  </style>
+</head>
+<body>
+
+<div class="topbar">
+  <button class="icon-btn back-btn" onclick="history.length > 1 ? history.back() : window.location.href='/index.html'" aria-label="Retour">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+  </button>
+  <div class="page-title">À propos</div>
+  <button id="themeToggleBtn" class="icon-btn" onclick="toggleTheme()" aria-label="Changer de thème">🌙</button>
+</div>
+
+<div class="container legal-content">
+  <div class="about-hero">
+    <div class="logo-big"><span class="mark">D</span>EKONme</div>
+    <p>Achète et vends partout au Togo, directement via WhatsApp.</p>
+  </div>
+
+  <h2>Notre mission</h2>
+  <p>DEKONme est né d'un constat simple : au Togo, WhatsApp est déjà le canal préféré pour acheter et vendre entre particuliers, mais il manquait un endroit central pour découvrir facilement ce qui est disponible autour de soi. DEKONme connecte les vendeurs et les acheteurs, puis laisse WhatsApp faire ce qu'il fait de mieux : la conversation directe et de confiance.</p>
+
+  <h2>Comment ça marche</h2>
+  <p>Publiez votre annonce en quelques minutes avec des photos et un prix en FCFA. Les acheteurs intéressés vous contactent directement sur WhatsApp — pas d'intermédiaire, pas de commission, pas de paiement bloqué sur la plateforme.</p>
+
+  <h2>La sécurité, une priorité</h2>
+  <p>Avant chaque mise en relation, DEKONme rappelle les bons réflexes : vérifier l'article en personne, ne jamais payer d'acompte à distance, et ne jamais partager un code de vérification. Vous pouvez aussi signaler toute annonce suspecte en un clic.</p>
+
+  <h2>Pour qui</h2>
+  <p>DEKONme s'adresse à tous les Togolais qui veulent vendre un article dont ils n'ont plus besoin, ou trouver une bonne affaire près de chez eux — à Lomé, Kara, Sokodé, Kpalimé et dans toutes les autres villes du pays.</p>
+
+  <h2>Nous contacter</h2>
+  <p>Une question, une suggestion, un problème ? Écrivez-nous directement sur <a href="https://wa.me/22899129916" target="_blank" rel="noopener noreferrer">WhatsApp</a>.</p>
+</div>
+
+<div class="bottom-nav" id="bottomNav"></div>
+
+<script src="/js/supabase-config.js"></script>
+<script src="/js/app.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    if (typeof renderBottomNav === 'function') renderBottomNav('');
+  });
+</script>
+</body>
+</html>

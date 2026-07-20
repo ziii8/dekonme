@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#E8732C">
+  <link rel="apple-touch-icon" href="/icons/icon-192.png">
+  <meta name="description" content="Conditions d'utilisation de DEKONme — règles d'usage du site et de la marketplace.">
+  <title>Conditions d'utilisation — DEKONme</title>
+  <link rel="stylesheet" href="/css/style.css">
+
+  <style>
+    .legal-content { padding: 8px 0 40px; }
+    .legal-content h2 { font-size: 17px; font-weight: 800; margin: 28px 0 10px; color: var(--ink); }
+    .legal-content h2:first-child { margin-top: 8px; }
+    .legal-content p, .legal-content li { font-size: 14px; line-height: 1.7; color: var(--ink); margin-bottom: 10px; }
+    .legal-content ul { padding-left: 20px; margin-bottom: 14px; }
+    .legal-content .updated { font-size: 12px; color: var(--ink-soft); margin-bottom: 24px; }
+    .legal-content a { color: var(--orange); font-weight: 600; text-decoration: underline; }
+  </style>
+</head>
+<body>
+
+<div class="topbar">
+  <button class="icon-btn back-btn" onclick="history.length > 1 ? history.back() : window.location.href='/index.html'" aria-label="Retour">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+  </button>
+  <div class="page-title">Conditions d'utilisation</div>
+  <button id="themeToggleBtn" class="icon-btn" onclick="toggleTheme()" aria-label="Changer de thème">🌙</button>
+</div>
+
+<div class="container legal-content">
+  <p class="updated">Dernière mise à jour : juillet 2026</p>
+
+  <h2>1. Objet</h2>
+  <p>DEKONme est une plateforme qui permet à ses utilisateurs de publier et consulter des annonces de vente de produits, et de se mettre en relation via WhatsApp pour finaliser une transaction. En utilisant DEKONme, vous acceptez les présentes conditions.</p>
+
+  <h2>2. Rôle de DEKONme</h2>
+  <p>DEKONme est un intermédiaire de mise en relation. Nous ne sommes ni vendeur, ni acheteur, ni partie à la transaction. Nous ne gérons aucun paiement et n'intervenons pas dans l'échange, la livraison ou la qualité des produits vendus. Chaque transaction se fait directement et sous la seule responsabilité de l'acheteur et du vendeur.</p>
+
+  <h2>3. Création de compte</h2>
+  <p>Pour publier une annonce, vous devez créer un compte avec des informations exactes (nom, numéro WhatsApp valide, ville). Vous êtes responsable de la confidentialité de vos identifiants de connexion.</p>
+
+  <h2>4. Règles de publication</h2>
+  <p>En publiant une annonce, vous vous engagez à :</p>
+  <ul>
+    <li>Ne proposer que des produits que vous avez le droit de vendre</li>
+    <li>Décrire honnêtement l'état et les caractéristiques de l'article</li>
+    <li>Utiliser des photos réelles du produit proposé</li>
+    <li>Ne pas publier de contenu illégal, contrefait, dangereux, ou de produits interdits à la vente</li>
+    <li>Ne pas publier de contenu trompeur, diffamatoire ou frauduleux</li>
+  </ul>
+  <p>DEKONme se réserve le droit de retirer toute annonce ne respectant pas ces règles, sans préavis.</p>
+
+  <h2>5. Sécurité des transactions</h2>
+  <p>Nous recommandons vivement de :</p>
+  <ul>
+    <li>Ne jamais verser d'acompte avant d'avoir vu et vérifié l'article en personne</li>
+    <li>Toujours vérifier l'article avant de finaliser un paiement</li>
+    <li>Ne jamais communiquer un code de vérification (OTP) reçu par SMS à qui que ce soit</li>
+    <li>Privilégier une rencontre dans un lieu public et sûr</li>
+  </ul>
+  <p>DEKONme ne peut être tenu responsable des litiges, arnaques ou dommages résultant d'une transaction entre utilisateurs.</p>
+
+  <h2>6. Signalement</h2>
+  <p>Tout utilisateur peut signaler une annonce suspecte via le bouton "Signaler cette annonce" présent sur chaque fiche produit. Notre équipe examine les signalements et peut suspendre un compte en cas d'abus avéré.</p>
+
+  <h2>7. Propriété du contenu</h2>
+  <p>Vous restez propriétaire des photos et textes que vous publiez, mais vous accordez à DEKONme le droit de les afficher sur le site dans le cadre normal du fonctionnement de la marketplace.</p>
+
+  <h2>8. Suspension de compte</h2>
+  <p>DEKONme peut suspendre ou supprimer un compte en cas de non-respect de ces conditions, de comportement frauduleux, ou de signalement fondé de la part d'autres utilisateurs.</p>
+
+  <h2>9. Publicité</h2>
+  <p>DEKONme affiche des publicités via Google AdSense pour financer gratuitement le service. Voir notre <a href="/confidentialite.html">politique de confidentialité</a> pour plus de détails sur les cookies publicitaires.</p>
+
+  <h2>10. Droit applicable</h2>
+  <p>Les présentes conditions sont régies par le droit en vigueur en République togolaise.</p>
+
+  <h2>11. Nous contacter</h2>
+  <p>Pour toute question concernant ces conditions, contactez-nous via <a href="https://wa.me/22899129916" target="_blank" rel="noopener noreferrer">WhatsApp</a>.</p>
+</div>
+
+<div class="bottom-nav" id="bottomNav"></div>
+
+<script src="/js/supabase-config.js"></script>
+<script src="/js/app.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    if (typeof renderBottomNav === 'function') renderBottomNav('');
+  });
+</script>
+</body>
+</html>

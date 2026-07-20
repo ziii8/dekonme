@@ -519,6 +519,82 @@ async function getSellerProfile(userId) {
   return data;
 }
 
+/* ==================== NOTATION VENDEUR ==================== */
+
+/* Résumé de la note d'un vendeur : moyenne + nombre d'avis.
+   Renvoie { average: number|null, count: number } — average est null
+   si le vendeur n'a encore aucun avis (on affiche alors "Nouveau vendeur"). */
+async function getSellerRatingSummary(sellerId) {
+  if (!window.db || !sellerId) return { average: null, count: 0 };
+  const { data, error } = await window.db
+    .from("reviews")
+    .select("rating")
+    .eq("seller_id", sellerId);
+
+  if (error || !data || data.length === 0) {
+    return { average: null, count: 0 };
+  }
+  const sum = data.reduce((acc, r) => acc + r.rating, 0);
+  return { average: sum / data.length, count: data.length };
+}
+
+/* Liste des avis reçus par un vendeur, avec le nom de l'auteur */
+async function getSellerReviews(sellerId, limit = 10) {
+  if (!window.db || !sellerId) return [];
+  const { data, error } = await window.db
+    .from("reviews")
+    .select("id, rating, comment, created_at, reviewer_id, profiles!reviews_reviewer_id_fkey(name, avatar_emoji)")
+    .eq("seller_id", sellerId)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+
+  if (error) { console.error("Erreur chargement avis :", error); return []; }
+  return data || [];
+}
+
+/* L'avis déjà laissé par l'utilisateur connecté pour ce vendeur, s'il existe
+   (permet d'afficher "Modifier mon avis" plutôt que d'en créer un doublon) */
+async function getMyReviewForSeller(sellerId) {
+  if (!window.db || !sellerId) return null;
+  const user = await getCurrentUser();
+  if (!user) return null;
+
+  const { data, error } = await window.db
+    .from("reviews")
+    .select("*")
+    .eq("seller_id", sellerId)
+    .eq("reviewer_id", user.id)
+    .maybeSingle();
+
+  if (error) return null;
+  return data;
+}
+
+/* Soumet ou met à jour l'avis de l'utilisateur connecté pour un vendeur.
+   Un seul avis par personne et par vendeur (contrainte UNIQUE côté DB) —
+   on fait un upsert plutôt qu'un simple insert. */
+async function submitSellerReview(sellerId, rating, comment, listingId) {
+  if (!window.db) return { error: "Base de données non initialisée" };
+  const user = await getCurrentUser();
+  if (!user) return { error: "Non connecté" };
+  if (user.id === sellerId) return { error: "Vous ne pouvez pas vous noter vous-même" };
+
+  const { data, error } = await window.db
+    .from("reviews")
+    .upsert({
+      seller_id: sellerId,
+      reviewer_id: user.id,
+      listing_id: listingId || null,
+      rating: rating,
+      comment: comment || null,
+    }, { onConflict: "seller_id,reviewer_id" })
+    .select()
+    .single();
+
+  if (error) { console.error("Erreur soumission avis :", error); return { error: error.message }; }
+  return { data };
+}
+
 async function getListingsBySeller(userId) {
   if (!window.db) return [];
   const { data, error } = await window.db

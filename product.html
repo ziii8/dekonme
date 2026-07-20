@@ -265,9 +265,12 @@
 
         const published = params.get('published') === '1';
         const updated = params.get('updated') === '1';
-        const ratingLine = listing.reviews > 0
-          ? `★ ${escapeHTML(listing.rating)} (${escapeHTML(listing.reviews)} avis)`
-          : 'Nouvelle annonce';
+        const sellerRating = typeof getSellerRatingSummary === 'function'
+          ? await getSellerRatingSummary(listing.user_id)
+          : { average: null, count: 0 };
+        const ratingLine = sellerRating.average !== null
+          ? `★ ${sellerRating.average.toFixed(1)} (${sellerRating.count} avis)`
+          : 'Nouveau vendeur';
 
         const rawImages = listing.images && listing.images.length
           ? listing.images

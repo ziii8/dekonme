@@ -169,7 +169,19 @@
         if (s && s.dot) statusHTML = `<p class="seller-status">${escapeHtml(s.dot)} ${escapeHtml(s.label)}</p>`;
       }
 
+      /* ==================== Notation vendeur ==================== */
+      const ratingSummary = typeof getSellerRatingSummary === 'function'
+        ? await getSellerRatingSummary(sellerId)
+        : { average: null, count: 0 };
+
+      const ratingBadgeHTML = ratingSummary.average !== null
+        ? `<span class="seller-rating-badge">⭐ ${ratingSummary.average.toFixed(1)} · ${ratingSummary.count} avis</span>`
+        : `<span class="seller-rating-badge new">Nouveau vendeur</span>`;
+
       const safePhone = typeof escapeHtml === 'function' ? escapeHtml(profile.phone || '') : String(profile.phone || '');
+
+      const currentUser = typeof getCurrentUser === 'function' ? await getCurrentUser() : null;
+      const isOwnProfile = currentUser && currentUser.id === sellerId;
 
       container.innerHTML = `
         <div class="profile-header">
@@ -177,6 +189,7 @@
           <div class="info">
             <h2>${safeName}</h2>
             <p>${safeCity ? safeCity + ' · ' : ''}${timeAgo(profile.created_at)}</p>
+            ${ratingBadgeHTML}
             ${statusHTML}
           </div>
         </div>
@@ -189,6 +202,11 @@
         ${socialHTML}
 
         <div class="section-head" style="margin-top: 32px;">
+          <h3>Avis (<span id="reviewCount">${ratingSummary.count}</span>)</h3>
+        </div>
+        <div id="reviewsSection"></div>
+
+        <div class="section-head" style="margin-top: 32px;">
           <h3>Annonces actives (<span id="activeCount">0</span>)</h3>
         </div>
         <div class="product-grid" id="sellerListingsGrid"></div>
@@ -196,6 +214,11 @@
       `;
 
       renderListingsGrid();
+      if (!isOwnProfile) {
+        renderReviewsSection(currentUser);
+      } else {
+        await renderReviewsList();
+      }
 
       /* FIX AdSense : profil réellement trouvé et affiché, on peut charger les pubs */
       loadAdSenseIfContentReady();
@@ -215,6 +238,137 @@
       return;
     }
     window.open(`https://wa.me/${phone.replace(/\D/g, '')}`, '_blank');
+  }
+
+  /* ==================== SECTION AVIS ==================== */
+  let _selectedStars = 0;
+
+  async function renderReviewsSection(currentUser) {
+    const section = document.getElementById('reviewsSection');
+    if (!section) return;
+
+    if (!currentUser) {
+      // Non connecté : on affiche juste la liste, avec une invitation à se connecter pour noter
+      await renderReviewsList();
+      const list = document.getElementById('reviewsList');
+      if (list) {
+        const prompt = document.createElement('div');
+        prompt.className = 'review-login-prompt';
+        prompt.innerHTML = `<a href="/auth.html?next=seller.html">Connectez-vous</a> pour laisser un avis sur ce vendeur.`;
+        section.insertBefore(prompt, list);
+      }
+      return;
+    }
+
+    const existingReview = typeof getMyReviewForSeller === 'function'
+      ? await getMyReviewForSeller(sellerId)
+      : null;
+
+    section.innerHTML = `
+      <div class="review-form-card">
+        <p class="review-form-label">${existingReview ? 'Modifier votre avis' : 'Laisser un avis sur ce vendeur'}</p>
+        <div class="star-picker" id="starPicker" role="radiogroup" aria-label="Note de 1 à 5 étoiles">
+          ${[1,2,3,4,5].map(n => `<button type="button" class="star-btn" data-star="${n}" aria-label="${n} étoile${n>1?'s':''}">☆</button>`).join('')}
+        </div>
+        <textarea id="reviewComment" rows="2" placeholder="Votre expérience avec ce vendeur (facultatif)" maxlength="300">${existingReview ? escapeHtml(existingReview.comment || '') : ''}</textarea>
+        <button type="button" class="btn btn-primary btn-block" id="submitReviewBtn" style="margin-top: 8px;">
+          ${existingReview ? 'Mettre à jour mon avis' : 'Publier mon avis'}
+        </button>
+      </div>
+      <div id="reviewsList"></div>
+    `;
+
+    _selectedStars = existingReview ? existingReview.rating : 0;
+    updateStarDisplay();
+
+    document.querySelectorAll('.star-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        _selectedStars = Number(btn.dataset.star);
+        updateStarDisplay();
+      });
+    });
+
+    document.getElementById('submitReviewBtn').addEventListener('click', handleSubmitReview);
+
+    await renderReviewsList();
+  }
+
+  function updateStarDisplay() {
+    document.querySelectorAll('.star-btn').forEach(btn => {
+      const n = Number(btn.dataset.star);
+      btn.textContent = n <= _selectedStars ? '★' : '☆';
+      btn.classList.toggle('active', n <= _selectedStars);
+    });
+  }
+
+  async function handleSubmitReview() {
+    if (_selectedStars === 0) {
+      showToast('Choisissez une note en cliquant sur les étoiles.', 'error');
+      return;
+    }
+
+    const btn = document.getElementById('submitReviewBtn');
+    const comment = document.getElementById('reviewComment').value.trim();
+
+    btn.disabled = true;
+    btn.textContent = 'Envoi…';
+
+    const result = typeof submitSellerReview === 'function'
+      ? await submitSellerReview(sellerId, _selectedStars, comment, null)
+      : { error: 'Fonction indisponible' };
+
+    if (result.error) {
+      showToast('Erreur : impossible d\'envoyer votre avis.', 'error');
+      btn.disabled = false;
+      btn.textContent = 'Publier mon avis';
+      return;
+    }
+
+    showToast('✅ Merci pour votre avis !', 'success');
+    init(); // recharge tout pour mettre à jour le badge de note global
+  }
+
+  function renderStars(rating) {
+    const full = Math.round(rating);
+    return Array.from({ length: 5 }, (_, i) => i < full ? '★' : '☆').join('');
+  }
+
+  async function renderReviewsList() {
+    let list = document.getElementById('reviewsList');
+    if (!list) {
+      // Cas "profil connecté au vendeur lui-même" : pas de formulaire, juste la liste
+      const section = document.getElementById('reviewsSection');
+      if (!section) return;
+      section.innerHTML = '<div id="reviewsList"></div>';
+      list = document.getElementById('reviewsList');
+    }
+
+    const reviews = typeof getSellerReviews === 'function' ? await getSellerReviews(sellerId, 10) : [];
+
+    if (!reviews.length) {
+      list.innerHTML = `<p class="review-empty">Ce vendeur n'a pas encore reçu d'avis.</p>`;
+      return;
+    }
+
+    list.innerHTML = reviews.map(r => {
+      const author = r.profiles ? escapeHtml(r.profiles.name || 'Utilisateur DEKONme') : 'Utilisateur DEKONme';
+      const avatar = r.profiles ? escapeHtml(r.profiles.avatar_emoji || '👤') : '👤';
+      const date = new Date(r.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
+      const comment = r.comment ? `<p class="review-comment">${escapeHtml(r.comment)}</p>` : '';
+      return `
+        <div class="review-item">
+          <div class="review-item-header">
+            <span class="review-avatar">${avatar}</span>
+            <div class="review-item-meta">
+              <span class="review-author">${author}</span>
+              <span class="review-stars">${renderStars(r.rating)}</span>
+            </div>
+            <span class="review-date">${date}</span>
+          </div>
+          ${comment}
+        </div>
+      `;
+    }).join('');
   }
 
   function safeListingImageUrl(url) {

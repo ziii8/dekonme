@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#E8732C">
+  <link rel="apple-touch-icon" href="/icons/icon-192.png">
+  <meta name="description" content="Politique de confidentialité de DEKONme — comment vos données sont collectées, utilisées et protégées.">
+  <title>Politique de confidentialité — DEKONme</title>
+  <link rel="stylesheet" href="/css/style.css">
+
+  <style>
+    .legal-content { padding: 8px 0 40px; }
+    .legal-content h2 { font-size: 17px; font-weight: 800; margin: 28px 0 10px; color: var(--ink); }
+    .legal-content h2:first-child { margin-top: 8px; }
+    .legal-content p, .legal-content li { font-size: 14px; line-height: 1.7; color: var(--ink); margin-bottom: 10px; }
+    .legal-content ul { padding-left: 20px; margin-bottom: 14px; }
+    .legal-content .updated { font-size: 12px; color: var(--ink-soft); margin-bottom: 24px; }
+    .legal-content a { color: var(--orange); font-weight: 600; text-decoration: underline; }
+  </style>
+</head>
+<body>
+
+<div class="topbar">
+  <button class="icon-btn back-btn" onclick="history.length > 1 ? history.back() : window.location.href='/index.html'" aria-label="Retour">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+  </button>
+  <div class="page-title">Confidentialité</div>
+  <button id="themeToggleBtn" class="icon-btn" onclick="toggleTheme()" aria-label="Changer de thème">🌙</button>
+</div>
+
+<div class="container legal-content">
+  <p class="updated">Dernière mise à jour : juillet 2026</p>
+
+  <h2>1. Qui sommes-nous</h2>
+  <p>DEKONme est une marketplace en ligne qui permet aux particuliers et petits commerces du Togo d'acheter et de vendre des produits, en mettant en relation acheteurs et vendeurs via WhatsApp.</p>
+
+  <h2>2. Données que nous collectons</h2>
+  <p>Lorsque vous créez un compte ou publiez une annonce, nous collectons :</p>
+  <ul>
+    <li>Votre nom, adresse email et numéro de téléphone WhatsApp</li>
+    <li>Votre ville</li>
+    <li>Les photos et descriptions des annonces que vous publiez</li>
+    <li>Vos favoris et l'historique de vos annonces</li>
+    <li>Des informations techniques automatiques (type d'appareil, préférence de thème clair/sombre)</li>
+  </ul>
+
+  <h2>3. Comment nous utilisons ces données</h2>
+  <p>Vos données servent uniquement à faire fonctionner le service : afficher vos annonces, permettre aux acheteurs de vous contacter, gérer votre profil vendeur, et améliorer l'expérience du site. Nous ne vendons jamais vos données personnelles à des tiers.</p>
+
+  <h2>4. Hébergement et stockage</h2>
+  <p>Vos données sont stockées de façon sécurisée via Supabase (base de données et hébergement de fichiers) et le site est diffusé via Cloudflare Pages. Ces prestataires techniques appliquent leurs propres mesures de sécurité pour protéger les données hébergées.</p>
+
+  <h2>5. Cookies et publicité</h2>
+  <p>DEKONme utilise Google AdSense pour afficher des publicités permettant de financer gratuitement le service. Google et ses partenaires publicitaires peuvent utiliser des cookies pour diffuser des annonces basées sur vos visites précédentes sur ce site ou d'autres sites.</p>
+  <p>Vous pouvez consulter et gérer les paramètres de publicité personnalisée de Google sur <a href="https://myadcenter.google.com" target="_blank" rel="noopener noreferrer">myadcenter.google.com</a>, et en apprendre davantage sur l'utilisation des données publicitaires par Google via <a href="https://policies.google.com/technologies/ads" target="_blank" rel="noopener noreferrer">policies.google.com/technologies/ads</a>.</p>
+  <p>Nous utilisons également le stockage local de votre navigateur (localStorage) pour mémoriser votre préférence de thème clair/sombre — cette information reste sur votre appareil et n'est jamais transmise à nos serveurs.</p>
+
+  <h2>6. Partage des informations</h2>
+  <p>Votre nom, votre ville et votre numéro WhatsApp associés à une annonce sont visibles publiquement par tout visiteur du site, car c'est nécessaire au fonctionnement d'un marketplace où acheteurs et vendeurs doivent pouvoir se contacter directement.</p>
+
+  <h2>7. Vos droits</h2>
+  <p>Vous pouvez à tout moment :</p>
+  <ul>
+    <li>Modifier vos informations de profil depuis la page "Mon profil"</li>
+    <li>Supprimer une annonce que vous avez publiée</li>
+    <li>Demander la suppression complète de votre compte et de vos données en nous contactant via WhatsApp</li>
+  </ul>
+
+  <h2>8. Sécurité</h2>
+  <p>Nous recommandons fortement de ne jamais partager de code de vérification (OTP), de mot de passe, ou de faire un paiement d'acompte à distance avant d'avoir vu et vérifié un article en personne. DEKONme affiche un rappel de sécurité avant chaque mise en relation via WhatsApp.</p>
+
+  <h2>9. Modifications de cette politique</h2>
+  <p>Cette politique de confidentialité peut être mise à jour de temps à autre. La date de dernière mise à jour est indiquée en haut de cette page.</p>
+
+  <h2>10. Nous contacter</h2>
+  <p>Pour toute question concernant vos données ou cette politique, contactez-nous via <a href="https://wa.me/22899129916" target="_blank" rel="noopener noreferrer">WhatsApp</a>.</p>
+</div>
+
+<div class="bottom-nav" id="bottomNav"></div>
+
+<script src="/js/supabase-config.js"></script>
+<script src="/js/app.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    if (typeof renderBottomNav === 'function') renderBottomNav('');
+  });
+</script>
+</body>
+</html>
