@@ -607,6 +607,21 @@ async function getListingsBySeller(userId) {
   return data;
 }
 
+/* Compte les annonces qu'un vendeur a marquées comme vendues — visible
+   publiquement sur seller.html comme signal de confiance/activité réelle.
+   Déclaratif (le vendeur clique lui-même "Marquer comme vendue"), donc ce
+   n'est pas une preuve infalsifiable, mais un signal d'activité utile. */
+async function countSoldListingsBySeller(userId) {
+  if (!window.db || !userId) return 0;
+  const { count, error } = await window.db
+    .from("listings")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", userId)
+    .eq("status", "sold");
+  if (error) { console.error("Erreur comptage ventes :", error); return 0; }
+  return count || 0;
+}
+
 async function requireAuth(redirectBackTo) {
   const logged = await isLoggedIn();
   if (!logged) {

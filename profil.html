@@ -603,6 +603,7 @@
     const image  = escapeHTML((l.images && l.images[0]) || l.image_url || 'https://picsum.photos/seed/' + encodeURIComponent(l.id) + '/600/600');
     const target = editable ? `/publish.html?id=${encodeURIComponent(l.id)}` : `/product.html?id=${encodeURIComponent(l.id)}`;
     const formattedPrice = typeof formatPrice === 'function' ? formatPrice(l.price) : l.price;
+    const safeId = encodeURIComponent(l.id);
     return `
       <div class="product-card" onclick="window.location.href='${escapeHTML(target)}'">
         <div class="img-wrap">
@@ -616,9 +617,51 @@
           <div class="price-row"><span class="price">${escapeHTML(String(formattedPrice))} F</span></div>
           <p class="meta">${escapeHTML(l.city || '')}${l.city && l.condition ? ' · ' : ''}${escapeHTML(l.condition || '')}</p>
         </div>
+        ${editable ? `
+          <button type="button" class="btn-mark-sold" data-id="${safeId}" onclick="event.stopPropagation(); handleMarkAsSold('${safeId}')">
+            ✅ Marquer comme vendue
+          </button>
+        ` : ''}
       </div>
     `;
   }
+
+  /* Déclare une annonce vendue — action irréversible côté UI (repasse en
+     "Occasion" nécessiterait de republier). Sécurisé côté serveur par la
+     politique RLS Supabase (UPDATE restreint au propriétaire), donc même
+     sans vérification supplémentaire ici, seule l'annonce du bon
+     utilisateur peut réellement être modifiée. */
+  window.handleMarkAsSold = async function (id) {
+    if (!confirm('Confirmer que cette annonce est vendue ? Elle sera déplacée dans "Annonces vendues".')) {
+      return;
+    }
+
+    if (typeof markAsSold !== 'function') return;
+    const result = await markAsSold(id);
+
+    if (result.error) {
+      showToast('❌ Impossible de marquer cette annonce comme vendue.', 'error');
+      return;
+    }
+
+    showToast('✅ Annonce marquée comme vendue !', 'success');
+
+    // Déplace l'annonce localement (active -> vendue) sans tout recharger
+    const idx = allActiveListings.findIndex(l => String(l.id) === String(id));
+    if (idx !== -1) {
+      const [moved] = allActiveListings.splice(idx, 1);
+      moved.status = 'sold';
+      allSoldListings.unshift(moved);
+    }
+    renderActiveGrid();
+    renderSoldGrid();
+
+    // Met à jour les statistiques en haut de page
+    const activeStat = document.querySelector('.stat-item:nth-child(1) strong');
+    const soldStat = document.querySelector('.stat-item:nth-child(2) strong');
+    if (activeStat) activeStat.textContent = allActiveListings.length;
+    if (soldStat) soldStat.textContent = allSoldListings.length;
+  };
 
   /* ============================================================
      GRILLES PAGINÉES
