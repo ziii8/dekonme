@@ -622,6 +622,29 @@ async function countSoldListingsBySeller(userId) {
   return count || 0;
 }
 
+/* ==================== SPONSORS (pub directe, sans AdSense) ==================== */
+
+/* Renvoie UN sponsor actif à afficher (le plus récent qui est dans sa
+   période de validité), ou null s'il n'y en a aucun — dans ce cas, la
+   bannière ne doit tout simplement pas s'afficher, pas de case vide. */
+async function getActiveSponsor() {
+  if (!window.db) return null;
+  const today = new Date().toISOString().slice(0, 10);
+
+  const { data, error } = await window.db
+    .from("sponsors")
+    .select("*")
+    .eq("active", true)
+    .or(`start_date.is.null,start_date.lte.${today}`)
+    .or(`end_date.is.null,end_date.gte.${today}`)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) { console.error("Erreur chargement sponsor :", error); return null; }
+  return data;
+}
+
 async function requireAuth(redirectBackTo) {
   const logged = await isLoggedIn();
   if (!logged) {

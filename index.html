@@ -150,6 +150,8 @@
       <div class="cat-scroll-row" id="brandGrid" role="region" aria-label="Catégories"></div>
     </section>
 
+    <div id="sponsorBannerContainer"></div>
+
     <section>
       <div class="section-head">
         <h2 id="productsTitle">Annonces récentes</h2>
@@ -321,6 +323,31 @@
     // ============================================
     // CATEGORY GRID RENDERING
     // ============================================
+    // ============================================
+    // BANNIÈRE SPONSOR (pub directe, remplace AdSense)
+    // ============================================
+    async function renderSponsorBanner() {
+      const container = document.getElementById('sponsorBannerContainer');
+      if (!container || typeof getActiveSponsor !== 'function') return;
+
+      const sponsor = await getActiveSponsor();
+      if (!sponsor) {
+        container.innerHTML = ''; // Aucun sponsor => rien à afficher, pas de case vide
+        return;
+      }
+
+      const safeName = escapeHtml(sponsor.name || '');
+      const safeImg = escapeHtml(sponsor.image_url || '');
+      const safeLink = escapeHtml(sponsor.link_url || '#');
+
+      container.innerHTML = `
+        <a href="${safeLink}" target="_blank" rel="noopener noreferrer sponsored" class="sponsor-banner" aria-label="Publicité : ${safeName}">
+          <img src="${safeImg}" alt="${safeName}" loading="lazy">
+          <span class="sponsor-tag">Sponsorisé</span>
+        </a>
+      `;
+    }
+
     function renderCategoryGrid() {
       const grid = document.getElementById('brandGrid');
       if (!grid || typeof CATEGORIES === 'undefined') return;
@@ -587,6 +614,7 @@
     // ============================================
     document.addEventListener('DOMContentLoaded', function() {
       renderCategoryGrid();
+      renderSponsorBanner();
       renderHomeProducts();
       renderDropdownMenu();
       

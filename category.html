@@ -86,6 +86,7 @@
 
   <!-- VUE PRODUITS FILTRÉS ET RECHERCHE -->
   <div id="productListView" class="hidden">
+    <div id="sponsorBannerContainer"></div>
     <div class="toolbar" style="margin-bottom: 16px; display: flex; gap: 12px; align-items: center;">
       <div style="position: relative;">
         <button onclick="toggleCategoryFilter()" id="filterBtn" class="btn-filter" style="display: flex; align-items: center; gap: 6px;">
@@ -231,6 +232,8 @@
     document.getElementById('brandListView').classList.add('hidden');
     document.getElementById('productListView').classList.remove('hidden');
     document.getElementById('pageTitle').textContent = cat || (query ? `"${query}"` : 'Résultats');
+    const sponsorContainer = document.getElementById('sponsorBannerContainer');
+    if (sponsorContainer) sponsorContainer.innerHTML = ''; // Bannière réservée à la vue "tous les produits"
 
     const grid = document.getElementById('productGrid');
     if (!grid) return;
@@ -268,10 +271,36 @@
   let catalogLoading = false;
   let _catalogInfiniteScrollObserver = null;
 
+  // ============================================
+  // BANNIÈRE SPONSOR (pub directe, remplace AdSense)
+  // ============================================
+  async function renderSponsorBanner() {
+    const container = document.getElementById('sponsorBannerContainer');
+    if (!container || typeof getActiveSponsor !== 'function') return;
+
+    const sponsor = await getActiveSponsor();
+    if (!sponsor) {
+      container.innerHTML = '';
+      return;
+    }
+
+    const safeName = escapeHtml(sponsor.name || '');
+    const safeImg = escapeHtml(sponsor.image_url || '');
+    const safeLink = escapeHtml(sponsor.link_url || '#');
+
+    container.innerHTML = `
+      <a href="${safeLink}" target="_blank" rel="noopener noreferrer sponsored" class="sponsor-banner" aria-label="Publicité : ${safeName}">
+        <img src="${safeImg}" alt="${safeName}" loading="lazy">
+        <span class="sponsor-tag">Sponsorisé</span>
+      </a>
+    `;
+  }
+
   async function renderAllProducts() {
     document.getElementById('brandListView').classList.add('hidden');
     document.getElementById('productListView').classList.remove('hidden');
     document.getElementById('pageTitle').textContent = 'Tous les produits';
+    renderSponsorBanner();
 
     const grid = document.getElementById('productGrid');
     if (!grid) return;
