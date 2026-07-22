@@ -217,6 +217,17 @@
     if (!actionsBox) return;
     if (!listing) { actionsBox.innerHTML = ''; return; }
 
+    if (listing.status === 'sold') {
+      actionsBox.innerHTML = `
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 10px; margin-top: 20px;">
+          <button class="btn btn-block" disabled style="width: 100%; max-width: 300px; background: var(--bg-soft); color: var(--ink-soft); cursor: not-allowed;">
+            Cet article n'est plus disponible
+          </button>
+        </div>
+      `;
+      return;
+    }
+
     actionsBox.innerHTML = `
       <div style="display: flex; flex-direction: column; align-items: center; gap: 10px; margin-top: 20px;">
         <button class="btn btn-whatsapp" id="btnContactWhatsapp" style="width: 100%; max-width: 300px;">
@@ -321,6 +332,7 @@
         container.innerHTML = `
           ${published ? `<div class="success-banner">✅ Votre annonce a été publiée avec succès.</div>` : ''}
           ${updated ? `<div class="success-banner">✅ Votre annonce a été mise à jour.</div>` : ''}
+          ${listing.status === 'sold' ? `<div class="success-banner" style="background: var(--bg-soft); color: var(--ink-soft); border-color: var(--border);">🔒 Cet article a été vendu et n'est plus disponible.</div>` : ''}
           ${galleryHTML}
 
           <h1 class="detail-title" style="font-size:22px; margin-top:12px; margin-bottom:4px;">${safeTitle}</h1>
