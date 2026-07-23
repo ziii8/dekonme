@@ -1,9 +1,9 @@
 {
-  "name": "DEKONme - Téléphones au Togo",
+  "name": "DEKONme - Marketplace du Togo",
   "short_name": "DEKONme",
-  "description": "Achetez et vendez des téléphones au Togo, contact direct par WhatsApp.",
-  "start_url": "./index.html",
-  "scope": "./",
+  "description": "Achetez et vendez facilement au Togo — mode, électronique, maison, beauté et plus. Contact direct par WhatsApp.",
+  "start_url": "/index.html",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#FAF6F0",
   "theme_color": "#E8732C",
@@ -14,25 +14,25 @@
   ],
   "icons": [
     {
-      "src": "icons/icon-192.png",
+      "src": "/icons/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "icons/icon-512.png",
+      "src": "/icons/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "icons/icon-maskable-192.png",
+      "src": "/icons/icon-maskable-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "maskable"
     },
     {
-      "src": "icons/icon-maskable-512.png",
+      "src": "/icons/icon-maskable-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
@@ -42,16 +42,16 @@
     {
       "name": "Publier une annonce",
       "short_name": "Publier",
-      "description": "Vendre un nouveau téléphone sur DEKONme",
-      "url": "./publish.html",
-      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
+      "description": "Vendre un article sur DEKONme",
+      "url": "/publish.html",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
     },
     {
       "name": "Mon Profil",
       "short_name": "Profil",
       "description": "Voir mes annonces et mes favoris",
-      "url": "./profil.html",
-      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
+      "url": "/profil.html",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
     }
   ]
 }
