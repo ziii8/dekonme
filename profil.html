@@ -379,7 +379,8 @@
     const safeName     = escapeHTML(profile.name);
     const safeCity     = escapeHTML(profile.city  || '');
     const safePhone    = escapeHTML(profile.phone || '');
-    const safeAvatar   = escapeHTML(profile.avatar_emoji || '👤');
+    const safeAvatarUrl = profile.avatar_url ? escapeHTML(profile.avatar_url) : '';
+    const safeAvatarEmoji = escapeHTML(profile.avatar_emoji || '👤');
     const safeCleanPhone = escapeHTML(cleanPhone);
     const safeId       = escapeHTML(profile.id);
 
@@ -406,7 +407,11 @@
 
     document.getElementById('profileContainer').innerHTML = `
       <div class="profile-header">
-        <div class="profile-avatar">${safeAvatar}</div>
+        <button type="button" class="profile-avatar-btn" id="avatarUploadBtn" aria-label="Changer ma photo de profil">
+          <span class="profile-avatar">${safeAvatarUrl ? `<img src="${safeAvatarUrl}" alt="Photo de profil">` : safeAvatarEmoji}</span>
+          <span class="avatar-camera-badge">📷</span>
+        </button>
+        <input type="file" id="avatarFileInput" accept="image/*" style="display:none;">
         <div class="info">
           <h2>${safeName}</h2>
           <p>${safeCity ? safeCity + ' · ' : ''}${safePhone}</p>
@@ -530,6 +535,13 @@
 
     /* ---- Event Listeners ---- */
     document.getElementById('btnToggleEdit').addEventListener('click', toggleEditForm);
+
+    const avatarUploadBtn = document.getElementById('avatarUploadBtn');
+    const avatarFileInput = document.getElementById('avatarFileInput');
+    if (avatarUploadBtn && avatarFileInput) {
+      avatarUploadBtn.addEventListener('click', () => avatarFileInput.click());
+      avatarFileInput.addEventListener('change', handleAvatarUpload);
+    }
     document.getElementById('btnToggleSocial').addEventListener('click', toggleSocialForm);
 
     const btnShare = document.getElementById('btnShareShop');
@@ -554,6 +566,41 @@
     renderActiveGrid();
     renderSoldGrid();
     if (typeof renderBottomNav === 'function') renderBottomNav('profil');
+  }
+
+  /* ============================================================
+     UPLOAD PHOTO DE PROFIL
+  ============================================================ */
+  async function handleAvatarUpload(e) {
+    const file = e.target.files && e.target.files[0];
+    e.target.value = '';
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      showToast('❌ Merci de choisir un fichier image.', 'error');
+      return;
+    }
+
+    const avatarBtn = document.getElementById('avatarUploadBtn');
+    const avatarSpan = avatarBtn ? avatarBtn.querySelector('.profile-avatar') : null;
+    const originalContent = avatarSpan ? avatarSpan.innerHTML : '';
+
+    if (avatarSpan) avatarSpan.innerHTML = '<span class="avatar-uploading-spinner"></span>';
+
+    const result = typeof uploadAvatarPhoto === 'function'
+      ? await uploadAvatarPhoto(file)
+      : { error: 'Fonction indisponible' };
+
+    if (result.error) {
+      showToast('❌ Impossible de mettre à jour la photo.', 'error');
+      if (avatarSpan) avatarSpan.innerHTML = originalContent;
+      return;
+    }
+
+    if (avatarSpan) {
+      avatarSpan.innerHTML = `<img src="${escapeHTML(result.url)}" alt="Photo de profil">`;
+    }
+    showToast('✅ Photo de profil mise à jour !', 'success');
   }
 
   /* ============================================================

@@ -194,11 +194,87 @@ let _heartbeatTimer = null;
         animation: none !important;
       }
     }
+
+    /* --- Écran de chargement de page --- */
+    #dkm-app-loader {
+      position: fixed;
+      inset: 0;
+      z-index: 99999;
+      background: var(--bg, #FAF6F0);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      transition: opacity 0.3s ease;
+    }
+    #dkm-app-loader.dkm-loader-hide {
+      opacity: 0;
+      pointer-events: none;
+    }
+    .dkm-loader-mark {
+      width: 56px;
+      height: 56px;
+      background: var(--ink, #1A1A1A);
+      color: var(--bg, #FAF6F0);
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      font-weight: 800;
+      animation: dkm-loader-pulse 1.2s ease-in-out infinite;
+    }
+    @keyframes dkm-loader-pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.08); }
+    }
+    .dkm-loader-spinner {
+      width: 26px;
+      height: 26px;
+      border: 3px solid var(--border, #E8E2D8);
+      border-top-color: var(--orange, #E8732C);
+      border-radius: 50%;
+      animation: dkm-spin 0.7s linear infinite;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .dkm-loader-mark, .dkm-loader-spinner { animation: none !important; }
+    }
   `;
   document.head.appendChild(style);
 })();
 
 /* Génère N cartes "skeleton" (placeholders animés) pendant le chargement */
+/* ============================================================
+   ÉCRAN DE CHARGEMENT DE PAGE
+   S'affiche immédiatement (avant même DOMContentLoaded) et se masque
+   quand chaque page appelle hideAppLoader() une fois son contenu prêt.
+   Sécurité : se masque automatiquement après 4s max si une page oublie
+   de l'appeler, pour ne jamais rester bloqué à l'écran.
+============================================================ */
+(function initAppLoader() {
+  if (document.getElementById('dkm-app-loader')) return;
+  const loader = document.createElement('div');
+  loader.id = 'dkm-app-loader';
+  loader.innerHTML = `
+    <div class="dkm-loader-mark">D</div>
+    <div class="dkm-loader-spinner"></div>
+  `;
+  document.body.appendChild(loader);
+  window._dkmLoaderTimeout = setTimeout(() => {
+    if (typeof hideAppLoader === 'function') hideAppLoader();
+  }, 4000);
+})();
+
+function hideAppLoader() {
+  clearTimeout(window._dkmLoaderTimeout);
+  const loader = document.getElementById('dkm-app-loader');
+  if (!loader) return;
+  loader.classList.add('dkm-loader-hide');
+  setTimeout(() => loader.remove(), 300);
+}
+if (!window.hideAppLoader) window.hideAppLoader = hideAppLoader;
+
 function renderSkeletonCards(count = 6) {
   return Array.from({ length: count }).map(() => `
     <div class="dkm-skeleton-card">
@@ -643,6 +719,77 @@ async function getActiveSponsor() {
 
   if (error) { console.error("Erreur chargement sponsor :", error); return null; }
   return data;
+}
+
+/* ==================== PHOTO DE PROFIL ==================== */
+
+/* Redimensionne l'image côté client avant upload (même logique que
+   compressImage() dans publish.html, adaptée à une petite taille d'avatar
+   — pas besoin d'une grande résolution pour un rond de 64-96px). La forme
+   circulaire finale est gérée en CSS (object-fit: cover), donc pas besoin
+   de recadrer en carré ici. */
+function compressAvatarImage(file, maxSize = 400, quality = 0.85) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error('Lecture du fichier impossible'));
+    reader.onload = (ev) => {
+      const img = new Image();
+      img.onerror = () => reject(new Error('Image invalide ou corrompue'));
+      img.onload = () => {
+        const ratio = Math.min(1, maxSize / Math.max(img.width, img.height));
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width * ratio;
+        canvas.height = img.height * ratio;
+        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+        canvas.toBlob((blob) => {
+          resolve(new File([blob], 'avatar.jpg', { type: 'image/jpeg' }));
+        }, 'image/jpeg', quality);
+      };
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+/* Upload la photo dans le bucket "avatars" (sous <user_id>/...) et met à
+   jour profiles.avatar_url. L'ancienne valeur avatar_emoji reste en base
+   comme secours si jamais avatar_url est vidé plus tard. */
+async function uploadAvatarPhoto(file) {
+  if (!window.db) return { error: "Base de données non initialisée" };
+  const user = await getCurrentUser();
+  if (!user) return { error: "Non connecté" };
+
+  try {
+    const compressed = await compressAvatarImage(file);
+    const path = `${user.id}/avatar-${Date.now()}.jpg`;
+
+    const { error: uploadError } = await window.db.storage
+      .from("avatars")
+      .upload(path, compressed, { upsert: false });
+
+    if (uploadError) {
+      console.error("Erreur upload avatar :", uploadError);
+      return { error: uploadError.message };
+    }
+
+    const { data: urlData } = window.db.storage.from("avatars").getPublicUrl(path);
+    const avatarUrl = urlData.publicUrl;
+
+    const { error: updateError } = await window.db
+      .from("profiles")
+      .update({ avatar_url: avatarUrl })
+      .eq("id", user.id);
+
+    if (updateError) {
+      console.error("Erreur mise à jour profil (avatar) :", updateError);
+      return { error: updateError.message };
+    }
+
+    return { url: avatarUrl };
+  } catch (err) {
+    console.error("Erreur traitement photo de profil :", err);
+    return { error: "Impossible de traiter cette image." };
+  }
 }
 
 async function requireAuth(redirectBackTo) {

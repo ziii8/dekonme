@@ -86,6 +86,15 @@
 </head>
 <body>
 
+  <!-- OVERLAY DE CHARGEMENT — masque le tout premier affichage le temps
+       que le CSS/JS et le premier contenu soient prêts (utile en 3G) -->
+  <div id="pageLoader" class="page-loader" aria-hidden="true">
+    <div class="page-loader-logo">
+      <span class="mark">D</span>EKONme
+    </div>
+  </div>
+
+
   <!-- TOP BAR NAVIGATION -->
   <div class="topbar" role="banner">
     <button class="icon-btn" id="menuBtn" aria-label="Ouvrir le menu" aria-expanded="false" aria-controls="dropdownMenu">
@@ -196,6 +205,28 @@
     // CONFIGURATION & STATE
     // ============================================
     const PAGE_SIZE = 6;
+
+    // ============================================
+    // MASQUAGE DE L'OVERLAY DE CHARGEMENT
+    // ============================================
+    const _pageLoadStart = Date.now();
+    let _pageLoaderHidden = false;
+    function hidePageLoader() {
+      if (_pageLoaderHidden) return;
+      _pageLoaderHidden = true;
+      const el = document.getElementById('pageLoader');
+      if (!el) return;
+      const minDisplay = 350; // évite un flash trop brutal sur connexion rapide
+      const elapsed = Date.now() - _pageLoadStart;
+      const wait = Math.max(0, minDisplay - elapsed);
+      setTimeout(() => {
+        el.classList.add('page-loader-hide');
+        setTimeout(() => el.remove(), 400);
+      }, wait);
+    }
+    // Filet de sécurité : si jamais rien ne déclenche le masquage
+    // (erreur réseau, etc.), on ne bloque pas la page indéfiniment.
+    setTimeout(hidePageLoader, 4000);
     let currentOffset = 0;
     let totalListings = 0;
     let isLoading = false;
@@ -612,11 +643,12 @@
     // ============================================
     // INITIALIZATION
     // ============================================
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', async function() {
       renderCategoryGrid();
       renderSponsorBanner();
-      renderHomeProducts();
+      await renderHomeProducts();
       renderDropdownMenu();
+      hidePageLoader();
       
       if (typeof renderBottomNav === 'function') {
         renderBottomNav('accueil');

@@ -196,7 +196,8 @@
 
       const safeName = typeof escapeHtml === 'function' ? escapeHtml(profile.name || 'Vendeur DEKONme') : String(profile.name || 'Vendeur DEKONme');
       const safeCity = typeof escapeHtml === 'function' ? escapeHtml(profile.city || '') : String(profile.city || '');
-      const safeAvatar = typeof escapeHtml === 'function' ? escapeHtml(profile.avatar_emoji || '👤') : '👤';
+      const safeAvatarUrl = profile.avatar_url && typeof escapeHtml === 'function' ? escapeHtml(profile.avatar_url) : '';
+      const safeAvatarEmoji = typeof escapeHtml === 'function' ? escapeHtml(profile.avatar_emoji || '👤') : '👤';
 
       /* ==================== Réseaux sociaux ==================== */
       const social = profile.social_links || {};
@@ -261,7 +262,7 @@
 
       container.innerHTML = `
         <div class="profile-header">
-          <div class="profile-avatar">${safeAvatar}</div>
+          <div class="profile-avatar">${safeAvatarUrl ? `<img src="${safeAvatarUrl}" alt="${safeName}">` : safeAvatarEmoji}</div>
           <div class="info">
             <h2>${safeName}</h2>
             <p>${safeCity ? safeCity + ' · ' : ''}${timeAgo(profile.created_at)}</p>
