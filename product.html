@@ -68,6 +68,14 @@
 </head>
 <body>
 
+<!-- OVERLAY DE CHARGEMENT — masque le tout premier affichage -->
+<div id="pageLoader" class="page-loader" aria-hidden="true">
+  <div class="page-loader-logo">
+    <span class="mark">D</span>EKONme
+  </div>
+</div>
+
+
 <!-- TOP BAR -->
 <div class="topbar">
   <button class="icon-btn back-btn" onclick="history.length > 1 ? history.back() : window.location.href='/index.html'" aria-label="Retour">
@@ -173,6 +181,26 @@
     document.head.appendChild(script);
   }
 
+  // ============================================
+  // MASQUAGE DE L'OVERLAY DE CHARGEMENT
+  // ============================================
+  const _pageLoadStart = Date.now();
+  let _pageLoaderHidden = false;
+  function hidePageLoader() {
+    if (_pageLoaderHidden) return;
+    _pageLoaderHidden = true;
+    const el = document.getElementById('pageLoader');
+    if (!el) return;
+    const minDisplay = 350;
+    const elapsed = Date.now() - _pageLoadStart;
+    const wait = Math.max(0, minDisplay - elapsed);
+    setTimeout(() => {
+      el.classList.add('page-loader-hide');
+      setTimeout(() => el.remove(), 400);
+    }, wait);
+  }
+  setTimeout(hidePageLoader, 4000);
+
   const params = new URLSearchParams(window.location.search);
 
   // FIX : les ID de la table "listings" sont des entiers simples (ex: 2),
@@ -263,6 +291,7 @@
         </div>
       `;
       if (typeof renderBottomNav === 'function') renderBottomNav('categories');
+      hidePageLoader();
       return;
     }
 
@@ -435,6 +464,7 @@
     }
 
     if (typeof renderBottomNav === 'function') renderBottomNav('categories');
+    hidePageLoader();
   }
 
   // ==================== VISIONNEUSE PLEIN ÉCRAN (lightbox) ====================
