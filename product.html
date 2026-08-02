@@ -68,12 +68,17 @@
 </head>
 <body>
 
-<!-- OVERLAY DE CHARGEMENT — masque le tout premier affichage -->
+<!-- OVERLAY DE CHARGEMENT — n'apparaît qu'une fois par session -->
 <div id="pageLoader" class="page-loader" aria-hidden="true">
   <div class="page-loader-logo">
     <span class="mark">D</span>EKONme
   </div>
 </div>
+<script>
+  if (sessionStorage.getItem('dkm_app_entered') === '1') {
+    document.getElementById('pageLoader').style.display = 'none';
+  }
+</script>
 
 
 <!-- TOP BAR -->
@@ -189,6 +194,7 @@
   function hidePageLoader() {
     if (_pageLoaderHidden) return;
     _pageLoaderHidden = true;
+    sessionStorage.setItem('dkm_app_entered', '1');
     const el = document.getElementById('pageLoader');
     if (!el) return;
     const minDisplay = 350;
