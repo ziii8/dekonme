@@ -792,6 +792,58 @@ async function uploadAvatarPhoto(file) {
   }
 }
 
+/* ==================== Q&A SUR LES ANNONCES ==================== */
+
+/* Liste des questions/réponses publiques d'une annonce, avec le nom de
+   la personne qui a posé chaque question. */
+async function getListingQuestions(listingId) {
+  if (!window.db || !listingId) return [];
+  const { data, error } = await window.db
+    .from("listing_questions")
+    .select("id, question, answer, answered_at, created_at, asker_id, profiles!listing_questions_asker_id_fkey(name, avatar_emoji)")
+    .eq("listing_id", listingId)
+    .order("created_at", { ascending: false });
+
+  if (error) { console.error("Erreur chargement questions :", error); return []; }
+  return data || [];
+}
+
+/* Pose une question sur une annonce, au nom de l'utilisateur connecté */
+async function submitListingQuestion(listingId, questionText) {
+  if (!window.db) return { error: "Base de données non initialisée" };
+  const user = await getCurrentUser();
+  if (!user) return { error: "Non connecté" };
+
+  const { data, error } = await window.db
+    .from("listing_questions")
+    .insert({
+      listing_id: listingId,
+      asker_id: user.id,
+      question: questionText,
+    })
+    .select()
+    .single();
+
+  if (error) { console.error("Erreur soumission question :", error); return { error: error.message }; }
+  return { data };
+}
+
+/* Répond à une question — la politique RLS restreint déjà cette action
+   au propriétaire de l'annonce, donc pas besoin de re-vérifier ici. */
+async function submitQuestionAnswer(questionId, answerText) {
+  if (!window.db) return { error: "Base de données non initialisée" };
+
+  const { data, error } = await window.db
+    .from("listing_questions")
+    .update({ answer: answerText, answered_at: new Date().toISOString() })
+    .eq("id", questionId)
+    .select()
+    .single();
+
+  if (error) { console.error("Erreur réponse question :", error); return { error: error.message }; }
+  return { data };
+}
+
 async function requireAuth(redirectBackTo) {
   const logged = await isLoggedIn();
   if (!logged) {

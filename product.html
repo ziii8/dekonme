@@ -282,6 +282,116 @@
     }
   }
 
+  /* ==================== Q&A SUR L'ANNONCE ==================== */
+  async function renderQnaSection(listingId, isOwner, currentUser) {
+    const section = document.getElementById('qnaSection');
+    if (!section) return;
+
+    const questions = typeof getListingQuestions === 'function'
+      ? await getListingQuestions(listingId)
+      : [];
+
+    const listHTML = questions.length
+      ? questions.map(q => {
+          const authorName = q.profiles ? escapeHTML(q.profiles.name || 'Utilisateur DEKONme') : 'Utilisateur DEKONme';
+          const authorAvatar = q.profiles ? escapeHTML(q.profiles.avatar_emoji || '👤') : '👤';
+          const questionText = escapeHTML(q.question);
+          const answerHTML = q.answer
+            ? `<div class="qna-answer"><span class="qna-answer-label">Réponse du vendeur :</span> ${escapeHTML(q.answer)}</div>`
+            : (isOwner
+                ? `<button type="button" class="qna-answer-btn" data-qid="${escapeHTML(String(q.id))}">Répondre</button>`
+                : `<p class="qna-pending">En attente de réponse du vendeur</p>`);
+          return `
+            <div class="qna-item">
+              <div class="qna-question-row">
+                <span class="qna-avatar">${authorAvatar}</span>
+                <div>
+                  <span class="qna-author">${authorName}</span>
+                  <p class="qna-question">${questionText}</p>
+                </div>
+              </div>
+              ${answerHTML}
+            </div>
+          `;
+        }).join('')
+      : `<p class="qna-empty">Aucune question pour le moment.</p>`;
+
+    const formHTML = (currentUser && !isOwner)
+      ? `
+        <div class="qna-form">
+          <textarea id="qnaInput" rows="2" placeholder="Posez une question au vendeur (ex: est-ce toujours disponible ?)" maxlength="300"></textarea>
+          <button type="button" class="btn btn-outline btn-sm" id="qnaSubmitBtn">Poser la question</button>
+        </div>
+      `
+      : (!currentUser
+          ? `<p class="qna-login-prompt"><a href="/auth.html?next=product.html">Connectez-vous</a> pour poser une question.</p>`
+          : '');
+
+    section.innerHTML = listHTML + formHTML;
+
+    const submitBtn = document.getElementById('qnaSubmitBtn');
+    if (submitBtn) {
+      submitBtn.addEventListener('click', () => handleQuestionSubmit(listingId, isOwner, currentUser));
+    }
+
+    section.querySelectorAll('.qna-answer-btn').forEach(btn => {
+      btn.addEventListener('click', () => showAnswerForm(btn));
+    });
+  }
+
+  function showAnswerForm(btn) {
+    const qid = btn.dataset.qid;
+    const wrapper = document.createElement('div');
+    wrapper.className = 'qna-answer-form';
+    wrapper.innerHTML = `
+      <textarea rows="2" placeholder="Votre réponse..." maxlength="300"></textarea>
+      <button type="button" class="btn btn-primary btn-sm">Envoyer la réponse</button>
+    `;
+    btn.replaceWith(wrapper);
+    wrapper.querySelector('button').addEventListener('click', async () => {
+      const text = wrapper.querySelector('textarea').value.trim();
+      if (!text) {
+        showToast("Merci d'écrire une réponse avant d'envoyer.");
+        return;
+      }
+      const result = typeof submitQuestionAnswer === 'function'
+        ? await submitQuestionAnswer(qid, text)
+        : { error: 'Fonction indisponible' };
+
+      if (result.error) {
+        showToast('Erreur : impossible d\'envoyer la réponse.');
+        return;
+      }
+      showToast('✅ Réponse envoyée !');
+      renderQnaSection(listing.id, true, await (typeof getCurrentUser === 'function' ? getCurrentUser() : null));
+    });
+  }
+
+  async function handleQuestionSubmit(listingId, isOwner, currentUser) {
+    const input = document.getElementById('qnaInput');
+    const text = input ? input.value.trim() : '';
+    if (!text) {
+      showToast('Écrivez votre question avant de l\'envoyer.');
+      return;
+    }
+
+    const submitBtn = document.getElementById('qnaSubmitBtn');
+    if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Envoi…'; }
+
+    const result = typeof submitListingQuestion === 'function'
+      ? await submitListingQuestion(listingId, text)
+      : { error: 'Fonction indisponible' };
+
+    if (result.error) {
+      showToast('Erreur : impossible d\'envoyer la question.');
+      if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Poser la question'; }
+      return;
+    }
+
+    showToast('✅ Question envoyée au vendeur !');
+    renderQnaSection(listingId, isOwner, currentUser);
+  }
+
   async function init() {
     const container = document.getElementById('productContainer');
     if (!container) return;
@@ -392,6 +502,11 @@
           </div>
 
           <div class="detail-section">
+            <h3 style="margin-bottom:12px;">Questions des acheteurs</h3>
+            <div id="qnaSection"></div>
+          </div>
+
+          <div class="detail-section">
             <h3 style="margin-bottom:12px;">Vendeur</h3>
             <div class="seller-card" id="sellerCard" ${!isOwner ? 'style="cursor:pointer; display:flex; align-items:center; gap:12px;"' : 'style="display:flex; align-items:center; gap:12px;"'}>
               <div class="avatar" style="width:44px; height:44px; background:var(--bg); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:20px;">👤</div>
@@ -451,6 +566,7 @@
 
         renderFavBtn();
         renderActions();
+        renderQnaSection(listing.id, isOwner, currentUser);
 
         /* FIX AdSense : contenu réel confirmé et affiché, on peut charger les pubs */
         loadAdSenseIfContentReady();
