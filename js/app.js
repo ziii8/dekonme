@@ -1,7 +1,7 @@
 /* ============================================= */
-/* DEKONme — app.js v3.6 (Auth complet + Animations) */
+/* DEKONme — app.js v3.7 (Auth complet + Animations) */
 /* Logique Globale & Rendu UI Marketplace         */
-/* CORRIGÉ : onclick UUID + admin.deleteUser bug  */
+/* SUPPRIMÉ : écran de chargement (splash) au démarrage */
 /* ============================================= */
 
 const CATEGORIES = [
@@ -194,78 +194,17 @@ let _heartbeatTimer = null;
         animation: none !important;
       }
     }
-
-    /* --- Écran de chargement de page --- */
-    #dkm-app-loader {
-      position: fixed;
-      inset: 0;
-      z-index: 99999;
-      background: var(--bg, #FAF6F0);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 16px;
-      transition: opacity 0.3s ease;
-    }
-    #dkm-app-loader.dkm-loader-hide {
-      opacity: 0;
-      pointer-events: none;
-    }
-    .dkm-loader-mark {
-      width: 56px;
-      height: 56px;
-      background: var(--ink, #1A1A1A);
-      color: var(--bg, #FAF6F0);
-      border-radius: 16px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 28px;
-      font-weight: 800;
-      animation: dkm-loader-pulse 1.2s ease-in-out infinite;
-    }
-    @keyframes dkm-loader-pulse {
-      0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.08); }
-    }
-    .dkm-loader-spinner {
-      width: 26px;
-      height: 26px;
-      border: 3px solid var(--border, #E8E2D8);
-      border-top-color: var(--orange, #E8732C);
-      border-radius: 50%;
-      animation: dkm-spin 0.7s linear infinite;
-    }
-    @media (prefers-reduced-motion: reduce) {
-      .dkm-loader-mark, .dkm-loader-spinner { animation: none !important; }
-    }
   `;
   document.head.appendChild(style);
 })();
 
 /* Génère N cartes "skeleton" (placeholders animés) pendant le chargement */
-/* ============================================================
-   ÉCRAN DE CHARGEMENT DE PAGE
-   S'affiche immédiatement (avant même DOMContentLoaded) et se masque
-   quand chaque page appelle hideAppLoader() une fois son contenu prêt.
-   Sécurité : se masque automatiquement après 4s max si une page oublie
-   de l'appeler, pour ne jamais rester bloqué à l'écran.
-============================================================ */
-(function initAppLoader() {
-  if (document.getElementById('dkm-app-loader')) return;
-  const loader = document.createElement('div');
-  loader.id = 'dkm-app-loader';
-  loader.innerHTML = `
-    <div class="dkm-loader-mark">D</div>
-    <div class="dkm-loader-spinner"></div>
-  `;
-  document.body.appendChild(loader);
-  window._dkmLoaderTimeout = setTimeout(() => {
-    if (typeof hideAppLoader === 'function') hideAppLoader();
-  }, 4000);
-})();
 
+/* Écran de chargement de page supprimé (plus d'overlay "D" + spinner au
+   démarrage). hideAppLoader() est conservée en no-op : si une page l'appelle
+   encore (ou si un service worker sert une ancienne version en cache), elle
+   ne trouve simplement plus rien à masquer — aucun risque de casser
+   d'autres pages tant qu'elles ne sont pas toutes mises à jour. */
 function hideAppLoader() {
   clearTimeout(window._dkmLoaderTimeout);
   const loader = document.getElementById('dkm-app-loader');
