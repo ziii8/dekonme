@@ -1,7 +1,9 @@
 {
+  "id": "/",
   "name": "DEKONme - Marketplace du Togo",
   "short_name": "DEKONme",
   "description": "Achetez et vendez facilement au Togo — mode, électronique, maison, beauté et plus. Contact direct par WhatsApp.",
+  "lang": "fr",
   "start_url": "/index.html",
   "scope": "/",
   "display": "standalone",

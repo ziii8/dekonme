@@ -1185,6 +1185,20 @@ window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () 
   if (!localStorage.getItem("dekonme-theme")) updateThemeIcon();
 });
 
+/* ==================== SERVICE WORKER ====================
+   AJOUTÉ : aucun appel à navigator.serviceWorker.register() n'existait
+   dans app.js ni index.html. Sans lui, service-worker.js reste un fichier
+   inerte sur le serveur — jamais installé par le navigateur. C'est aussi
+   l'un des critères d'installabilité PWA (avec le manifest + HTTPS), donc
+   requis pour que le TWA fonctionne correctement sur le Play Store. */
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/service-worker.js')
+      .then((reg) => console.log('Service Worker enregistré :', reg.scope))
+      .catch((err) => console.error('Erreur enregistrement Service Worker :', err));
+  });
+}
+
 /* ==================== INIT ==================== */
 window.updateMyProfile = async function ({ name, phone, city, avatar_emoji }) {
   if (!window.db) return { error: "Base de données non initialisée" };
